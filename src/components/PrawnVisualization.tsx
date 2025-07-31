@@ -17,16 +17,33 @@ interface PrawnVisualizationProps {
 }
 
 interface GameState {
-  prawnMood: 'calm' | 'excited' | 'swimming' | 'feeding' | 'cooking' | 'thinking'
+  prawnMood: 'calm' | 'excited' | 'swimming' | 'feeding' | 'cooking' | 'thinking' | 'performing' | 'dead'
   interactionCount: number
   isFeeding: boolean
   isSwimming: boolean
   currentSwimPattern: 'circular' | 'figure8' | 'random' | 'patrol'
-  gamePhase: 'exploring' | 'playing' | 'cooking' | 'completed'
+  gamePhase: 'exploring' | 'trajectory' | 'quiz' | 'cooking' | 'completed'
   score: number
   correctAnswers: number
   isRobotMode: boolean
   hasAI: boolean
+  trajectoryPoints: number
+  currentQuestion: number
+  lives: number
+}
+
+interface TrajectoryPoint {
+  x: number
+  y: number
+  timestamp: number
+}
+
+interface GameStats {
+  currentScore: number
+  trajectoryComplexity: number
+  naturalness: number
+  isDrawing: boolean
+  currentPath: TrajectoryPoint[]
 }
 
 interface Recipe {
@@ -64,8 +81,19 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     score: 0,
     correctAnswers: 0,
     isRobotMode: false,
-    hasAI: false
+    hasAI: false,
+    trajectoryPoints: 0,
+    currentQuestion: 0,
+    lives: 1
   })
+
+  // Trajectory drawing state
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [currentPath, setCurrentPath] = useState<TrajectoryPoint[]>([])
+  const [trajectoryHistory, setTrajectoryHistory] = useState<TrajectoryPoint[][]>([])
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isDrawingRef = useRef(false)
+  const pathRef = useRef<TrajectoryPoint[]>([])
 
   // Game UI state
   const [showGameUI, setShowGameUI] = useState(false)
@@ -149,22 +177,258 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     
     setGameState(prev => ({ 
       ...prev, 
-      gamePhase: 'playing', 
+      gamePhase: 'trajectory', 
       prawnMood: 'thinking',
       isRobotMode: true,
-      hasAI: !!geminiApiKey
+      hasAI: !!geminiApiKey,
+      score: 0,
+      correctAnswers: 0,
+      trajectoryPoints: 0,
+      currentQuestion: 0,
+      lives: 1
     }))
     
-    // Generate random question
+    setShowGameUI(true)
+    playClickSound({ volume: 0.5, playbackRate: 1.3 })
+    toast.success("🤖 РобоКреветка-Кухар ChefBot-2000 активована! Намалюйте траєкторію руху криветки.")
+  }
+
+  // Trajectory drawing functions
+  const startDrawing = (x: number, y: number) => {
+    if (gameState.gamePhase !== 'trajectory') return
+    
+    setIsDrawing(true)
+    isDrawingRef.current = true
+    const newPath: TrajectoryPoint[] = [{ x, y, timestamp: Date.now() }]
+    setCurrentPath(newPath)
+    pathRef.current = newPath
+    
+    setGameState(prev => ({ ...prev, prawnMood: 'performing' }))
+    playRippleSound({ volume: 0.3, playbackRate: 1.2 })
+  }
+
+  const continueDrawing = (x: number, y: number) => {
+    if (!isDrawingRef.current || gameState.gamePhase !== 'trajectory') return
+    
+    const newPoint: TrajectoryPoint = { x, y, timestamp: Date.now() }
+    const newPath = [...pathRef.current, newPoint]
+    setCurrentPath(newPath)
+    pathRef.current = newPath
+    
+    // Draw on canvas
+    if (canvasRef.current) {
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      if (ctx && pathRef.current.length > 1) {
+        const prev = pathRef.current[pathRef.current.length - 2]
+        const curr = pathRef.current[pathRef.current.length - 1]
+        
+        ctx.strokeStyle = '#3b82f6'
+        ctx.lineWidth = 3
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        
+        ctx.beginPath()
+        ctx.moveTo(prev.x, prev.y)
+        ctx.lineTo(curr.x, curr.y)
+        ctx.stroke()
+      }
+    }
+  }
+
+  const finishDrawing = () => {
+    if (!isDrawingRef.current || gameState.gamePhase !== 'trajectory') return
+    
+    setIsDrawing(false)
+    isDrawingRef.current = false
+    
+    if (pathRef.current.length < 3) {
+      toast.error("Траєкторія занадто коротка! Намалюйте більш складний трюк.")
+      setCurrentPath([])
+      pathRef.current = []
+      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+      return
+    }
+    
+    // Analyze trajectory
+    const trajectory = pathRef.current
+    const complexity = calculateTrajectoryComplexity(trajectory)
+    const naturalness = calculateNaturalness(trajectory)
+    
+    let points = 0
+    let prawnFate: 'alive' | 'dead' = 'alive'
+    
+    // Scoring logic
+    if (naturalness > 0.9) {
+      // Supernatural movement - prawn dies
+      points = 0
+      prawnFate = 'dead'
+      setGameState(prev => ({ 
+        ...prev, 
+        prawnMood: 'dead',
+        score: 0,
+        trajectoryPoints: 0,
+        lives: 0
+      }))
+      toast.error("❌ Надприродний рух! ChefBot-2000 вимкнувся. Починайте спочатку!")
+      playRippleSound({ volume: 0.8, playbackRate: 0.5 })
+    } else {
+      // Calculate points based on complexity and naturalness
+      const basePoints = Math.floor(complexity * 10)
+      const naturalBonus = Math.floor((0.7 - naturalness) * 5) // Bonus for natural movement
+      points = Math.min(10, Math.max(1, basePoints + naturalBonus))
+      
+      setGameState(prev => ({ 
+        ...prev, 
+        score: prev.score + points,
+        trajectoryPoints: prev.trajectoryPoints + points,
+        prawnMood: 'excited'
+      }))
+      
+      toast.success(`🎯 Трюк оцінено: +${points} балів! (Складність: ${(complexity * 10).toFixed(1)}/10, Природність: ${((1 - naturalness) * 10).toFixed(1)}/10)`)
+      playBubbleSound({ volume: 0.6, playbackRate: 1.2 })
+    }
+    
+    // Add to history
+    setTrajectoryHistory(prev => [...prev, trajectory])
+    setCurrentPath([])
+    pathRef.current = []
+    
+    // Check if ready for quiz (need 100 points from trajectories)
+    if (prawnFate === 'alive' && gameState.score + points >= 100) {
+      setTimeout(() => {
+        startQuizPhase()
+      }, 2000)
+    } else if (prawnFate === 'dead') {
+      setTimeout(() => {
+        // Reset everything
+        resetGame()
+      }, 3000)
+    }
+  }
+
+  const calculateTrajectoryComplexity = (path: TrajectoryPoint[]): number => {
+    if (path.length < 3) return 0
+    
+    let totalCurvature = 0
+    let totalDistance = 0
+    let directionChanges = 0
+    
+    for (let i = 1; i < path.length - 1; i++) {
+      const p1 = path[i - 1]
+      const p2 = path[i]
+      const p3 = path[i + 1]
+      
+      // Calculate angle between segments
+      const angle1 = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+      const angle2 = Math.atan2(p3.y - p2.y, p3.x - p2.x)
+      let angleDiff = Math.abs(angle2 - angle1)
+      if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff
+      
+      totalCurvature += angleDiff
+      
+      // Count significant direction changes
+      if (angleDiff > Math.PI / 4) {
+        directionChanges++
+      }
+      
+      // Calculate distance
+      const distance = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+      totalDistance += distance
+    }
+    
+    // Normalize complexity (0-1)
+    const curvatureScore = Math.min(1, totalCurvature / (Math.PI * path.length / 4))
+    const directionScore = Math.min(1, directionChanges / (path.length / 5))
+    const lengthScore = Math.min(1, totalDistance / 1000)
+    
+    return (curvatureScore + directionScore + lengthScore) / 3
+  }
+
+  const calculateNaturalness = (path: TrajectoryPoint[]): number => {
+    if (path.length < 3) return 0
+    
+    let unnaturalMovements = 0
+    const maxSpeed = 50 // pixels per frame
+    const maxAcceleration = 20 // change in speed per frame
+    
+    for (let i = 2; i < path.length; i++) {
+      const p1 = path[i - 2]
+      const p2 = path[i - 1] 
+      const p3 = path[i]
+      
+      // Calculate speeds
+      const speed1 = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2) / Math.max(1, p2.timestamp - p1.timestamp)
+      const speed2 = Math.sqrt((p3.x - p2.x) ** 2 + (p3.y - p2.y) ** 2) / Math.max(1, p3.timestamp - p2.timestamp)
+      
+      // Check for supernatural speed
+      if (speed1 > maxSpeed || speed2 > maxSpeed) {
+        unnaturalMovements += 2
+      }
+      
+      // Check for supernatural acceleration
+      const acceleration = Math.abs(speed2 - speed1)
+      if (acceleration > maxAcceleration) {
+        unnaturalMovements += 1
+      }
+      
+      // Check for impossible right angles
+      const angle1 = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+      const angle2 = Math.atan2(p3.y - p2.y, p3.x - p2.x)
+      let angleDiff = Math.abs(angle2 - angle1)
+      if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff
+      
+      if (angleDiff > Math.PI * 0.8) { // Near 180-degree turns
+        unnaturalMovements += 1
+      }
+    }
+    
+    return Math.min(1, unnaturalMovements / (path.length / 3))
+  }
+
+  const startQuizPhase = () => {
+    setGameState(prev => ({ 
+      ...prev, 
+      gamePhase: 'quiz',
+      prawnMood: 'thinking',
+      currentQuestion: 0
+    }))
+    
+    // Generate first question
     const randomQuestion = cookingQuestions[Math.floor(Math.random() * cookingQuestions.length)]
     setGameQuestion(randomQuestion.question)
-    setGameOptions([...randomQuestion.options].sort(() => Math.random() - 0.5)) // Shuffle options
+    setGameOptions([...randomQuestion.options].sort(() => Math.random() - 0.5))
     setCorrectAnswer(randomQuestion.correct)
     setUserAnswer('')
-    setShowGameUI(true)
     
-    playClickSound({ volume: 0.5, playbackRate: 1.3 })
-    toast.success("🤖 РобоКреветка-Кухар ChefBot-2000 активована! Відповідайте на кулінарні питання.")
+    toast.success("🎓 Фаза питань! Відповідайте правильно, щоб отримати доступ до ШІ-кухаря!")
+  }
+
+  const resetGame = () => {
+    setGameState(prev => ({ 
+      ...prev, 
+      gamePhase: 'exploring',
+      prawnMood: 'calm',
+      isRobotMode: false,
+      score: 0,
+      correctAnswers: 0,
+      trajectoryPoints: 0,
+      currentQuestion: 0,
+      lives: 1
+    }))
+    setShowGameUI(false)
+    setCurrentPath([])
+    setTrajectoryHistory([])
+    pathRef.current = []
+    
+    // Clear canvas
+    if (canvasRef.current) {
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+    }
   }
 
   const handleAnswerSubmit = (answer: string) => {
@@ -173,15 +437,16 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     if (answer === correctAnswer) {
       setGameState(prev => ({ 
         ...prev, 
-        score: prev.score + 10,
+        score: prev.score + 25,
         correctAnswers: prev.correctAnswers + 1,
-        prawnMood: 'excited'
+        prawnMood: 'excited',
+        currentQuestion: prev.currentQuestion + 1
       }))
       playBubbleSound({ volume: 0.6, playbackRate: 1.5 })
-      toast.success("🎉 Правильно! ChefBot-2000 схвалює! +10 балів")
+      toast.success("🎉 Правильно! ChefBot-2000 схвалює! +25 балів")
       
-      // Check if game is won (3 correct answers)
-      if (gameState.correctAnswers + 1 >= 3) {
+      // Check if all 4 questions answered correctly
+      if (gameState.correctAnswers + 1 >= 4) {
         setTimeout(() => {
           setGameState(prev => ({ 
             ...prev, 
@@ -190,7 +455,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }))
           setShowGameUI(false)
           setShowRecipeGenerator(true)
-          toast.success("🏆 Ви виграли! ChefBot-2000 активує ШІ-кухаря!")
+          toast.success("🏆 Всі питання правильно! ChefBot-2000 активує ШІ-кухаря!")
         }, 2000)
       } else {
         // Next question
@@ -203,13 +468,22 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         }, 2000)
       }
     } else {
-      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+      // Wrong answer - reset everything
+      setGameState(prev => ({ 
+        ...prev, 
+        prawnMood: 'dead',
+        score: 0,
+        correctAnswers: 0,
+        trajectoryPoints: 0,
+        currentQuestion: 0,
+        lives: 0
+      }))
       playRippleSound({ volume: 0.4, playbackRate: 0.8 })
-      toast.error("❌ Неправильно. ChefBot-2000 вчить вас кулінарії!")
+      toast.error("❌ Неправильно! ChefBot-2000 вимкнувся. Всі бали згоріли!")
       
       setTimeout(() => {
-        setUserAnswer('')
-      }, 1500)
+        resetGame()
+      }, 3000)
     }
   }
 
@@ -306,7 +580,10 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         score: 0,
         correctAnswers: 0,
         isRobotMode: false,
-        prawnMood: 'calm'
+        prawnMood: 'calm',
+        trajectoryPoints: 0,
+        currentQuestion: 0,
+        lives: 1
       }))
       
     } catch (error) {
@@ -1438,30 +1715,57 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }
         })
 
-        // Mood-based overall scaling with robotic effects
+        // Mood-based overall scaling with robotic effects and death animation
         const moodScale = gameState.prawnMood === 'excited' ? 1.05 : 
                           gameState.prawnMood === 'swimming' ? 1.02 : 
                           gameState.prawnMood === 'cooking' ? 1.08 :
-                          gameState.prawnMood === 'thinking' ? 1.03 : 1
-        const breathingScale = 1 + Math.sin(time * (gameState.isRobotMode ? 5 : 3)) * 0.02 * animationStateRef.current.breathingIntensity
+                          gameState.prawnMood === 'thinking' ? 1.03 : 
+                          gameState.prawnMood === 'performing' ? 1.1 :
+                          gameState.prawnMood === 'dead' ? 0.8 + Math.sin(time * 10) * 0.1 : 1 // Death twitching
+        const breathingScale = gameState.prawnMood === 'dead' ? 
+          1 + Math.sin(time * 15) * 0.05 : // Erratic twitching when dead
+          1 + Math.sin(time * (gameState.isRobotMode ? 5 : 3)) * 0.02 * animationStateRef.current.breathingIntensity
         const roboticScale = gameState.isRobotMode ? 1 + Math.sin(time * 8) * 0.01 : 1
         prawnGroupRef.current.scale.setScalar(moodScale * breathingScale * roboticScale)
 
-        // Enhanced robotic lighting effects
+        // Death effects - rotate and fade
+        if (gameState.prawnMood === 'dead') {
+          prawnGroupRef.current.rotation.z = Math.sin(time * 2) * 0.3 // Rolling motion
+          bodySegments.forEach((segment: THREE.Mesh) => {
+            if (segment.material instanceof THREE.MeshStandardMaterial) {
+              segment.material.opacity = 0.5 + Math.sin(time * 8) * 0.2 // Flickering
+            }
+          })
+        } else {
+          prawnGroupRef.current.rotation.z = 0
+          bodySegments.forEach((segment: THREE.Mesh) => {
+            if (segment.material instanceof THREE.MeshStandardMaterial) {
+              segment.material.opacity = 0.95
+            }
+          })
+        }
+
+          // Enhanced robotic lighting effects
         if (scene.children.find(child => child.type === 'PointLight')) {
           const lights = scene.children.filter(child => child.type === 'PointLight') as THREE.PointLight[]
           lights.forEach((light, index) => {
             const baseIntensity = gameState.prawnMood === 'excited' ? 0.9 : 
                                  gameState.prawnMood === 'swimming' ? 0.8 :
                                  gameState.prawnMood === 'cooking' ? 1.2 :
-                                 gameState.prawnMood === 'thinking' ? 1.0 : 0.7
+                                 gameState.prawnMood === 'thinking' ? 1.0 :
+                                 gameState.prawnMood === 'performing' ? 1.3 :
+                                 gameState.prawnMood === 'dead' ? 0.2 : 0.7
             
             const roboticPulse = gameState.isRobotMode ? Math.sin(time * 4 + index) * 0.3 : 0
-            light.intensity = baseIntensity + Math.sin(time * 2 + index) * 0.1 * animationStateRef.current.swimIntensity + roboticPulse
+            const deathFlicker = gameState.prawnMood === 'dead' ? Math.random() * 0.1 : 0
+            light.intensity = baseIntensity + Math.sin(time * 2 + index) * 0.1 * animationStateRef.current.swimIntensity + roboticPulse + deathFlicker
             
             // Enhanced color shifting for robotic mode
             const colorShift = Math.sin(time * 0.5 + index) * 0.1
-            if (gameState.isRobotMode) {
+            if (gameState.prawnMood === 'dead') {
+              // Red/dark colors for death
+              light.color.setHSL(0 + colorShift * 0.05, 0.9, 0.3 + Math.sin(time * 5) * 0.1)
+            } else if (gameState.isRobotMode) {
               // Cyber blue colors for robot mode
               if (index === 0) {
                 light.color.setHSL(0.6 + colorShift * 0.1, 0.9, 0.7 + Math.sin(time * 3) * 0.1)
@@ -1666,6 +1970,42 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-aqua">
+      {/* Trajectory Drawing Canvas */}
+      {gameState.gamePhase === 'trajectory' && (
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-20 cursor-crosshair"
+          width={window.innerWidth}
+          height={window.innerHeight}
+          onMouseDown={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            startDrawing(e.clientX - rect.left, e.clientY - rect.top)
+          }}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            continueDrawing(e.clientX - rect.left, e.clientY - rect.top)
+          }}
+          onMouseUp={finishDrawing}
+          onMouseLeave={finishDrawing}
+          onTouchStart={(e) => {
+            e.preventDefault()
+            const rect = e.currentTarget.getBoundingClientRect()
+            const touch = e.touches[0]
+            startDrawing(touch.clientX - rect.left, touch.clientY - rect.top)
+          }}
+          onTouchMove={(e) => {
+            e.preventDefault()
+            const rect = e.currentTarget.getBoundingClientRect()
+            const touch = e.touches[0]
+            continueDrawing(touch.clientX - rect.left, touch.clientY - rect.top)
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault()
+            finishDrawing()
+          }}
+        />
+      )}
+      
       <div 
         ref={mountRef} 
         className="w-full h-full cursor-pointer"
@@ -1697,18 +2037,28 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
               gameState.prawnMood === 'feeding' ? '🍽️ Годування' : 
               gameState.prawnMood === 'swimming' ? '🏊 Плавання' : 
               gameState.prawnMood === 'cooking' ? '👨‍🍳 Готує рецепт' :
-              gameState.prawnMood === 'thinking' ? '🧠 Аналізує дані' : '🎮 Інтерактив'
+              gameState.prawnMood === 'thinking' ? '🧠 Аналізує дані' : 
+              gameState.prawnMood === 'performing' ? '🎪 Виконує трюк' :
+              gameState.prawnMood === 'dead' ? '💀 Вимкнений' : '🎮 Інтерактив'
             }
           </p>
           <p className="text-xs opacity-75 mt-1">Взаємодій: {gameState.interactionCount}</p>
           {gameState.gamePhase !== 'exploring' && (
-            <p className="text-xs text-green-300 mt-1">
-              🎯 Рахунок: {gameState.score} | 🎪 Фаза: {
-                gameState.gamePhase === 'playing' ? 'Гра' :
-                gameState.gamePhase === 'cooking' ? 'Готування' :
+            <div className="text-xs text-green-300 mt-1 space-y-1">
+              <p>🎯 Загальний рахунок: {gameState.score}</p>
+              {gameState.gamePhase === 'trajectory' && (
+                <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+              )}
+              {gameState.gamePhase === 'quiz' && (
+                <p>🧠 Питання: {gameState.correctAnswers}/4 ({gameState.currentQuestion + 1} питання)</p>
+              )}
+              <p>📊 Фаза: {
+                gameState.gamePhase === 'trajectory' ? 'Малювання трюків' :
+                gameState.gamePhase === 'quiz' ? 'Відповіді на питання' :
+                gameState.gamePhase === 'cooking' ? 'Готування рецепту' :
                 gameState.gamePhase === 'completed' ? 'Завершено' : 'Дослідження'
-              }
-            </p>
+              }</p>
+            </div>
           )}
           {gameState.isSwimming && (
             <motion.p 
@@ -1744,8 +2094,50 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           disabled={!audioEnabled}
         >
           <span className="text-2xl mr-2">🤖</span>
-          <span>ChefBot-2000 Кулінарна Гра</span>
+          <span>ChefBot-2000 Гра</span>
         </motion.button>
+      )}
+
+      {/* Trajectory Drawing Instructions */}
+      {gameState.gamePhase === 'trajectory' && (
+        <motion.div
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-blue-500/90 backdrop-blur-sm rounded-lg px-6 py-4 border border-blue-300/50 text-white text-center z-30"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-lg font-bold mb-2">🎪 Малювання трюків креветки</h3>
+          <p className="text-sm mb-1">Намалюйте траєкторію руху мишкою або пальцем</p>
+          <p className="text-xs opacity-80">• Складність і природність = бали (макс. 10 за трюк)</p>
+          <p className="text-xs opacity-80">• Надприродний рух = смерть креветки ❌</p>
+          <p className="text-xs opacity-80">• Потрібно 100 балів для доступу до питань</p>
+          
+          <div className="mt-3 text-xs bg-white/20 rounded-lg p-2">
+            <p>🎯 Поточний рахунок: {gameState.score}/100 балів</p>
+            <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Quiz Phase Instructions */}
+      {gameState.gamePhase === 'quiz' && !showGameUI && (
+        <motion.div
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-purple-500/90 backdrop-blur-sm rounded-lg px-6 py-4 border border-purple-300/50 text-white text-center z-30"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-lg font-bold mb-2">🧠 Фаза питань</h3>
+          <p className="text-sm mb-1">Відповідайте на 4 кулінарні питання</p>
+          <p className="text-xs opacity-80">• Правильна відповідь = +25 балів</p>
+          <p className="text-xs opacity-80">• Помилка = смерть креветки та втрата всіх балів ❌</p>
+          
+          <div className="mt-3 text-xs bg-white/20 rounded-lg p-2">
+            <p>🎯 Рахунок: {gameState.score} балів</p>
+            <p>✅ Правильно: {gameState.correctAnswers}/4</p>
+            <p>❓ Поточне питання: {gameState.currentQuestion + 1}</p>
+          </div>
+        </motion.div>
       )}
 
       {/* Game UI Overlay */}
@@ -1764,44 +2156,101 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                   <Badge variant="secondary">{gameState.hasAI ? 'ШІ Активно' : 'ШІ Очікує'}</Badge>
                 </CardTitle>
                 <p className="text-muted-foreground mt-2">
-                  Рахунок: {gameState.score} | Правильних відповідей: {gameState.correctAnswers}/3
+                  {gameState.gamePhase === 'quiz' ? (
+                    <>Питання {gameState.currentQuestion + 1}/4 | Рахунок: {gameState.score} | Правильних: {gameState.correctAnswers}/4</>
+                  ) : (
+                    <>Фаза траєкторій | Рахунок: {gameState.score}/100 | Траєкторії: {gameState.trajectoryPoints}</>
+                  )}
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-primary/10 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg mb-3">{gameQuestion}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {gameOptions.map((option, index) => (
-                      <Button
-                        key={index}
-                        variant={userAnswer === option ? 
-                          (option === correctAnswer ? "default" : "destructive") : 
-                          "outline"
-                        }
-                        className="text-left justify-start p-4 h-auto"
-                        onClick={() => handleAnswerSubmit(option)}
-                        disabled={!!userAnswer}
-                      >
-                        <span className="font-medium mr-2">{String.fromCharCode(65 + index)})</span>
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
-                  {userAnswer && (
-                    <motion.div
-                      className="mt-4 p-3 rounded-lg bg-secondary/20"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                    >
-                      <p className="text-sm">
-                        {userAnswer === correctAnswer 
-                          ? "✅ Правильно! ChefBot-2000: 'Ваші кулінарні знання вражаючі! Системи схвалення активовані.'"
-                          : "❌ Неправильно. ChefBot-2000: 'Мої датабази містять правильну відповідь. Давайте вчитися разом!'"
-                        }
+                {gameState.gamePhase === 'trajectory' ? (
+                  <div className="text-center space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                      <h3 className="text-xl font-bold text-blue-800 mb-4">🎪 Малювання трюків креветки</h3>
+                      <p className="text-blue-700 mb-4">
+                        Намалюйте складну і природну траєкторію руху креветки. ChefBot-2000 оцінить ваш трюк!
                       </p>
-                    </motion.div>
-                  )}
-                </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-green-100 border border-green-300 rounded-lg p-3">
+                          <p className="font-semibold text-green-800">✅ Добре:</p>
+                          <ul className="text-green-700 text-xs mt-1 space-y-1">
+                            <li>• Складні кривини</li>
+                            <li>• Природні рухи</li>
+                            <li>• Довгі траєкторії</li>
+                            <li>• Зміни напрямку</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                          <p className="font-semibold text-red-800">❌ Погано:</p>
+                          <ul className="text-red-700 text-xs mt-1 space-y-1">
+                            <li>• Надто швидко</li>
+                            <li>• Різкі повороти</li>
+                            <li>• Надприродні рухи</li>
+                            <li>• Короткі лінії</li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-yellow-800 text-sm font-medium">
+                          🎯 Поточний прогрес: {gameState.score}/100 балів
+                        </p>
+                        <div className="w-full bg-yellow-200 rounded-full h-2 mt-2">
+                          <div 
+                            className="bg-yellow-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, gameState.score)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      onClick={() => resetGame()}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      🔄 Перезапустити гру
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="bg-primary/10 p-4 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-3">{gameQuestion}</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {gameOptions.map((option, index) => (
+                        <Button
+                          key={index}
+                          variant={userAnswer === option ? 
+                            (option === correctAnswer ? "default" : "destructive") : 
+                            "outline"
+                          }
+                          className="text-left justify-start p-4 h-auto"
+                          onClick={() => handleAnswerSubmit(option)}
+                          disabled={!!userAnswer}
+                        >
+                          <span className="font-medium mr-2">{String.fromCharCode(65 + index)})</span>
+                          {option}
+                        </Button>
+                      ))}
+                    </div>
+                    {userAnswer && (
+                      <motion.div
+                        className="mt-4 p-3 rounded-lg bg-secondary/20"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <p className="text-sm">
+                          {userAnswer === correctAnswer 
+                            ? "✅ Правильно! ChefBot-2000: 'Ваші кулінарні знання вражаючі! Системи схвалення активовані.'"
+                            : "❌ Неправильно! ChefBot-2000 вимкнувся! Всі бали згоріли. Гра починається спочатку."
+                          }
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -1825,6 +2274,14 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                 <p className="text-muted-foreground mt-2">
                   РобоКреветка-Кухар створить унікальний рецепт на основі ваших інгредієнтів
                 </p>
+                <div className="mt-2 text-sm bg-green-100 border border-green-300 rounded-lg p-3">
+                  <p className="text-green-800 font-medium">
+                    🎯 Фінальний рахунок: {gameState.score} балів
+                  </p>
+                  <p className="text-green-700 text-xs mt-1">
+                    Траєкторії: {gameState.trajectoryPoints} + Питання: {gameState.correctAnswers * 25} = {gameState.score}
+                  </p>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {!generatedRecipe ? (
@@ -2090,19 +2547,79 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-sm opacity-75 mt-1">
             {menuVisible 
               ? "Натисніть будь-де для входу на сайт"
-              : gameState.gamePhase === 'playing'
-                ? "🧠 ChefBot-2000 тестує ваші кулінарні знання"
-                : gameState.gamePhase === 'cooking'
-                  ? "👨‍🍳 ChefBot-2000 аналізує інгредієнти та створює рецепт"
-                  : gameState.isSwimming 
-                    ? "🌊 Автономне плавання • 🖱️ Ручне керування"
-                    : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
+              : gameState.gamePhase === 'trajectory'
+                ? "🎪 Малюйте траєкторії трюків мишкою • Потрібно 100 балів"
+                : gameState.gamePhase === 'quiz'
+                  ? "🧠 ChefBot-2000 тестує ваші кулінарні знання • 4 питання"
+                  : gameState.gamePhase === 'cooking'
+                    ? "👨‍🍳 ChefBot-2000 аналізує інгредієнти та створює рецепт"
+                    : gameState.isSwimming 
+                      ? "🌊 Автономне плавання • 🖱️ Ручне керування"
+                      : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
             }
           </p>
         </div>
       </motion.div>
 
-      {/* Swimming pattern control */}
+      {/* Reset Game Button - visible during game phases */}
+      {gameState.gamePhase !== 'exploring' && gameState.gamePhase !== 'completed' && (
+        <motion.button
+          onClick={resetGame}
+          className="absolute bottom-32 left-8 bg-red-500/80 hover:bg-red-600/90 backdrop-blur-sm rounded-full px-4 py-2 border border-red-300/50 text-white text-sm transition-all duration-300 hover:scale-105 shadow-lg"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          🔄 Перезапустити
+        </motion.button>
+      )}
+
+      {/* Trajectory Progress Indicator */}
+      {gameState.gamePhase === 'trajectory' && (
+        <motion.div
+          className="absolute bottom-8 left-8 bg-black/80 backdrop-blur-sm rounded-lg px-4 py-3 text-white text-sm"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span>🎯</span>
+            <span className="font-medium">Прогрес до питань:</span>
+          </div>
+          <div className="w-48 bg-gray-700 rounded-full h-2 mb-1">
+            <div 
+              className="bg-green-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, gameState.score)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs opacity-75">{gameState.score}/100 балів</p>
+        </motion.div>
+      )}
+
+      {/* Quiz Progress Indicator */}
+      {gameState.gamePhase === 'quiz' && (
+        <motion.div
+          className="absolute bottom-8 left-8 bg-black/80 backdrop-blur-sm rounded-lg px-4 py-3 text-white text-sm"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span>🧠</span>
+            <span className="font-medium">Питання:</span>
+          </div>
+          <div className="w-48 bg-gray-700 rounded-full h-2 mb-1">
+            <div 
+              className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${(gameState.correctAnswers / 4) * 100}%` }}
+            ></div>
+          </div>
+          <p className="text-xs opacity-75">{gameState.correctAnswers}/4 правильно</p>
+          <p className="text-xs opacity-75">Поточне: {gameState.currentQuestion + 1}</p>
+        </motion.div>
+      )}
       <motion.button
         onClick={() => {
           const patterns = ['circular', 'figure8', 'random', 'patrol'] as const
