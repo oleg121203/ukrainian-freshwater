@@ -20,6 +20,7 @@ import { OrdersManagement } from '@/components/OrdersManagement'
 import { ShoppingCart } from '@/components/ShoppingCart'
 import { FloatingCart } from '@/components/FloatingCart'
 import { ShoppingTest } from '@/components/ShoppingTest'
+import { PaymentAdmin } from '@/components/PaymentAdmin'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
@@ -32,7 +33,7 @@ function App() {
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
-  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding', 'orders', 'shop-test']
+  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding', 'orders', 'shop-test', 'payment-admin']
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -75,7 +76,7 @@ function App() {
       case 'contact':
         return <ContactSection onNavigate={handleNavigate} />
       case 'admin':
-        return <AdminDashboard />
+        return <AdminDashboard onNavigate={handleNavigate} />
       case 'eco-farming':
         return <EcoFarmingSection onNavigate={handleNavigate} />
       case 'technology':
@@ -100,6 +101,8 @@ function App() {
         return <OrdersManagement onNavigate={handleNavigate} />
       case 'shop-test':
         return <ShoppingTest onNavigate={handleNavigate} />
+      case 'payment-admin':
+        return <PaymentAdmin onNavigate={handleNavigate} />
       default:
         return <HeroSection onNavigate={handleNavigate} />
     }
@@ -126,6 +129,7 @@ function App() {
                     case 'feeding': return 'Feed'
                     case 'orders': return 'Orders'
                     case 'shop-test': return 'Test'
+                    case 'payment-admin': return 'Pay'
                     default: return sectionName
                   }
                 }

@@ -11,7 +11,9 @@ import {
   Phone,
   User,
   Mail,
-  Package
+  Package,
+  CheckCircle,
+  CopySimple
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +27,8 @@ import { Separator } from '@/components/ui/separator'
 import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
 import { useShoppingCart, CartItem, Order } from '@/hooks/useShoppingCart'
+import { PaymentForm } from '@/components/PaymentForm'
+import { usePaymentService, PaymentData, PaymentResult } from '@/services/paymentService'
 
 interface CustomerInfo {
   firstName: string
@@ -56,7 +60,8 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     getTotalItems,
     createOrder 
   } = useShoppingCart()
-  const [step, setStep] = useState<'cart' | 'checkout' | 'confirmation'>('cart')
+  const { processPayment } = usePaymentService()
+  const [step, setStep] = useState<'cart' | 'checkout' | 'payment' | 'processing' | 'success' | 'error'>('cart')
   
   // Customer and delivery form state
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
@@ -73,7 +78,8 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     deliveryTime: 'morning'
   })
   
-  const [paymentMethod, setPaymentMethod] = useState<string>('cash')
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null)
+  const [currentOrderId, setCurrentOrderId] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Customer info persistence
@@ -161,22 +167,69 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
       setSavedCustomerInfo(customerInfo)
 
       // Create order using the hook
-      createOrder(customerInfo, deliveryInfo, paymentMethod)
+      const orderId = Date.now().toString()
+      setCurrentOrderId(orderId)
       
-      // Move to confirmation
-      setStep('confirmation')
+      // Move to payment step
+      setStep('payment')
       
-      toast.success(
-        language === 'uk' 
-          ? 'Замовлення успішно оформлено!'
-          : 'Order placed successfully!'
-      )
-
     } catch (error) {
       toast.error(
         language === 'uk' 
           ? 'Помилка при оформленні замовлення'
-          : 'Error placing order'
+          : 'Error creating order'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handlePaymentSubmit = async (paymentData: PaymentData): Promise<void> => {
+    setIsSubmitting(true)
+    setStep('processing')
+
+    try {
+      const customerData = {
+        name: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        email: customerInfo.email,
+        phone: customerInfo.phone
+      }
+
+      const result = await processPayment(
+        currentOrderId,
+        getTotalPrice(),
+        paymentData,
+        customerData
+      )
+
+      setPaymentResult(result)
+
+      if (result.success) {
+        // Create the actual order
+        createOrder(customerInfo, deliveryInfo, paymentData.method)
+        setStep('success')
+        
+        toast.success(
+          language === 'uk' 
+            ? 'Оплата успішна! Замовлення оформлено.'
+            : 'Payment successful! Order placed.'
+        )
+      } else {
+        setStep('error')
+        toast.error(result.message)
+      }
+
+    } catch (error) {
+      setStep('error')
+      setPaymentResult({
+        success: false,
+        transactionId: '',
+        message: error instanceof Error ? error.message : 'Payment failed'
+      })
+      toast.error(
+        language === 'uk' 
+          ? 'Помилка оплати'
+          : 'Payment error'
       )
     } finally {
       setIsSubmitting(false)
@@ -185,7 +238,14 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
 
   const handleClose = () => {
     setStep('cart')
+    setPaymentResult(null)
+    setCurrentOrderId('')
     onClose()
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success(language === 'uk' ? 'Скопійовано!' : 'Copied!')
   }
 
   if (!isVisible) return null
@@ -216,11 +276,19 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   <h2 className="text-xl font-semibold">
                     {step === 'cart' && (language === 'uk' ? 'Кошик' : 'Shopping Cart')}
                     {step === 'checkout' && (language === 'uk' ? 'Оформлення замовлення' : 'Checkout')}
-                    {step === 'confirmation' && (language === 'uk' ? 'Підтвердження' : 'Confirmation')}
+                    {step === 'payment' && (language === 'uk' ? 'Оплата' : 'Payment')}
+                    {step === 'processing' && (language === 'uk' ? 'Обробка оплати' : 'Processing Payment')}
+                    {step === 'success' && (language === 'uk' ? 'Успішно!' : 'Success!')}
+                    {step === 'error' && (language === 'uk' ? 'Помилка' : 'Error')}
                   </h2>
                   {step === 'cart' && (
                     <p className="text-sm text-muted-foreground">
                       {totalItems} {language === 'uk' ? 'товарів' : 'items'} • {totalPrice} UAH
+                    </p>
+                  )}
+                  {step === 'processing' && (
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'uk' ? 'Будь ласка, зачекайте...' : 'Please wait...'}
                     </p>
                   )}
                 </div>
@@ -470,29 +538,16 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CreditCard size={20} />
-                        {language === 'uk' ? 'Спосіб оплати' : 'Payment Method'}
+                        {language === 'uk' ? 'Інформація' : 'Information'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Select
-                        value={paymentMethod}
-                        onValueChange={setPaymentMethod}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cash">
-                            {language === 'uk' ? 'Готівка при отриманні' : 'Cash on delivery'}
-                          </SelectItem>
-                          <SelectItem value="card">
-                            {language === 'uk' ? 'Картою при отриманні' : 'Card on delivery'}
-                          </SelectItem>
-                          <SelectItem value="transfer">
-                            {language === 'uk' ? 'Банківський переказ' : 'Bank transfer'}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <p className="text-sm text-muted-foreground">
+                        {language === 'uk' 
+                          ? 'На наступному кроці ви зможете обрати зручний спосіб оплати: банківська картка, Apple Pay, Google Pay, Приват24, Monobank, PayPal або криптовалюта.'
+                          : 'On the next step you can choose a convenient payment method: bank card, Apple Pay, Google Pay, Privat24, Monobank, PayPal or cryptocurrency.'
+                        }
+                      </p>
                     </CardContent>
                   </Card>
 
@@ -523,23 +578,139 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                 </div>
               )}
 
-              {step === 'confirmation' && (
+              {step === 'payment' && (
+                <div className="p-6">
+                  <PaymentForm
+                    totalAmount={getTotalPrice()}
+                    onPaymentSubmit={handlePaymentSubmit}
+                    onBack={() => setStep('checkout')}
+                    isSubmitting={isSubmitting}
+                  />
+                </div>
+              )}
+
+              {step === 'processing' && (
                 <div className="p-6 text-center">
-                  <div className="text-6xl mb-6">🎉</div>
+                  <div className="flex justify-center mb-6">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full"
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {language === 'uk' ? 'Обробка оплати...' : 'Processing payment...'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {language === 'uk' 
+                      ? 'Будь ласка, не закривайте це вікно'
+                      : 'Please do not close this window'
+                    }
+                  </p>
+                </div>
+              )}
+
+              {step === 'success' && paymentResult && (
+                <div className="p-6 text-center">
+                  <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
                   <h3 className="text-2xl font-bold mb-4">
-                    {language === 'uk' ? 'Дякуємо за замовлення!' : 'Thank you for your order!'}
+                    {language === 'uk' ? 'Оплата успішна!' : 'Payment Successful!'}
                   </h3>
                   <p className="text-muted-foreground mb-6">
                     {language === 'uk' 
-                      ? 'Ваше замовлення прийнято і буде доставлено протягом 24 годин. Ми зв\'яжемося з вами для підтвердження.'
-                      : 'Your order has been received and will be delivered within 24 hours. We will contact you for confirmation.'
+                      ? 'Ваше замовлення прийнято і буде доставлено протягом 24 годин.'
+                      : 'Your order has been received and will be delivered within 24 hours.'
                     }
                   </p>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>{language === 'uk' ? 'Сума замовлення:' : 'Order total:'} {totalPrice} UAH</p>
-                    <p>{language === 'uk' ? 'Доставка:' : 'Delivery:'} {deliveryInfo.city}</p>
-                    <p>{language === 'uk' ? 'Телефон:' : 'Phone:'} {customerInfo.phone}</p>
-                  </div>
+                  
+                  <Card className="text-left mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-sm">
+                        {language === 'uk' ? 'Деталі оплати' : 'Payment Details'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>{language === 'uk' ? 'ID транзакції:' : 'Transaction ID:'}</span>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {paymentResult.transactionId}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={() => copyToClipboard(paymentResult.transactionId)}
+                          >
+                            <CopySimple size={12} />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{language === 'uk' ? 'Сума:' : 'Amount:'}</span>
+                        <span className="font-semibold">{totalPrice} UAH</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{language === 'uk' ? 'Доставка:' : 'Delivery:'}</span>
+                        <span>{deliveryInfo.city}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {paymentResult.qrCode && (
+                    <Card className="mb-6">
+                      <CardHeader>
+                        <CardTitle className="text-sm">
+                          {language === 'uk' ? 'QR код для оплати' : 'Payment QR Code'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-center">
+                        <img src={paymentResult.qrCode} alt="Payment QR Code" className="mx-auto mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {paymentResult.message}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {paymentResult.redirectUrl && (
+                    <Card className="mb-6">
+                      <CardContent className="pt-6">
+                        <Button 
+                          className="w-full"
+                          onClick={() => window.open(paymentResult.redirectUrl, '_blank')}
+                        >
+                          {language === 'uk' ? 'Завершити оплату' : 'Complete Payment'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {step === 'error' && paymentResult && (
+                <div className="p-6 text-center">
+                  <div className="text-6xl mb-6">❌</div>
+                  <h3 className="text-2xl font-bold mb-4 text-destructive">
+                    {language === 'uk' ? 'Помилка оплати' : 'Payment Failed'}
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    {paymentResult.message}
+                  </p>
+                  
+                  <Card className="text-left mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-sm">
+                        {language === 'uk' ? 'Що робити далі?' : 'What to do next?'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <p>• {language === 'uk' ? 'Перевірте дані картки' : 'Check your card details'}</p>
+                      <p>• {language === 'uk' ? 'Переконайтесь, що на рахунку достатньо коштів' : 'Ensure you have sufficient funds'}</p>
+                      <p>• {language === 'uk' ? 'Спробуйте інший спосіб оплати' : 'Try a different payment method'}</p>
+                      <p>• {language === 'uk' ? 'Зв\'яжіться з нами за допомогою' : 'Contact us for assistance'}</p>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
@@ -574,17 +745,28 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   </Button>
                   <Button onClick={submitOrder} disabled={isSubmitting}>
                     {isSubmitting 
-                      ? (language === 'uk' ? 'Оформлення...' : 'Submitting...')
-                      : (language === 'uk' ? 'Підтвердити' : 'Confirm')
+                      ? (language === 'uk' ? 'Оформлення...' : 'Creating...')
+                      : (language === 'uk' ? 'Перейти до оплати' : 'Proceed to Payment')
                     }
                   </Button>
                 </div>
               )}
 
-              {step === 'confirmation' && (
-                <Button className="w-full" onClick={handleClose}>
-                  {language === 'uk' ? 'Готово' : 'Done'}
-                </Button>
+              {(step === 'success' || step === 'error') && (
+                <div className="space-y-3">
+                  {step === 'error' && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setStep('payment')}
+                    >
+                      {language === 'uk' ? 'Спробувати знову' : 'Try Again'}
+                    </Button>
+                  )}
+                  <Button className="w-full" onClick={handleClose}>
+                    {language === 'uk' ? 'Готово' : 'Done'}
+                  </Button>
+                </div>
               )}
             </div>
           </div>

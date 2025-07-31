@@ -24,7 +24,8 @@ import {
   Eye,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  CreditCard
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
@@ -72,7 +73,11 @@ interface Customer {
   lastOrderAt?: string
 }
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  onNavigate?: (section: string) => void
+}
+
+export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
   const { t } = useLanguage()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -482,11 +487,12 @@ export function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Огляд</TabsTrigger>
             <TabsTrigger value="products">Продукти</TabsTrigger>
             <TabsTrigger value="orders">Замовлення</TabsTrigger>
             <TabsTrigger value="customers">Клієнти</TabsTrigger>
+            <TabsTrigger value="payments">Платежі</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -995,6 +1001,148 @@ export function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Налаштування платежів</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => onNavigate?.('payment-admin')}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Детальні налаштування
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Quick Payment Stats */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Успішні платежі</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {orders.filter(o => o.status === 'delivered').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">За поточний місяць</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">В очікуванні</CardTitle>
+                  <Clock className="h-4 w-4 text-yellow-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {orders.filter(o => o.status === 'pending').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Потребують обробки</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Невдалі</CardTitle>
+                  <XCircle className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {orders.filter(o => o.status === 'cancelled').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">За поточний місяць</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Payment Methods Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Стан платіжних систем</CardTitle>
+                <CardDescription>
+                  Поточний статус інтеграції з платіжними системами
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { name: 'Банківські картки', status: 'active', icon: '💳' },
+                    { name: 'Apple Pay', status: 'active', icon: '🍎' },
+                    { name: 'Google Pay', status: 'active', icon: '🟢' },
+                    { name: 'Приват24', status: 'active', icon: '🏦' },
+                    { name: 'Monobank', status: 'active', icon: '⚫' },
+                    { name: 'PayPal', status: 'active', icon: '💙' },
+                    { name: 'Bitcoin', status: 'active', icon: '₿' },
+                    { name: 'USDT', status: 'active', icon: '💚' }
+                  ].map((method) => (
+                    <div key={method.name} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{method.icon}</span>
+                        <span className="text-sm font-medium">{method.name}</span>
+                      </div>
+                      <Badge 
+                        variant="secondary" 
+                        className="bg-green-100 text-green-800"
+                      >
+                        Активний
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Швидкі дії</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => onNavigate?.('payment-admin')}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Налаштування платежів
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => {
+                      toast.info('Функція буде доступна незабаром')
+                    }}
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Звіти по платежах
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => {
+                      toast.info('Функція буде доступна незабаром')
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Аналітика платежів
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => {
+                      toast.info('Функція буде доступна незабаром')
+                    }}
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Налаштування комісій
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
