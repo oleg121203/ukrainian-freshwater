@@ -9,7 +9,11 @@ import {
   Eye,
   EyeSlash,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Building,
+  Smartphone,
+  Shield,
+  ArrowLeft
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -131,9 +135,16 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
             </p>
           </div>
           {onNavigate && (
-            <Button variant="outline" onClick={() => onNavigate('admin')}>
-              {language === 'uk' ? 'Назад до адміністрування' : 'Back to Admin'}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onNavigate('admin')}>
+                <ArrowLeft size={16} className="mr-2" />
+                {language === 'uk' ? 'Назад до адміністрування' : 'Back to Admin'}
+              </Button>
+              <Button variant="outline" onClick={() => onNavigate('shop-test')}>
+                <CreditCard size={16} className="mr-2" />
+                {language === 'uk' ? 'Тест платежів' : 'Test Payments'}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -155,6 +166,181 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Payment Settings */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Available Payment Methods */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard size={20} />
+                  {language === 'uk' ? 'Доступні способи оплати' : 'Available Payment Methods'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Card Payments */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      {language === 'uk' ? 'Картки' : 'Cards'}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={16} />
+                          <span className="text-sm">Visa/Mastercard</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">Apple Pay</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">Google Pay</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ukrainian Banks */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      {language === 'uk' ? 'Українські банки' : 'Ukrainian Banks'}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">Приват24</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">Monobank</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">Ощадбанк</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">УкрГазБанк</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">iBox Bank</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* International Wallets */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      {language === 'uk' ? 'Електронні гаманці' : 'Digital Wallets'}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">PayPal</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">Skrill</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">WebMoney</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={16} />
+                          <span className="text-sm">QIWI</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Other Methods */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      {language === 'uk' ? 'Інші способи' : 'Other Methods'}
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Building size={16} />
+                          <span className="text-sm">{language === 'uk' ? 'Банківський переказ' : 'Bank Transfer'}</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Shield size={16} />
+                          <span className="text-sm">{language === 'uk' ? 'Криптовалюта' : 'Cryptocurrency'}</span>
+                        </div>
+                        <Badge variant="secondary">
+                          {language === 'uk' ? 'Активно' : 'Active'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

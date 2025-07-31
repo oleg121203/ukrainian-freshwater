@@ -30,7 +30,7 @@ interface PaymentFormProps {
 }
 
 interface PaymentData {
-  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'paypal' | 'crypto'
+  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'oschadbank' | 'ukrgasbank' | 'ibox' | 'paypal' | 'skrill' | 'webmoney' | 'qiwi' | 'crypto' | 'bank_transfer'
   cardData?: {
     number: string
     expiry: string
@@ -39,13 +39,22 @@ interface PaymentData {
   }
   bankData?: {
     phone: string
+    accountNumber?: string
   }
   walletData?: {
     email: string
+    walletId?: string
+    phone?: string
   }
   cryptoData?: {
     wallet: string
     currency: 'btc' | 'eth' | 'usdt'
+  }
+  bankTransferData?: {
+    bankName: string
+    accountNumber: string
+    recipientName: string
+    purpose: string
   }
 }
 
@@ -60,8 +69,16 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
   })
   const [bankPhone, setBankPhone] = useState('')
   const [walletEmail, setWalletEmail] = useState('')
+  const [walletId, setWalletId] = useState('')
+  const [walletPhone, setWalletPhone] = useState('')
   const [cryptoWallet, setCryptoWallet] = useState('')
   const [cryptoCurrency, setCryptoCurrency] = useState<'btc' | 'eth' | 'usdt'>('usdt')
+  const [bankTransferData, setBankTransferData] = useState({
+    bankName: '',
+    accountNumber: '',
+    recipientName: '',
+    purpose: ''
+  })
   const [agreeToTerms, setAgreeToTerms] = useState(false)
 
   const paymentMethods = [
@@ -104,11 +121,60 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
       fee: '0%'
     },
     {
+      id: 'oschadbank',
+      name: 'Ощадбанк',
+      icon: Building,
+      description: language === 'uk' ? 'Оплата через Ощадбанк 24/7' : 'Oschadbank 24/7 payment',
+      fee: '0%'
+    },
+    {
+      id: 'ukrgasbank',
+      name: 'УкрГазБанк',
+      icon: Building,
+      description: language === 'uk' ? 'Мобільний банкінг УкрГазБанк' : 'UkrGasBank mobile banking',
+      fee: '0%'
+    },
+    {
+      id: 'ibox',
+      name: 'iBox Bank',
+      icon: Smartphone,
+      description: language === 'uk' ? 'Мобільний банк iBox' : 'iBox mobile banking',
+      fee: '0%'
+    },
+    {
       id: 'paypal',
       name: 'PayPal',
       icon: Building,
       description: language === 'uk' ? 'Міжнародна система оплати' : 'International payment system',
       fee: '2.9%'
+    },
+    {
+      id: 'skrill',
+      name: 'Skrill',
+      icon: Smartphone,
+      description: language === 'uk' ? 'Цифровий гаманець Skrill' : 'Skrill digital wallet',
+      fee: '1.9%'
+    },
+    {
+      id: 'webmoney',
+      name: 'WebMoney',
+      icon: Smartphone,
+      description: language === 'uk' ? 'Електронний гаманець' : 'Electronic wallet',
+      fee: '0.8%'
+    },
+    {
+      id: 'qiwi',
+      name: 'QIWI',
+      icon: Smartphone,
+      description: language === 'uk' ? 'QIWI гаманець' : 'QIWI wallet',
+      fee: '1.6%'
+    },
+    {
+      id: 'bank_transfer',
+      name: language === 'uk' ? 'Банківський переказ' : 'Bank Transfer',
+      icon: Building,
+      description: language === 'uk' ? 'Прямий переказ на рахунок' : 'Direct bank account transfer',
+      fee: '0%'
     },
     {
       id: 'crypto',
@@ -177,10 +243,48 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
   }
 
   const validateWalletPayment = () => {
-    if (!walletEmail || !/\S+@\S+\.\S+/.test(walletEmail)) {
-      toast.error(language === 'uk' ? 'Введіть коректну електронну адресу' : 'Enter a valid email address')
+    if (paymentMethod === 'paypal' || paymentMethod === 'skrill') {
+      if (!walletEmail || !/\S+@\S+\.\S+/.test(walletEmail)) {
+        toast.error(language === 'uk' ? 'Введіть коректну електронну адресу' : 'Enter a valid email address')
+        return false
+      }
+    } else if (paymentMethod === 'webmoney') {
+      if (!walletId.trim()) {
+        toast.error(language === 'uk' ? 'Введіть WebMoney ID' : 'Enter WebMoney ID')
+        return false
+      }
+    } else if (paymentMethod === 'qiwi') {
+      if (!walletPhone || !/^\+?[\d\s\-\(\)]+$/.test(walletPhone)) {
+        toast.error(language === 'uk' ? 'Введіть номер телефону QIWI' : 'Enter QIWI phone number')
+        return false
+      }
+    }
+    return true
+  }
+
+  const validateBankTransfer = () => {
+    const { bankName, accountNumber, recipientName, purpose } = bankTransferData
+    
+    if (!bankName.trim()) {
+      toast.error(language === 'uk' ? 'Оберіть банк' : 'Select bank')
       return false
     }
+    
+    if (!accountNumber.trim()) {
+      toast.error(language === 'uk' ? 'Введіть номер рахунку' : 'Enter account number')
+      return false
+    }
+    
+    if (!recipientName.trim()) {
+      toast.error(language === 'uk' ? 'Введіть ім\'я отримувача' : 'Enter recipient name')
+      return false
+    }
+    
+    if (!purpose.trim()) {
+      toast.error(language === 'uk' ? 'Введіть призначення платежу' : 'Enter payment purpose')
+      return false
+    }
+    
     return true
   }
 
@@ -208,12 +312,26 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
         break
       case 'privat24':
       case 'monobank':
+      case 'oschadbank':
+      case 'ukrgasbank':
+      case 'ibox':
         if (!validateBankPayment()) return
         paymentData.bankData = { phone: bankPhone }
         break
       case 'paypal':
+      case 'skrill':
+      case 'webmoney':
+      case 'qiwi':
         if (!validateWalletPayment()) return
-        paymentData.walletData = { email: walletEmail }
+        paymentData.walletData = { 
+          email: walletEmail, 
+          walletId: walletId, 
+          phone: walletPhone 
+        }
+        break
+      case 'bank_transfer':
+        if (!validateBankTransfer()) return
+        paymentData.bankTransferData = bankTransferData
         break
       case 'crypto':
         if (!validateCryptoPayment()) return
@@ -379,11 +497,15 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
         </Card>
       )}
 
-      {(paymentMethod === 'privat24' || paymentMethod === 'monobank') && (
+      {(paymentMethod === 'privat24' || paymentMethod === 'monobank' || paymentMethod === 'oschadbank' || paymentMethod === 'ukrgasbank' || paymentMethod === 'ibox') && (
         <Card>
           <CardHeader>
             <CardTitle>
-              {paymentMethod === 'privat24' ? 'Приват24' : 'Monobank'}
+              {paymentMethod === 'privat24' && 'Приват24'}
+              {paymentMethod === 'monobank' && 'Monobank'}
+              {paymentMethod === 'oschadbank' && 'Ощадбанк 24/7'}
+              {paymentMethod === 'ukrgasbank' && 'УкрГазБанк'}
+              {paymentMethod === 'ibox' && 'iBox Bank'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -424,6 +546,154 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                 value={walletEmail}
                 onChange={(e) => setWalletEmail(e.target.value)}
                 placeholder="your@paypal.com"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentMethod === 'skrill' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Skrill</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="skrillEmail">
+                {language === 'uk' ? 'Email Skrill' : 'Skrill Email'} *
+              </Label>
+              <Input
+                id="skrillEmail"
+                type="email"
+                value={walletEmail}
+                onChange={(e) => setWalletEmail(e.target.value)}
+                placeholder="your@skrill.com"
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'uk' 
+                  ? 'Email адреса вашого Skrill аккаунту'
+                  : 'Email address of your Skrill account'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentMethod === 'webmoney' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>WebMoney</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="webmoneyId">
+                {language === 'uk' ? 'WebMoney ID (WMID)' : 'WebMoney ID (WMID)'} *
+              </Label>
+              <Input
+                id="webmoneyId"
+                value={walletId}
+                onChange={(e) => setWalletId(e.target.value)}
+                placeholder="123456789012"
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'uk' 
+                  ? '12-значний номер вашого WebMoney гаманця'
+                  : '12-digit WebMoney wallet identifier'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentMethod === 'qiwi' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>QIWI Wallet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="qiwiPhone">
+                {language === 'uk' ? 'Номер телефону QIWI' : 'QIWI Phone Number'} *
+              </Label>
+              <Input
+                id="qiwiPhone"
+                value={walletPhone}
+                onChange={(e) => setWalletPhone(e.target.value)}
+                placeholder="+7 XXX XXX XX XX"
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'uk' 
+                  ? 'Номер телефону QIWI гаманця'
+                  : 'QIWI wallet phone number'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentMethod === 'bank_transfer' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{language === 'uk' ? 'Банківський переказ' : 'Bank Transfer'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="bankName">
+                {language === 'uk' ? 'Назва банку' : 'Bank Name'} *
+              </Label>
+              <Select 
+                value={bankTransferData.bankName} 
+                onValueChange={(value) => setBankTransferData(prev => ({...prev, bankName: value}))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'uk' ? 'Оберіть банк' : 'Select bank'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="privatbank">ПриватБанк</SelectItem>
+                  <SelectItem value="monobank">Monobank</SelectItem>
+                  <SelectItem value="oschadbank">Ощадбанк</SelectItem>
+                  <SelectItem value="ukrgasbank">УкрГазБанк</SelectItem>
+                  <SelectItem value="ukrsibbank">УкрСібБанк</SelectItem>
+                  <SelectItem value="raiffeisen">Райффайзен Банк</SelectItem>
+                  <SelectItem value="ukrsots">УКРСОЦБАНК</SelectItem>
+                  <SelectItem value="other">{language === 'uk' ? 'Інший банк' : 'Other bank'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="accountNumber">
+                {language === 'uk' ? 'Номер рахунку' : 'Account Number'} *
+              </Label>
+              <Input
+                id="accountNumber"
+                value={bankTransferData.accountNumber}
+                onChange={(e) => setBankTransferData(prev => ({...prev, accountNumber: e.target.value}))}
+                placeholder="UA123456789012345678901234567"
+              />
+            </div>
+            <div>
+              <Label htmlFor="recipientName">
+                {language === 'uk' ? 'Ім\'я отримувача' : 'Recipient Name'} *
+              </Label>
+              <Input
+                id="recipientName"
+                value={bankTransferData.recipientName}
+                onChange={(e) => setBankTransferData(prev => ({...prev, recipientName: e.target.value}))}
+                placeholder={language === 'uk' ? 'Повне ім\'я отримувача' : 'Full recipient name'}
+              />
+            </div>
+            <div>
+              <Label htmlFor="purpose">
+                {language === 'uk' ? 'Призначення платежу' : 'Payment Purpose'} *
+              </Label>
+              <Input
+                id="purpose"
+                value={bankTransferData.purpose}
+                onChange={(e) => setBankTransferData(prev => ({...prev, purpose: e.target.value}))}
+                placeholder={language === 'uk' ? 'Оплата за продукцію AquaFarm' : 'Payment for AquaFarm products'}
               />
             </div>
           </CardContent>

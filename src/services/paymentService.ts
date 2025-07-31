@@ -1,7 +1,7 @@
 import { useKV } from '@github/spark/hooks'
 
 export interface PaymentData {
-  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'paypal' | 'crypto'
+  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'oschadbank' | 'ukrgasbank' | 'ibox' | 'paypal' | 'skrill' | 'webmoney' | 'qiwi' | 'crypto' | 'bank_transfer'
   cardData?: {
     number: string
     expiry: string
@@ -10,13 +10,22 @@ export interface PaymentData {
   }
   bankData?: {
     phone: string
+    accountNumber?: string
   }
   walletData?: {
     email: string
+    walletId?: string
+    phone?: string
   }
   cryptoData?: {
     wallet: string
     currency: 'btc' | 'eth' | 'usdt'
+  }
+  bankTransferData?: {
+    bankName: string
+    accountNumber: string
+    recipientName: string
+    purpose: string
   }
 }
 
@@ -109,8 +118,29 @@ class PaymentService {
         case 'monobank':
           result = await this.processMonobank(transactionId, amount, paymentData.bankData!)
           break
+        case 'oschadbank':
+          result = await this.processOschadbank(transactionId, amount, paymentData.bankData!)
+          break
+        case 'ukrgasbank':
+          result = await this.processUkrGasBank(transactionId, amount, paymentData.bankData!)
+          break
+        case 'ibox':
+          result = await this.processIboxBank(transactionId, amount, paymentData.bankData!)
+          break
         case 'paypal':
           result = await this.processPayPal(transactionId, amount, paymentData.walletData!)
+          break
+        case 'skrill':
+          result = await this.processSkrill(transactionId, amount, paymentData.walletData!)
+          break
+        case 'webmoney':
+          result = await this.processWebMoney(transactionId, amount, paymentData.walletData!)
+          break
+        case 'qiwi':
+          result = await this.processQiwi(transactionId, amount, paymentData.walletData!)
+          break
+        case 'bank_transfer':
+          result = await this.processBankTransfer(transactionId, amount, paymentData.bankTransferData!)
           break
         case 'crypto':
           result = await this.processCrypto(transactionId, amount, paymentData.cryptoData!)
@@ -266,6 +296,63 @@ class PaymentService {
     }
   }
 
+  private async processOschadbank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+    await this.delay(2200)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `oschadbank_${transactionId}`,
+        message: 'Oschadbank 24/7 payment initiated',
+        redirectUrl: `https://online.oschadbank.ua/payment?amount=${amount}&phone=${bankData!.phone}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `oschadbank_${transactionId}`,
+      message: 'Oschadbank payment initiated'
+    }
+  }
+
+  private async processUkrGasBank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+    await this.delay(2100)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `ukrgasbank_${transactionId}`,
+        message: 'UkrGasBank mobile payment initiated',
+        redirectUrl: `https://my.ukrgasbank.com/payment?amount=${amount}&phone=${bankData!.phone}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `ukrgasbank_${transactionId}`,
+      message: 'UkrGasBank payment initiated'
+    }
+  }
+
+  private async processIboxBank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+    await this.delay(1800)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `ibox_${transactionId}`,
+        message: 'iBox Bank mobile payment initiated',
+        redirectUrl: `https://ibox.ua/payment?amount=${amount}&phone=${bankData!.phone}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `ibox_${transactionId}`,
+      message: 'iBox Bank payment initiated'
+    }
+  }
+
   private async processPayPal(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
     await this.delay(3000)
     
@@ -283,6 +370,86 @@ class PaymentService {
       success: true,
       transactionId: `paypal_${transactionId}`,
       message: 'PayPal payment initiated'
+    }
+  }
+
+  private async processSkrill(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+    await this.delay(2800)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `skrill_${transactionId}`,
+        message: 'Skrill payment initiated',
+        redirectUrl: `https://www.skrill.com/pay?amount=${amount}&email=${walletData!.email}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `skrill_${transactionId}`,
+      message: 'Skrill payment initiated'
+    }
+  }
+
+  private async processWebMoney(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+    await this.delay(2200)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `webmoney_${transactionId}`,
+        message: 'WebMoney payment initiated',
+        redirectUrl: `https://merchant.webmoney.ru/conf/purse?amount=${amount}&wmid=${walletData!.walletId}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `webmoney_${transactionId}`,
+      message: 'WebMoney payment initiated'
+    }
+  }
+
+  private async processQiwi(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+    await this.delay(2500)
+    
+    if (this.testMode) {
+      return {
+        success: true,
+        transactionId: `qiwi_${transactionId}`,
+        message: 'QIWI payment initiated',
+        redirectUrl: `https://qiwi.com/payment/form/99?amount=${amount}&account=${walletData!.phone}`
+      }
+    }
+
+    return {
+      success: true,
+      transactionId: `qiwi_${transactionId}`,
+      message: 'QIWI payment initiated'
+    }
+  }
+
+  private async processBankTransfer(transactionId: string, amount: number, bankTransferData: PaymentData['bankTransferData']): Promise<PaymentResult> {
+    await this.delay(1000)
+    
+    // Generate bank transfer instructions
+    const instructions = {
+      recipientBank: bankTransferData!.bankName,
+      recipientAccount: 'UA213223130000026007233566001',
+      recipientName: 'ТОВ "АкваФарм"',
+      recipientCode: '12345678',
+      amount: amount,
+      purpose: bankTransferData!.purpose,
+      payerAccount: bankTransferData!.accountNumber,
+      payerName: bankTransferData!.recipientName
+    }
+
+    return {
+      success: true,
+      transactionId: `bank_transfer_${transactionId}`,
+      message: 'Bank transfer instructions generated. Please complete the transfer through your bank.',
+      redirectUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(instructions, null, 2))}`
     }
   }
 

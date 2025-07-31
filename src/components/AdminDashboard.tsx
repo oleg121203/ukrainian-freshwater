@@ -1076,8 +1076,16 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                     { name: 'Google Pay', status: 'active', icon: '🟢' },
                     { name: 'Приват24', status: 'active', icon: '🏦' },
                     { name: 'Monobank', status: 'active', icon: '⚫' },
+                    { name: 'Ощадбанк', status: 'active', icon: '🏛️' },
+                    { name: 'УкрГазБанк', status: 'active', icon: '⛽' },
+                    { name: 'iBox Bank', status: 'active', icon: '📱' },
                     { name: 'PayPal', status: 'active', icon: '💙' },
+                    { name: 'Skrill', status: 'active', icon: '🔷' },
+                    { name: 'WebMoney', status: 'active', icon: '💰' },
+                    { name: 'QIWI', status: 'active', icon: '🥝' },
+                    { name: 'Банківський переказ', status: 'active', icon: '🏪' },
                     { name: 'Bitcoin', status: 'active', icon: '₿' },
+                    { name: 'Ethereum', status: 'active', icon: '⟠' },
                     { name: 'USDT', status: 'active', icon: '💚' }
                   ].map((method) => (
                     <div key={method.name} className="flex items-center justify-between p-3 border rounded-lg">

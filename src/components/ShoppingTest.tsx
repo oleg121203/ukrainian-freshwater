@@ -34,6 +34,90 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
           {language === 'uk' ? 'Тест системи замовлень' : 'Shopping System Test'}
         </h1>
 
+        {/* Payment Methods Info */}
+        <Card className="mb-8 bg-gradient-to-r from-blue-50 to-green-50 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <ShoppingCart size={20} />
+              {language === 'uk' ? 'Доступні способи оплати' : 'Available Payment Methods'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span>💳</span>
+                <span>{language === 'uk' ? 'Банківські картки' : 'Bank Cards'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🍎</span>
+                <span>Apple Pay</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🟢</span>
+                <span>Google Pay</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🏦</span>
+                <span>Приват24</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>⚫</span>
+                <span>Monobank</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🏛️</span>
+                <span>Ощадбанк</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>⛽</span>
+                <span>УкрГазБанк</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>📱</span>
+                <span>iBox Bank</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>💙</span>
+                <span>PayPal</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🔷</span>
+                <span>Skrill</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>💰</span>
+                <span>WebMoney</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🥝</span>
+                <span>QIWI</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🏪</span>
+                <span>{language === 'uk' ? 'Банк. переказ' : 'Bank Transfer'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>₿</span>
+                <span>Bitcoin</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>⟠</span>
+                <span>Ethereum</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>💚</span>
+                <span>USDT</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              {language === 'uk' 
+                ? '🎉 Система підтримує 16 різних способів оплати для максимальної зручності клієнтів!'
+                : '🎉 System supports 16 different payment methods for maximum customer convenience!'
+              }
+            </p>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Cart Status */}
           <Card>
