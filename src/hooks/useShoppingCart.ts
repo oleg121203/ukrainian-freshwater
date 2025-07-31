@@ -15,11 +15,11 @@ export interface Product {
   inStock: boolean
 }
 
-export export interface CartItem extends Product {
+export interface CartItem extends Product {
   quantity: number
 }
 
-export export interface Order {
+export interface Order {
   id: string
   items: CartItem[]
   total: number
