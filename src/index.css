@@ -1,1 +1,67 @@
-/* This is where custom CSS goes */
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@layer base {
+  * {
+    @apply border-border
+  }
+}
+
+:root {
+  /* Aqua farm theme with blue-green analogous colors */
+  --background: oklch(0.98 0 0);
+  --foreground: oklch(0.15 0 0);
+
+  --card: oklch(0.99 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(0.99 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  /* Deep sea blue primary */
+  --primary: oklch(0.5 0.15 240);
+  --primary-foreground: oklch(0.98 0 0);
+  
+  /* Soft aquamarine secondary */
+  --secondary: oklch(0.95 0.05 200);
+  --secondary-foreground: oklch(0.2 0.1 240);
+  
+  /* Fresh green muted */
+  --muted: oklch(0.96 0.03 150);
+  --muted-foreground: oklch(0.45 0.08 150);
+  
+  /* Warm orange accent */
+  --accent: oklch(0.65 0.18 50);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(0.92 0.02 200);
+  --input: oklch(0.94 0.02 200);
+  --ring: oklch(0.6 0.12 240);
+
+  --radius: 0.75rem;
+}
+
+/* Typography settings */
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, .heading-font {
+  font-family: 'Merriweather', serif;
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .bg-gradient-aqua {
+    background: linear-gradient(135deg, oklch(0.7 0.1 200), oklch(0.6 0.12 150));
+  }
+  
+  .text-gradient-primary {
+    background: linear-gradient(135deg, oklch(0.5 0.15 240), oklch(0.6 0.12 200));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
