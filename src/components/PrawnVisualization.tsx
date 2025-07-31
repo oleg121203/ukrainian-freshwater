@@ -3807,5 +3807,3 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     </div>
   )
 }
-
-export { PrawnVisualization }
