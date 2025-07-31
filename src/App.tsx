@@ -15,6 +15,7 @@ import { EcoFarmingSection } from '@/components/EcoFarmingSection'
 import { TechnologySection } from '@/components/TechnologySection'
 import { DeliverySection } from '@/components/DeliverySection'
 import { ProfessionalSection } from '@/components/ProfessionalSection'
+import { FeedingSimulation } from '@/components/FeedingSimulation'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
@@ -26,7 +27,7 @@ function App() {
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
-  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional']
+  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding']
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -78,6 +79,18 @@ function App() {
         return <DeliverySection onNavigate={handleNavigate} />
       case 'professional':
         return <ProfessionalSection onNavigate={handleNavigate} />
+      case 'feeding':
+        return <FeedingSimulation 
+          onPrawnFeed={(foodType, intensity) => {
+            // This could trigger animations in the 3D prawn when integrated
+            console.log('Prawn fed with:', foodType, 'intensity:', intensity)
+            playSwooshSound({ volume: 0.3, playbackRate: 1.2 })
+          }} 
+          onStatsUpdate={(stats) => {
+            // Update global prawn state if needed
+            console.log('Prawn stats updated:', stats)
+          }}
+        />
       default:
         return <HeroSection onNavigate={handleNavigate} />
     }
@@ -101,6 +114,7 @@ function App() {
                     case 'technology': return 'Tech'
                     case 'delivery': return 'Ship'
                     case 'professional': return 'Pro'
+                    case 'feeding': return 'Feed'
                     default: return sectionName
                   }
                 }

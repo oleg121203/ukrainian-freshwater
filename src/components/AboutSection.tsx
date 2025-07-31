@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Leaf, Award, Users, Heart, ShoppingCart, Images, BookOpen, ArrowRight } from '@phosphor-icons/react'
+import { Leaf, Award, Users, Heart, ShoppingCart, Images, BookOpen, ArrowRight, Bowl } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -165,7 +165,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
 
         {/* Navigation Cards */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -182,6 +182,21 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
               </p>
               <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
                 {language === 'uk' ? 'Дивитися' : 'View'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('feeding')}>
+            <CardContent className="p-6 text-center">
+              <Bowl size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-lg font-semibold mb-2">
+                {language === 'uk' ? 'Симулятор годування' : 'Feeding Simulator'}
+              </h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                {language === 'uk' ? 'Спробуйте віртуально годувати креветок' : 'Try feeding prawns virtually'}
+              </p>
+              <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Грати' : 'Play'} <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
