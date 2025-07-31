@@ -38,6 +38,7 @@ interface Recipe {
   authorEmail: string
   createdAt: string
   aiGenerated: boolean
+  chefbotNotes?: string
 }
 
 export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite }: PrawnVisualizationProps) {
@@ -255,7 +256,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         authorName: userName,
         authorEmail: userEmail,
         createdAt: new Date().toISOString(),
-        aiGenerated: true
+        aiGenerated: true,
+        chefbotNotes: recipeData.chefbotNotes
       }
 
       setGeneratedRecipe(newRecipe)
@@ -357,118 +359,24 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     const prawnGroup = new THREE.Group()
     prawnGroupRef.current = prawnGroup
 
-    // Advanced materials with robotic enhancements
+    // Advanced materials (will be updated dynamically based on robot mode)
     const createPrawnMaterial = (baseColor: number, roughness = 0.3, metalness = 0.1, options: any = {}) => {
+      // Create basic material first, will be updated in animation loop
       const material = new THREE.MeshStandardMaterial({
         color: baseColor,
-        roughness: gameState.isRobotMode ? Math.max(0.1, roughness - 0.2) : roughness,
-        metalness: gameState.isRobotMode ? Math.min(0.9, metalness + 0.5) : metalness,
+        roughness: roughness,
+        metalness: metalness,
         transparent: true,
-        opacity: options.opacity || (gameState.isRobotMode ? 0.98 : 0.95),
+        opacity: options.opacity || 0.95,
         side: THREE.DoubleSide,
-        emissive: gameState.isRobotMode ? new THREE.Color(0x0066cc) : new THREE.Color(0x000000),
-        emissiveIntensity: gameState.isRobotMode ? 0.2 : 0,
+        emissive: new THREE.Color(0x000000),
+        emissiveIntensity: 0,
         ...options
       })
       
-      // Add robotic texture when in robot mode
-      if (gameState.isRobotMode && options.addNoise) {
-        material.onBeforeCompile = (shader) => {
-          shader.uniforms.time = { value: 0 }
-          shader.vertexShader = shader.vertexShader.replace(
-            '#include <common>',
-            `
-            #include <common>
-            varying vec3 vWorldPosition;
-            varying vec3 vNormal;
-            uniform float time;
-            `
-          )
-          shader.vertexShader = shader.vertexShader.replace(
-            '#include <begin_vertex>',
-            `
-            #include <begin_vertex>
-            vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-            vNormal = normalize(normalMatrix * normal);
-            `
-          )
-          
-          shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <common>',
-            `
-            #include <common>
-            varying vec3 vWorldPosition;
-            varying vec3 vNormal;
-            uniform float time;
-            
-            float noise(vec3 p) {
-              return fract(sin(dot(p, vec3(12.9898, 78.233, 54.321))) * 43758.5453);
-            }
-            
-            // Hexagonal panel grid for robot plating
-            float hexGrid(vec2 uv, float scale) {
-              uv *= scale;
-              vec2 gv = fract(uv) - 0.5;
-              vec2 id = floor(uv);
-              
-              float d1 = length(gv);
-              float d2 = length(gv - vec2(0.5, 0.0));
-              float d3 = length(gv - vec2(-0.5, 0.0));
-              float d4 = length(gv - vec2(0.0, 0.5));
-              float d5 = length(gv - vec2(0.0, -0.5));
-              
-              return min(min(min(min(d1, d2), d3), d4), d5);
-            }
-            `
-          )
-          
-          shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <color_fragment>',
-            `
-            #include <color_fragment>
-            
-            // Robot shell plating with hexagonal panels
-            vec2 panelUV = vWorldPosition.xy * 0.8;
-            float hexPattern = hexGrid(panelUV, 8.0);
-            float panelLines = smoothstep(0.05, 0.1, hexPattern) * 0.3;
-            
-            // Circuit board traces
-            float circuitX = abs(sin(vWorldPosition.x * 25.0)) * step(0.95, abs(sin(vWorldPosition.y * 15.0)));
-            float circuitY = abs(sin(vWorldPosition.z * 20.0)) * step(0.9, abs(sin(vWorldPosition.x * 12.0)));
-            float circuits = (circuitX + circuitY) * 0.4;
-            
-            // LED indicator dots
-            float ledPattern = step(0.98, sin(vWorldPosition.x * 30.0) * sin(vWorldPosition.y * 25.0) * sin(vWorldPosition.z * 35.0));
-            vec3 ledColor = vec3(0.0, 0.8, 1.0) * ledPattern * (sin(time * 5.0) * 0.5 + 1.0);
-            
-            // Digital noise overlay
-            float digitalNoise = noise(vWorldPosition * 12.0 + time * 2.0) * 0.1;
-            
-            // Holographic rim lighting
-            float rim = pow(1.0 - abs(dot(vNormal, normalize(vWorldPosition - cameraPosition))), 2.0);
-            vec3 hologram = vec3(0.0, 1.0, 1.0) * rim * 0.4;
-            
-            // AI status pulse
-            float aiPulse = sin(time * 4.0) * 0.15 + 0.85;
-            
-            // Combine all robotic effects
-            vec3 roboticOverlay = ledColor + hologram + vec3(panelLines + circuits + digitalNoise) * aiPulse;
-            diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb + roboticOverlay, 0.8);
-            
-            // Metallic sheen for robot surface
-            diffuseColor.rgb += vec3(0.1, 0.15, 0.2) * rim * 0.5;
-            `
-          )
-          
-          // Update time uniform
-          const updateTime = () => {
-            shader.uniforms.time.value = Date.now() * 0.001
-            requestAnimationFrame(updateTime)
-          }
-          updateTime()
-        }
-      } else if (options.addNoise) {
-        // Original organic texture
+      // Add basic texture (will be enhanced in animation loop)
+      if (options.addNoise) {
+        // Simple organic texture
         material.onBeforeCompile = (shader) => {
           shader.vertexShader = shader.vertexShader.replace(
             '#include <common>',
@@ -537,126 +445,33 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     const cephalothoraxGeometry = new THREE.SphereGeometry(0.5, 24, 20)
     cephalothoraxGeometry.scale(1.4, 1.0, 1.8) // More pronounced and robotic
     
-    // Add detailed surface modifications for robotic appearance
+    // Add detailed surface modifications
     const positions = cephalothoraxGeometry.attributes.position.array as Float32Array
     for (let i = 0; i < positions.length; i += 3) {
       const x = positions[i]
       const y = positions[i + 1]
       const z = positions[i + 2]
       
-      if (gameState.isRobotMode) {
-        // Robotic hexagonal plating pattern
-        const hexSize = 0.15
-        const hexX = Math.floor(x / hexSize) * hexSize
-        const hexY = Math.floor(y / hexSize) * hexSize
-        const hexZ = Math.floor(z / hexSize) * hexSize
-        
-        const hexOffset = ((Math.floor(x / hexSize) + Math.floor(y / hexSize) + Math.floor(z / hexSize)) % 2) * 0.02
-        const panelDepth = Math.sin(hexX * 25) * Math.cos(hexY * 20) * Math.sin(hexZ * 30) * 0.015
-        
-        positions[i] = x + hexOffset + panelDepth
-        positions[i + 1] = y + hexOffset + panelDepth * 0.5
-        positions[i + 2] = z + hexOffset + panelDepth
-      } else {
-        // Original organic bumps and ridges
-        const bump = Math.sin(x * 8) * Math.cos(y * 6) * Math.sin(z * 4) * 0.05
-        const ridge = Math.abs(Math.sin(z * 12)) * 0.03
-        
-        positions[i] = x + bump
-        positions[i + 1] = y + ridge
-        positions[i + 2] = z + bump * 0.5
-      }
+      // Add basic organic bumps and ridges
+      const bump = Math.sin(x * 8) * Math.cos(y * 6) * Math.sin(z * 4) * 0.05
+      const ridge = Math.abs(Math.sin(z * 12)) * 0.03
+      
+      positions[i] = x + bump
+      positions[i + 1] = y + ridge
+      positions[i + 2] = z + bump * 0.5
     }
     cephalothoraxGeometry.attributes.position.needsUpdate = true
     cephalothoraxGeometry.computeVertexNormals()
     
-    const cephalothoraxMaterial = createPrawnMaterial(
-      gameState.isRobotMode ? 0x6699cc : 0xd4844a, 
-      gameState.isRobotMode ? 0.15 : 0.35, 
-      gameState.isRobotMode ? 0.8 : 0.25, 
-      { addNoise: true }
-    )
+    const cephalothoraxMaterial = createPrawnMaterial(0xd4844a, 0.35, 0.25, { addNoise: true })
     const cephalothorax = new THREE.Mesh(cephalothoraxGeometry, cephalothoraxMaterial)
     cephalothorax.position.set(0, 0, 0.3)
     cephalothorax.castShadow = true
     cephalothorax.receiveShadow = true
     prawnGroup.add(cephalothorax)
     bodySegments.push(cephalothorax)
-    // Add robotic armor plates when in robot mode
-    if (gameState.isRobotMode) {
-      // Add main armor plate on the cephalothorax
-      const armorPlateGeometry = new THREE.BoxGeometry(1.2, 0.8, 1.4)
-      const armorPlatePositions = armorPlateGeometry.attributes.position.array as Float32Array
-      
-      // Add armor plate details
-      for (let i = 0; i < armorPlatePositions.length; i += 3) {
-        const x = armorPlatePositions[i]
-        const y = armorPlatePositions[i + 1]
-        const z = armorPlatePositions[i + 2]
-        
-        // Add beveled edges and panel lines
-        const bevel = Math.max(0, 0.05 - Math.sqrt(x*x + y*y) * 0.03)
-        const panelLine = Math.abs(Math.sin(x * 5)) * Math.abs(Math.sin(z * 5)) * 0.01
-        
-        armorPlatePositions[i] = x * (1 - bevel)
-        armorPlatePositions[i + 1] = y * (1 - bevel) + panelLine
-        armorPlatePositions[i + 2] = z * (1 - bevel)
-      }
-      
-      armorPlateGeometry.attributes.position.needsUpdate = true
-      armorPlateGeometry.computeVertexNormals()
-      
-      const armorPlateMaterial = new THREE.MeshStandardMaterial({
-        color: 0x334466,
-        roughness: 0.1,
-        metalness: 0.9,
-        transparent: true,
-        opacity: 0.8,
-        emissive: new THREE.Color(0x001122),
-        emissiveIntensity: 0.2
-      })
-      
-      const armorPlate = new THREE.Mesh(armorPlateGeometry, armorPlateMaterial)
-      armorPlate.position.set(0, 0.1, 0.3)
-      armorPlate.castShadow = true
-      prawnGroup.add(armorPlate)
-      
-      // Add LED status indicators
-      for (let i = 0; i < 6; i++) {
-        const ledGeometry = new THREE.SphereGeometry(0.03, 8, 6)
-        const ledMaterial = new THREE.MeshStandardMaterial({
-          color: 0x00ffcc,
-          emissive: new THREE.Color(0x00ffcc),
-          emissiveIntensity: 0.8,
-          transparent: true,
-          opacity: 0.9
-        })
-        
-        const led = new THREE.Mesh(ledGeometry, ledMaterial)
-        const angle = (i / 6) * Math.PI * 2
-        led.position.set(
-          Math.cos(angle) * 0.5,
-          0.3,
-          0.4 + Math.sin(angle) * 0.3
-        )
-        prawnGroup.add(led)
-      }
-      
-      // Add chest display panel
-      const displayGeometry = new THREE.PlaneGeometry(0.4, 0.2)
-      const displayMaterial = new THREE.MeshStandardMaterial({
-        color: 0x002244,
-        emissive: new THREE.Color(0x0066cc),
-        emissiveIntensity: 0.5,
-        transparent: true,
-        opacity: 0.8
-      })
-      
-      const display = new THREE.Mesh(displayGeometry, displayMaterial)
-      display.position.set(0, 0, 0.9)
-      display.rotation.x = -0.2
-      prawnGroup.add(display)
-    }
+    
+    // Robot armor will be added dynamically in animation loop when isRobotMode is true
 
     // Abdomen segments (6 segments like real prawns) - enhanced realism
     for (let i = 0; i < 6; i++) {
@@ -734,70 +549,46 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       const y = eyeStalkPositions[i + 1]
       const z = eyeStalkPositions[i + 2]
       
-      if (gameState.isRobotMode) {
-        // Robotic servo joints
-        const joint = Math.abs(y) > 0.1 ? Math.sin(y * 15) * 0.015 : 0
-        eyeStalkPositions[i] = x + joint
-        eyeStalkPositions[i + 2] = z + joint
-      } else {
-        // Organic texture
-        const texture = Math.sin(y * 20) * Math.cos(Math.atan2(z, x) * 8) * 0.008
-        eyeStalkPositions[i] = x + texture
-        eyeStalkPositions[i + 2] = z + texture
-      }
+      // Organic texture
+      const texture = Math.sin(y * 20) * Math.cos(Math.atan2(z, x) * 8) * 0.008
+      eyeStalkPositions[i] = x + texture
+      eyeStalkPositions[i + 2] = z + texture
     }
     eyeStalkGeometry.attributes.position.needsUpdate = true
     eyeStalkGeometry.computeVertexNormals()
     
     const eyeGeometry = new THREE.SphereGeometry(0.14, 20, 16)
     
-    // Create compound eye texture or robotic camera
+    // Create compound eye texture
     const eyePositions = eyeGeometry.attributes.position.array as Float32Array
     for (let i = 0; i < eyePositions.length; i += 3) {
       const x = eyePositions[i]
       const y = eyePositions[i + 1]
       const z = eyePositions[i + 2]
       
-      if (gameState.isRobotMode) {
-        // Robotic camera lens with focusing rings
-        const angle = Math.atan2(y, x)
-        const radius = Math.sqrt(x*x + y*y)
-        const rings = Math.sin(radius * 25) * 0.01
-        const lensPattern = Math.sin(angle * 12) * 0.005
-        
-        eyePositions[i] = x + rings + lensPattern
-        eyePositions[i + 1] = y + rings + lensPattern
-        eyePositions[i + 2] = z + rings
-      } else {
-        // Create faceted compound eye surface
-        const facetX = Math.floor((Math.atan2(y, x) + Math.PI) / (Math.PI / 6))
-        const facetY = Math.floor((Math.acos(z / Math.sqrt(x*x + y*y + z*z)) + Math.PI) / (Math.PI / 6))
-        const facetOffset = ((facetX + facetY) % 2) * 0.01
-        
-        eyePositions[i] = x * (1 + facetOffset)
-        eyePositions[i + 1] = y * (1 + facetOffset)
-        eyePositions[i + 2] = z * (1 + facetOffset)
-      }
+      // Create faceted compound eye surface
+      const facetX = Math.floor((Math.atan2(y, x) + Math.PI) / (Math.PI / 6))
+      const facetY = Math.floor((Math.acos(z / Math.sqrt(x*x + y*y + z*z)) + Math.PI) / (Math.PI / 6))
+      const facetOffset = ((facetX + facetY) % 2) * 0.01
+      
+      eyePositions[i] = x * (1 + facetOffset)
+      eyePositions[i + 1] = y * (1 + facetOffset)
+      eyePositions[i + 2] = z * (1 + facetOffset)
     }
     eyeGeometry.attributes.position.needsUpdate = true
     eyeGeometry.computeVertexNormals()
     
-    const eyeStalkMaterial = createPrawnMaterial(
-      gameState.isRobotMode ? 0x4488cc : 0xff9966, 
-      gameState.isRobotMode ? 0.2 : 0.5, 
-      gameState.isRobotMode ? 0.7 : 0.15, 
-      { addNoise: true }
-    )
+    const eyeStalkMaterial = createPrawnMaterial(0xff9966, 0.5, 0.15, { addNoise: true })
     
     const eyeMaterial = new THREE.MeshStandardMaterial({
-      color: gameState.isRobotMode ? 0x00ffcc : 0x1a0f0a,
-      roughness: gameState.isRobotMode ? 0.02 : 0.05,
-      metalness: gameState.isRobotMode ? 0.95 : 0.9,
+      color: 0x1a0f0a,
+      roughness: 0.05,
+      metalness: 0.9,
       transparent: true,
       opacity: 0.95,
-      envMapIntensity: gameState.isRobotMode ? 3 : 2,
-      emissive: gameState.isRobotMode ? new THREE.Color(0x0088ff) : new THREE.Color(0x000000),
-      emissiveIntensity: gameState.isRobotMode ? 0.3 : 0
+      envMapIntensity: 2,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0
     })
 
     const leftEyeStalk = new THREE.Mesh(eyeStalkGeometry, eyeStalkMaterial)
@@ -1627,6 +1418,26 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }
         }
 
+        // Update materials based on robot mode
+        const isRobotMode = gameState.isRobotMode
+        bodySegments.forEach((segment: THREE.Mesh) => {
+          if (segment.material instanceof THREE.MeshStandardMaterial) {
+            if (isRobotMode) {
+              segment.material.color.setHex(0x6699cc)
+              segment.material.roughness = 0.15
+              segment.material.metalness = 0.8
+              segment.material.emissive.setHex(0x0066cc)
+              segment.material.emissiveIntensity = 0.2
+            } else {
+              segment.material.color.setHex(0xd4844a)
+              segment.material.roughness = 0.35
+              segment.material.metalness = 0.25
+              segment.material.emissive.setHex(0x000000)
+              segment.material.emissiveIntensity = 0
+            }
+          }
+        })
+
         // Mood-based overall scaling with robotic effects
         const moodScale = gameState.prawnMood === 'excited' ? 1.05 : 
                           gameState.prawnMood === 'swimming' ? 1.02 : 
@@ -1765,7 +1576,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       }
       renderer.dispose()
     }
-  }, [audioEnabled, playRippleSound, playAmbientSound, gameState.prawnMood])
+  }, [audioEnabled, playRippleSound, playAmbientSound, gameState.prawnMood, gameState.isRobotMode])
 
   const handleClick = async (event: React.MouseEvent) => {
     // Enable audio on first user interaction
@@ -2124,12 +1935,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                       </div>
                       
                       {/* ChefBot-2000 Notes */}
-                      {recipeData.chefbotNotes && (
+                      {generatedRecipe && generatedRecipe.chefbotNotes && (
                         <div className="col-span-1 md:col-span-2 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                           <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-2">
                             🤖 ChefBot-2000 Коментарі:
                           </h4>
-                          <p className="text-sm text-blue-600 italic">"{recipeData.chefbotNotes}"</p>
+                          <p className="text-sm text-blue-600 italic">"{generatedRecipe.chefbotNotes}"</p>
                         </div>
                       )}
                     </div>
