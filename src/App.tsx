@@ -11,11 +11,13 @@ import { RecipesSection } from '@/components/RecipesSection'
 import { ReviewsSection } from '@/components/ReviewsSection'
 import { ContactSection } from '@/components/ContactSection'
 import { AdminDashboard } from '@/components/AdminDashboard'
+import { useAudio } from '@/hooks/useAudio'
 
 function App() {
   const [currentSection, setCurrentSection] = useState<string>('hero')
   const [menuVisible, setMenuVisible] = useState(false)
   const [show3D, setShow3D] = useState(true)
+  const { playSwooshSound } = useAudio()
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -31,6 +33,7 @@ function App() {
   }
 
   const handleBackToHero = () => {
+    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
     setCurrentSection('hero')
     setShow3D(true)
   }

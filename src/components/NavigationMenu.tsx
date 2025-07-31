@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe, GearSix } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
 interface NavigationMenuProps {
@@ -11,6 +12,7 @@ interface NavigationMenuProps {
 
 export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMenuProps) {
   const { language, setLanguage, t } = useLanguage()
+  const { playClickSound, playBubbleSound } = useAudio()
 
   const menuItems = [
     { key: 'hero', icon: Fish, label: t('nav.home') },
@@ -143,7 +145,9 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                         variant="outline"
                         size="lg"
                         className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-lg hover:shadow-xl"
+                        onMouseEnter={() => playBubbleSound({ volume: 0.15, playbackRate: 1.3 + Math.random() * 0.4 })}
                         onClick={() => {
+                          playClickSound({ volume: 0.4, playbackRate: 1.1 })
                           onNavigate(item.key)
                           onClose()
                         }}
@@ -169,7 +173,10 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                     variant={language === 'uk' ? 'default' : 'ghost'}
                     size="sm"
                     className="rounded-full"
-                    onClick={() => setLanguage('uk')}
+                    onClick={() => {
+                      playClickSound({ volume: 0.3, playbackRate: 1.2 })
+                      setLanguage('uk')
+                    }}
                   >
                     УК
                   </Button>
@@ -177,7 +184,10 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                     variant={language === 'en' ? 'default' : 'ghost'}
                     size="sm"
                     className="rounded-full"
-                    onClick={() => setLanguage('en')}
+                    onClick={() => {
+                      playClickSound({ volume: 0.3, playbackRate: 1.2 })
+                      setLanguage('en')
+                    }}
                   >
                     EN
                   </Button>

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import * as THREE from 'three'
 import { motion } from 'framer-motion'
+import { useAudio } from '@/hooks/useAudio'
 
 interface PrawnVisualizationProps {
   onMenuToggle: (show: boolean) => void
@@ -15,8 +16,20 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
   const frameRef = useRef<number | null>(null)
   const prawnGroupRef = useRef<THREE.Group | null>(null)
   const mouseRef = useRef({ x: 0, y: 0 })
+  const ambientSoundRef = useRef<{ stop: () => void } | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  
+  // Audio hook for sound effects
+  const { 
+    playBubbleSound, 
+    playRippleSound, 
+    playClickSound, 
+    playSwooshSound,
+    playAmbientSound,
+    resumeAudioContext 
+  } = useAudio()
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -156,8 +169,16 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     // Mouse interaction
     const handleMouseMove = (event: MouseEvent) => {
       if (!mounted) return
-      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
+      const newX = (event.clientX / window.innerWidth) * 2 - 1
+      const newY = -(event.clientY / window.innerHeight) * 2 + 1
+      
+      // Play ripple sound on significant mouse movement when audio is enabled
+      if (audioEnabled && (Math.abs(newX - mouseRef.current.x) > 0.1 || Math.abs(newY - mouseRef.current.y) > 0.1)) {
+        playRippleSound({ volume: 0.1, playbackRate: 0.8 + Math.random() * 0.4 })
+      }
+      
+      mouseRef.current.x = newX
+      mouseRef.current.y = newY
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -204,6 +225,13 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       setIsLoaded(true)
     }
 
+    // Initialize ambient sound after a delay
+    setTimeout(() => {
+      if (mounted && audioEnabled) {
+        ambientSoundRef.current = playAmbientSound({ volume: 0.05, loop: true })
+      }
+    }, 2000)
+
     // Cleanup
     return () => {
       mounted = false
@@ -212,14 +240,23 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
       }
+      if (ambientSoundRef.current) {
+        ambientSoundRef.current.stop()
+      }
       if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement)
       }
       renderer.dispose()
     }
-  }, [])
+  }, [audioEnabled, playRippleSound, playAmbientSound])
 
-  const handleClick = (event: React.MouseEvent) => {
+  const handleClick = async (event: React.MouseEvent) => {
+    // Enable audio on first user interaction
+    if (!audioEnabled) {
+      await resumeAudioContext()
+      setAudioEnabled(true)
+    }
+
     const rect = (event.target as HTMLElement).getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
@@ -231,11 +268,25 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     
     if (distance < 150) {
       // Click on prawn - toggle menu
+      playClickSound({ volume: 0.5, playbackRate: 1.2 })
+      playBubbleSound({ volume: 0.4, playbackRate: 1 + Math.random() * 0.3 })
       onMenuToggle(!menuVisible)
     } else {
       // Click on background - navigate to main site
+      playSwooshSound({ volume: 0.3, playbackRate: 1.1 })
       onNavigateToSite?.()
     }
+  }
+
+  const handleMouseEnter = () => {
+    setIsHovered(true)
+    if (audioEnabled) {
+      playBubbleSound({ volume: 0.2, playbackRate: 1.5 })
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovered(false)
   }
 
   return (
@@ -243,8 +294,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       <div 
         ref={mountRef} 
         className="w-full h-full cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         onClick={handleClick}
       />
       
@@ -277,7 +328,48 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         </div>
       </motion.div>
 
-      {/* Menu button indicator */}
+      {/* Audio toggle button */}
+      <motion.button
+        onClick={async () => {
+          if (!audioEnabled) {
+            await resumeAudioContext()
+            setAudioEnabled(true)
+            playClickSound({ volume: 0.3 })
+          } else {
+            setAudioEnabled(false)
+            if (ambientSoundRef.current) {
+              ambientSoundRef.current.stop()
+              ambientSoundRef.current = null
+            }
+          }
+        }}
+        className="absolute top-8 right-20 bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/20 text-white hover:bg-white/20 transition-all duration-300"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
+        transition={{ delay: 2.5 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {audioEnabled ? (
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        )}
+      </motion.button>
+
+      {/* Audio indicator tooltip */}
+      <motion.div
+        className="absolute top-20 right-16 bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-sm pointer-events-none"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: audioEnabled ? 0 : 1, y: audioEnabled ? -10 : 0 }}
+        transition={{ delay: 3 }}
+      >
+        Натисніть для увімкнення звуку
+      </motion.div>
       <motion.div 
         className="absolute top-8 right-8 text-white pointer-events-none"
         initial={{ opacity: 0, scale: 0.8 }}
