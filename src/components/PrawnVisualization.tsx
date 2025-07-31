@@ -30,6 +30,11 @@ interface GameState {
   trajectoryPoints: number
   currentQuestion: number
   lives: number
+  comboCount: number
+  comboMultiplier: number
+  maxCombo: number
+  lastTrickTime: number
+  comboTimeWindow: number
 }
 
 interface TrajectoryPoint {
@@ -68,8 +73,10 @@ interface ParticleEffect {
   maxLife: number
   size: number
   color: string
-  type: 'spark' | 'bubble' | 'glitter' | 'trail'
+  type: 'spark' | 'bubble' | 'glitter' | 'trail' | 'combo' | 'explosion'
   timestamp: number
+  intensity?: number
+  comboLevel?: number
 }
 
 interface Recipe {
@@ -110,7 +117,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     hasAI: false,
     trajectoryPoints: 0,
     currentQuestion: 0,
-    lives: 1
+    lives: 1,
+    comboCount: 0,
+    comboMultiplier: 1,
+    maxCombo: 0,
+    lastTrickTime: 0,
+    comboTimeWindow: 5000 // 5 seconds to maintain combo
   })
 
   // Trajectory drawing state
@@ -201,8 +213,149 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     swimIntensity: 1
   })
   
-  // Game mechanics
-  const startCookingGame = () => {
+  // Combo effect functions
+  const createComboExplosion = (x: number, y: number, comboLevel: number) => {
+    const comboParticles: ParticleEffect[] = []
+    const particleCount = Math.min(50, 15 + comboLevel * 8) // More particles for higher combos
+    
+    // Combo colors based on level
+    const comboColors = [
+      '#fbbf24', // Gold - 2x combo
+      '#f97316', // Orange - 3x combo
+      '#ef4444', // Red - 4x combo
+      '#8b5cf6', // Purple - 5x combo
+      '#06b6d4', // Cyan - 6x combo
+      '#10b981', // Green - 7x combo
+      '#f59e0b', // Amber - 8x combo
+      '#ec4899', // Pink - 9x combo
+      '#6366f1', // Indigo - 10x combo
+      '#ffffff'  // White - max combo
+    ]
+    
+    const comboColor = comboColors[Math.min(comboLevel - 2, comboColors.length - 1)]
+    
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount
+      const radius = comboLevel * 3 + Math.random() * 20
+      const speed = comboLevel * 1.5 + Math.random() * 5 + 3
+      
+      comboParticles.push({
+        x: x + Math.cos(angle) * (Math.random() * 20),
+        y: y + Math.sin(angle) * (Math.random() * 20),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        maxLife: 1500 + comboLevel * 200, // Longer lasting for higher combos
+        size: Math.random() * (3 + comboLevel) + 2,
+        color: comboColor,
+        type: 'combo',
+        timestamp: Date.now(),
+        intensity: comboLevel / 10,
+        comboLevel: comboLevel
+      })
+    }
+    
+    // Add central explosion effect
+    for (let i = 0; i < comboLevel; i++) {
+      comboParticles.push({
+        x: x + (Math.random() - 0.5) * 30,
+        y: y + (Math.random() - 0.5) * 30,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        life: 1,
+        maxLife: 2000,
+        size: Math.random() * 8 + 5,
+        color: '#ffffff',
+        type: 'explosion',
+        timestamp: Date.now(),
+        intensity: 1,
+        comboLevel: comboLevel
+      })
+    }
+    
+    setParticleEffects(prev => [...prev, ...comboParticles])
+    
+    // Create combo wave effect
+    const comboWave: WaveEffect = {
+      x,
+      y,
+      radius: 0,
+      maxRadius: 60 + comboLevel * 15,
+      opacity: 0.9,
+      timestamp: Date.now(),
+      color: comboColor,
+      intensity: comboLevel / 5
+    }
+    setWaveEffects(prev => [...prev, comboWave])
+  }
+  
+  const checkComboStatus = (currentTime: number): boolean => {
+    const timeSinceLastTrick = currentTime - gameState.lastTrickTime
+    return timeSinceLastTrick <= gameState.comboTimeWindow
+  }
+  
+  const updateCombo = (trickScore: number): number => {
+    const currentTime = Date.now()
+    let newComboCount = 1
+    let newComboMultiplier = 1
+    let finalScore = trickScore
+    
+    if (checkComboStatus(currentTime) && gameState.comboCount > 0) {
+      // Continue combo
+      newComboCount = gameState.comboCount + 1
+      newComboMultiplier = Math.min(10, Math.floor(newComboCount / 2) + 1) // 2x at combo 2, 3x at combo 4, etc., max 10x
+      finalScore = Math.round(trickScore * newComboMultiplier)
+      
+      // Create combo explosion effect
+      const canvas = canvasRef.current
+      if (canvas) {
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
+        createComboExplosion(centerX, centerY, newComboCount)
+      }
+      
+      // Play combo sound effect
+      if (newComboCount >= 3) {
+        playClickSound({ volume: 0.6 + (newComboCount * 0.1), playbackRate: 1.0 + (newComboCount * 0.1) })
+      }
+      if (newComboCount >= 5) {
+        playBubbleSound({ volume: 0.8, playbackRate: 1.5 + (newComboCount * 0.1) })
+      }
+      if (newComboCount >= 8) {
+        playRippleSound({ volume: 0.9, playbackRate: 2.0 })
+      }
+      
+      // Show combo notification
+      const comboTexts = [
+        '', '', // No text for combo 1-2
+        '🔥 КОМБО!', '⚡ СУПЕР КОМБО!', '🌟 МЕГА КОМБО!', 
+        '💫 УЛЬТРА КОМБО!', '🎆 КОСМО КОМБО!', '🌈 ЛЕГЕНДАРНИЙ КОМБО!',
+        '👑 МАЙСТЕР КОМБО!', '🔮 НЕМОЖЛИВИЙ КОМБО!'
+      ]
+      
+      const comboText = comboTexts[Math.min(newComboCount, comboTexts.length - 1)]
+      if (comboText) {
+        toast.success(`${comboText} x${newComboMultiplier} | ${trickScore} → ${finalScore} балів!`)
+      }
+      
+    } else {
+      // Reset combo
+      newComboCount = 1
+      newComboMultiplier = 1
+      finalScore = trickScore
+    }
+    
+    // Update game state
+    setGameState(prev => ({
+      ...prev,
+      comboCount: newComboCount,
+      comboMultiplier: newComboMultiplier,
+      maxCombo: Math.max(prev.maxCombo, newComboCount),
+      lastTrickTime: currentTime
+    }))
+    
+    return finalScore
+  }
     if (!audioEnabled) return
     
     setGameState(prev => ({ 
@@ -491,7 +644,11 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       correctAnswers: 0,
       lives: 1,
       prawnMood: 'calm',
-      isRobotMode: false
+      isRobotMode: false,
+      comboCount: 0,
+      comboMultiplier: 1,
+      maxCombo: 0,
+      lastTrickTime: 0
     }))
     setTrajectoryHistory([])
     setCurrentPath([])
@@ -664,12 +821,15 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       return
     }
     
-    // Award points
-    const newScore = gameState.score + totalScore
+    // Award points with combo system
+    const baseScore = totalScore
+    const finalScore = updateCombo(baseScore)
+    const newTotalScore = gameState.score + finalScore
+    
     setGameState(prev => ({ 
       ...prev, 
-      score: newScore,
-      trajectoryPoints: prev.trajectoryPoints + totalScore,
+      score: newTotalScore,
+      trajectoryPoints: prev.trajectoryPoints + finalScore,
       prawnMood: 'excited'
     }))
     
@@ -679,10 +839,13 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     pathRef.current = []
     
     playClickSound({ volume: 0.4, playbackRate: 1.4 })
-    toast.success(`🎯 Трюк оцінено на ${totalScore} балів! (Складність: ${(complexityScore * 10).toFixed(1)}/10, Природність: ${(naturalnessScore * 10).toFixed(1)}/10)`)
+    
+    // Enhanced toast with combo information
+    const comboText = gameState.comboCount > 1 ? ` | КОМБО x${gameState.comboMultiplier}!` : ''
+    toast.success(`🎯 Трюк: ${baseScore} балів → ${finalScore} балів${comboText} (Складність: ${(complexityScore * 10).toFixed(1)}/10, Природність: ${(naturalnessScore * 10).toFixed(1)}/10)`)
     
     // Check if ready for quiz phase
-    if (newScore >= 100) {
+    if (newTotalScore >= 100) {
       setTimeout(() => {
         setGameState(prev => ({ ...prev, gamePhase: 'quiz', prawnMood: 'thinking' }))
         generateQuestion()
@@ -767,7 +930,11 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       correctAnswers: 0,
       trajectoryPoints: 0,
       currentQuestion: 0,
-      lives: 1
+      lives: 1,
+      comboCount: 0,
+      comboMultiplier: 1,
+      maxCombo: 0,
+      lastTrickTime: 0
     }))
     setShowGameUI(false)
     setCurrentPath([])
@@ -823,7 +990,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         }, 2000)
       }
     } else {
-      // Wrong answer - reset everything
+      // Wrong answer - reset everything including combo
       setGameState(prev => ({ 
         ...prev, 
         prawnMood: 'dead',
@@ -831,7 +998,10 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         correctAnswers: 0,
         trajectoryPoints: 0,
         currentQuestion: 0,
-        lives: 0
+        lives: 0,
+        comboCount: 0,
+        comboMultiplier: 1,
+        lastTrickTime: 0
       }))
       playRippleSound({ volume: 0.4, playbackRate: 0.8 })
       toast.error("❌ Неправильно! ChefBot-2000 вимкнувся. Всі бали згоріли!")
@@ -957,7 +1127,31 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     resumeAudioContext 
   } = useAudio()
 
+  // Use effect to check combo timer expiration
   useEffect(() => {
+    if (gameState.gamePhase === 'trajectory' && gameState.comboCount > 0) {
+      const checkComboExpiration = () => {
+        const currentTime = Date.now()
+        const timeSinceLastTrick = currentTime - gameState.lastTrickTime
+        
+        if (timeSinceLastTrick > gameState.comboTimeWindow) {
+          // Combo expired
+          setGameState(prev => ({
+            ...prev,
+            comboCount: 0,
+            comboMultiplier: 1
+          }))
+          
+          if (gameState.comboCount >= 3) {
+            toast.info(`💔 Комбо втрачено! Останній рекорд: ${gameState.comboCount} трюків`)
+          }
+        }
+      }
+      
+      const interval = setInterval(checkComboExpiration, 100) // Check every 100ms
+      return () => clearInterval(interval)
+    }
+  }, [gameState.gamePhase, gameState.comboCount, gameState.lastTrickTime, gameState.comboTimeWindow])
     if (!mountRef.current) return
 
     let mounted = true
@@ -2417,6 +2611,91 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
               ctx.fill()
               break
               
+            case 'combo':
+              // Draw combo particles as bright pulsing stars
+              const comboAlpha = alpha * (0.8 + Math.sin(currentTime * 0.02) * 0.2)
+              const comboSize = particle.size * (1 + Math.sin(currentTime * 0.015) * 0.3)
+              const comboLevel = particle.comboLevel || 1
+              
+              // Create gradient for combo effect
+              const gradient = ctx.createRadialGradient(
+                particle.x, particle.y, 0,
+                particle.x, particle.y, comboSize * 2
+              )
+              gradient.addColorStop(0, particle.color.replace('rgb', 'rgba').replace(')', `, ${comboAlpha})`))
+              gradient.addColorStop(0.5, particle.color.replace('rgb', 'rgba').replace(')', `, ${comboAlpha * 0.6})`))
+              gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+              
+              ctx.fillStyle = gradient
+              ctx.shadowColor = particle.color
+              ctx.shadowBlur = 15 + comboLevel * 2
+              
+              // Draw multi-pointed star
+              const points = 8 + comboLevel
+              ctx.beginPath()
+              for (let i = 0; i < points * 2; i++) {
+                const angle = (Math.PI * i) / points
+                const radius = i % 2 === 0 ? comboSize : comboSize * 0.5
+                const x = particle.x + Math.cos(angle) * radius
+                const y = particle.y + Math.sin(angle) * radius
+                if (i === 0) ctx.moveTo(x, y)
+                else ctx.lineTo(x, y)
+              }
+              ctx.closePath()
+              ctx.fill()
+              
+              // Add inner bright core
+              ctx.fillStyle = `rgba(255, 255, 255, ${comboAlpha * 0.9})`
+              ctx.shadowBlur = 5
+              ctx.beginPath()
+              ctx.arc(particle.x, particle.y, comboSize * 0.3, 0, Math.PI * 2)
+              ctx.fill()
+              break
+              
+            case 'explosion':
+              // Draw explosion particles as expanding energy balls
+              const explosionSize = particle.size * (2 - alpha) // Grow as they fade
+              const explosionAlpha = alpha * 0.9
+              
+              // Outer explosion ring
+              ctx.fillStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${explosionAlpha * 0.3})`)
+              ctx.shadowColor = particle.color
+              ctx.shadowBlur = 20
+              ctx.beginPath()
+              ctx.arc(particle.x, particle.y, explosionSize * 1.5, 0, Math.PI * 2)
+              ctx.fill()
+              
+              // Inner explosion core
+              ctx.fillStyle = `rgba(255, 255, 255, ${explosionAlpha})`
+              ctx.shadowBlur = 10
+              ctx.beginPath()
+              ctx.arc(particle.x, particle.y, explosionSize, 0, Math.PI * 2)
+              ctx.fill()
+              
+              // Lightning-like spikes
+              if (particle.comboLevel && particle.comboLevel > 3) {
+                const spikes = 6
+                ctx.strokeStyle = `rgba(255, 255, 255, ${explosionAlpha * 0.8})`
+                ctx.lineWidth = 3
+                ctx.shadowBlur = 8
+                for (let i = 0; i < spikes; i++) {
+                  const angle = (Math.PI * 2 * i) / spikes
+                  const startRadius = explosionSize * 0.5
+                  const endRadius = explosionSize * 2
+                  ctx.beginPath()
+                  ctx.moveTo(
+                    particle.x + Math.cos(angle) * startRadius,
+                    particle.y + Math.sin(angle) * startRadius
+                  )
+                  ctx.lineTo(
+                    particle.x + Math.cos(angle) * endRadius,
+                    particle.y + Math.sin(angle) * endRadius
+                  )
+                  ctx.stroke()
+                }
+              }
+              break
+              
             case 'trail':
               // Draw trail as a fading line
               ctx.strokeStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha})`)
@@ -2639,7 +2918,15 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             <div className="text-xs text-green-300 mt-1 space-y-1">
               <p>🎯 Загальний рахунок: {gameState.score}</p>
               {gameState.gamePhase === 'trajectory' && (
-                <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+                <>
+                  <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+                  {gameState.comboCount > 1 && (
+                    <p className="text-yellow-300 font-bold">🔥 КОМБО x{gameState.comboMultiplier} ({gameState.comboCount} трюків)</p>
+                  )}
+                  {gameState.maxCombo > 1 && (
+                    <p className="text-purple-300">👑 Макс комбо: {gameState.maxCombo}</p>
+                  )}
+                </>
               )}
               {gameState.gamePhase === 'quiz' && (
                 <p>🧠 Питання: {gameState.correctAnswers}/4 ({gameState.currentQuestion + 1} питання)</p>
@@ -2703,11 +2990,18 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-xs opacity-80">• Складність і природність = бали (макс. 10 за трюк)</p>
           <p className="text-xs opacity-80">• Надприродний рух = смерть креветки ❌</p>
           <p className="text-xs opacity-80">• Потрібно 100 балів для доступу до питань</p>
-          <p className="text-xs opacity-80 mt-1">✨ Нові ефекти: хвилі, іскри, бульбашки, сяйво!</p>
+          <p className="text-xs opacity-80 font-bold text-yellow-200">• КОМБО: послідовні трюки протягом 5 сек = множник балів!</p>
+          <p className="text-xs opacity-80 mt-1">✨ Нові ефекти: хвилі, іскри, бульбашки, сяйво + комбо вибухи!</p>
           
           <div className="mt-3 text-xs bg-white/20 rounded-lg p-2">
             <p>🎯 Поточний рахунок: {gameState.score}/100 балів</p>
             <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+            {gameState.comboCount > 1 && (
+              <p className="text-yellow-200 font-bold">🔥 АКТИВНИЙ КОМБО x{gameState.comboMultiplier} ({gameState.comboCount} трюків)</p>
+            )}
+            {gameState.maxCombo > 1 && (
+              <p className="text-purple-200">👑 Рекорд комбо: {gameState.maxCombo} трюків</p>
+            )}
             <p>🌊 Активних хвиль: {waveEffects.length}</p>
             <p>✨ Активних частинок: {particleEffects.length}</p>
           </div>
@@ -2834,6 +3128,18 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                           <p className="text-xs text-purple-700">• Різкі повороти генерують іскри ⚡</p>
                           <p className="text-xs text-purple-700">• Кольорові хвилі та бульбашки 🌊</p>
                           <p className="text-xs text-purple-700">• Сяючі діаманти та зірки ✨</p>
+                        </div>
+                        
+                        <div className="mt-3 p-3 bg-gradient-to-r from-yellow-100 to-orange-100 rounded border border-yellow-300">
+                          <p className="text-xs font-medium text-yellow-800 mb-2">🔥 СИСТЕМА КОМБО:</p>
+                          <p className="text-xs text-yellow-700">• Виконуйте трюки протягом 5 секунд один за одним</p>
+                          <p className="text-xs text-yellow-700">• Кожен 2-й трюк збільшує множник</p>
+                          <p className="text-xs text-yellow-700">• Комбо 2-3: x2, комбо 4-5: x3, і так далі</p>
+                          <p className="text-xs text-yellow-700">• Максимальний множник: x10</p>
+                          <p className="text-xs text-yellow-700">• Спеціальні ефекти вибухів для високих комбо!</p>
+                          <div className="mt-2 text-xs text-orange-700 bg-orange-50 p-1 rounded">
+                            <span className="font-medium">Рекорди:</span> 3+ комбо = 💫 | 6+ комбо = 🌈 | 9+ комбо = 🔮
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -3208,6 +3514,51 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         </motion.button>
       )}
 
+      {/* Combo Timer Display */}
+      {gameState.gamePhase === 'trajectory' && gameState.comboCount > 0 && (
+        <motion.div
+          className="absolute top-8 right-1/2 transform translate-x-1/2 bg-gradient-to-r from-yellow-500/90 to-orange-500/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-yellow-300/50 text-white text-center z-30"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🔥</span>
+            <div>
+              <p className="text-sm font-bold">КОМБО x{gameState.comboMultiplier}</p>
+              <p className="text-xs">{gameState.comboCount} трюків підряд</p>
+            </div>
+            <div className="w-12 h-12 relative">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeDasharray={`${Math.max(0, 100 - ((Date.now() - gameState.lastTrickTime) / gameState.comboTimeWindow) * 100)}, 100`}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-bold">
+                  {Math.max(0, Math.ceil((gameState.comboTimeWindow - (Date.now() - gameState.lastTrickTime)) / 1000))}
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Trajectory Progress Indicator */}
       {gameState.gamePhase === 'trajectory' && (
         <motion.div
@@ -3405,6 +3756,32 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
               <p className="text-xs">⚙️ ChefBot-2000 ШІ</p>
             </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Combo Achievement Notifications */}
+      {gameState.comboCount > 0 && gameState.comboCount % 3 === 0 && (
+        <motion.div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
+          initial={{ scale: 0, opacity: 0, rotate: -180 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          exit={{ scale: 0, opacity: 0, rotate: 180 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
+          <div className="bg-gradient-to-r from-purple-500/95 to-pink-500/95 backdrop-blur-sm rounded-lg px-8 py-6 border-2 border-white text-white text-center shadow-2xl">
+            <div className="text-4xl mb-2">
+              {gameState.comboCount >= 9 ? '🔮' : 
+               gameState.comboCount >= 6 ? '🌈' : 
+               gameState.comboCount >= 3 ? '💫' : '🔥'}
+            </div>
+            <p className="text-xl font-bold">
+              {gameState.comboCount >= 9 ? 'НЕМОЖЛИВИЙ КОМБО!' :
+               gameState.comboCount >= 6 ? 'ЛЕГЕНДАРНИЙ КОМБО!' :
+               gameState.comboCount >= 3 ? 'МЕГА КОМБО!' : 'СУПЕР КОМБО!'}
+            </p>
+            <p className="text-lg mt-1">x{gameState.comboMultiplier} множник</p>
+            <p className="text-sm opacity-90 mt-1">{gameState.comboCount} трюків підряд!</p>
           </div>
         </motion.div>
       )}
