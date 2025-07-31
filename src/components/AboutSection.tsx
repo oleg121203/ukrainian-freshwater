@@ -119,27 +119,48 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-8">
-                  <div className="text-5xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    {language === 'uk' ? feature.title_uk : feature.title_en}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {language === 'uk' ? feature.description_uk : feature.description_en}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          {features.map((feature, index) => {
+            // Map feature to navigation sections
+            const getFeatureNavigation = (featureIndex: number) => {
+              switch(featureIndex) {
+                case 0: return 'eco-farming'
+                case 1: return 'technology'
+                case 2: return 'delivery'
+                case 3: return 'professional'
+                default: return 'about'
+              }
+            }
+
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card 
+                  className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary/50"
+                  onClick={() => onNavigate?.(getFeatureNavigation(index))}
+                >
+                  <CardContent className="p-8">
+                    <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
+                      {language === 'uk' ? feature.title_uk : feature.title_en}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed mb-4">
+                      {language === 'uk' ? feature.description_uk : feature.description_en}
+                    </p>
+                    <div className="flex items-center text-primary text-sm font-medium group-hover:text-primary-foreground group-hover:bg-primary px-3 py-1 rounded-full transition-all duration-300 w-fit">
+                      {language === 'uk' ? 'Дізнатися більше' : 'Learn more'} <ArrowRight size={16} className="ml-1" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </div>
 
         {/* Navigation Cards */}

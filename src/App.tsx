@@ -11,6 +11,10 @@ import { RecipesSection } from '@/components/RecipesSection'
 import { ReviewsSection } from '@/components/ReviewsSection'
 import { ContactSection } from '@/components/ContactSection'
 import { AdminDashboard } from '@/components/AdminDashboard'
+import { EcoFarmingSection } from '@/components/EcoFarmingSection'
+import { TechnologySection } from '@/components/TechnologySection'
+import { DeliverySection } from '@/components/DeliverySection'
+import { ProfessionalSection } from '@/components/ProfessionalSection'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
@@ -22,7 +26,7 @@ function App() {
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
-  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin']
+  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional']
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -66,6 +70,14 @@ function App() {
         return <ContactSection onNavigate={handleNavigate} />
       case 'admin':
         return <AdminDashboard />
+      case 'eco-farming':
+        return <EcoFarmingSection onNavigate={handleNavigate} />
+      case 'technology':
+        return <TechnologySection onNavigate={handleNavigate} />
+      case 'delivery':
+        return <DeliverySection onNavigate={handleNavigate} />
+      case 'professional':
+        return <ProfessionalSection onNavigate={handleNavigate} />
       default:
         return <HeroSection onNavigate={handleNavigate} />
     }
@@ -82,17 +94,29 @@ function App() {
             <p className="text-xs mb-2">3D: {show3D ? 'Yes' : 'No'}</p>
             <p className="text-xs mb-3">Menu: {menuVisible ? 'Open' : 'Closed'}</p>
             <div className="grid grid-cols-2 gap-1">
-              {allSections.map(section => (
-                <Button
-                  key={section}
-                  size="sm"
-                  variant={currentSection === section ? "default" : "outline"}
-                  className="text-xs h-6"
-                  onClick={() => handleNavigate(section)}
-                >
-                  {section}
-                </Button>
-              ))}
+              {allSections.map(section => {
+                const getSectionLabel = (sectionName: string) => {
+                  switch(sectionName) {
+                    case 'eco-farming': return 'Eco'
+                    case 'technology': return 'Tech'
+                    case 'delivery': return 'Ship'
+                    case 'professional': return 'Pro'
+                    default: return sectionName
+                  }
+                }
+                
+                return (
+                  <Button
+                    key={section}
+                    size="sm"
+                    variant={currentSection === section ? "default" : "outline"}
+                    className="text-xs h-6"
+                    onClick={() => handleNavigate(section)}
+                  >
+                    {getSectionLabel(section)}
+                  </Button>
+                )
+              })}
             </div>
             <Button
               size="sm"
