@@ -257,6 +257,13 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       setAudioEnabled(true)
     }
 
+    // Check if the menu is visible - if so, clicking anywhere should close it and navigate to site
+    if (menuVisible) {
+      playSwooshSound({ volume: 0.3, playbackRate: 1.1 })
+      onNavigateToSite?.()
+      return
+    }
+
     const rect = (event.target as HTMLElement).getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
@@ -266,7 +273,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     const centerY = rect.height / 2
     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
     
-    if (distance < 150) {
+    if (distance < 200) { // Increased detection area
       // Click on prawn - toggle menu
       playClickSound({ volume: 0.5, playbackRate: 1.2 })
       playBubbleSound({ volume: 0.4, playbackRate: 1 + Math.random() * 0.3 })
@@ -305,6 +312,20 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         <p className="text-lg opacity-75">Macrobrachium rosenbergii</p>
       </div>
       
+      {/* Enter site hint - only show when menu is NOT visible */}
+      {!menuVisible && isLoaded && (
+        <motion.div
+          className="absolute top-8 right-8 text-white/80 text-center pointer-events-none"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 2.5 }}
+        >
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+            <p className="text-sm font-medium">Натисніть тут для входу →</p>
+          </div>
+        </motion.div>
+      )}
+      
       {/* Loading overlay */}
       {!isLoaded && (
         <div className="absolute inset-0 bg-gradient-aqua/80 backdrop-blur-sm flex items-center justify-center">
@@ -324,7 +345,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/20">
           <p className="text-base font-medium">Рухайте мишкою для обертання креветки</p>
-          <p className="text-sm opacity-75 mt-1">Натисніть на креветку для меню • Натисніть на фон для входу на сайт</p>
+          <p className="text-sm opacity-75 mt-1">
+            {menuVisible 
+              ? "Натисніть будь-де для входу на сайт"
+              : "Натисніть на креветку для меню • Натисніть на фон для входу на сайт"
+            }
+          </p>
         </div>
       </motion.div>
 
@@ -370,23 +396,9 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       >
         Натисніть для увімкнення звуку
       </motion.div>
-      <motion.div 
-        className="absolute top-8 right-8 text-white pointer-events-none"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
-        transition={{ delay: 2 }}
-      >
-        <div className="bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/20">
-          <div className="w-6 h-6 flex flex-col justify-center space-y-1">
-            <div className="h-0.5 bg-white rounded"></div>
-            <div className="h-0.5 bg-white rounded"></div>
-            <div className="h-0.5 bg-white rounded"></div>
-          </div>
-        </div>
-      </motion.div>
 
       {/* Hover effect indicator */}
-      {isHovered && isLoaded && (
+      {isHovered && isLoaded && !menuVisible && (
         <motion.div
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           initial={{ scale: 0, opacity: 0 }}
@@ -394,8 +406,44 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
-          <div className="w-40 h-40 border-2 border-white/40 rounded-full animate-pulse">
-            <div className="w-32 h-32 border border-white/20 rounded-full m-4 animate-ping"></div>
+          <div className="w-80 h-80 border-2 border-white/40 rounded-full animate-pulse">
+            <div className="w-64 h-64 border border-white/20 rounded-full m-8 animate-ping"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <p className="text-white text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
+                Натисніть для меню
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+      
+      {/* Background click hint */}
+      {!menuVisible && isLoaded && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 0 : 0.3 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="absolute top-20 left-20 text-white/60 text-center">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <p className="text-xs">Клік для входу</p>
+            </div>
+          </div>
+          <div className="absolute top-20 right-20 text-white/60 text-center">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <p className="text-xs">Клік для входу</p>
+            </div>
+          </div>
+          <div className="absolute bottom-20 left-20 text-white/60 text-center">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <p className="text-xs">Клік для входу</p>
+            </div>
+          </div>
+          <div className="absolute bottom-20 right-20 text-white/60 text-center">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <p className="text-xs">Клік для входу</p>
+            </div>
           </div>
         </motion.div>
       )}

@@ -12,12 +12,17 @@ import { ReviewsSection } from '@/components/ReviewsSection'
 import { ContactSection } from '@/components/ContactSection'
 import { AdminDashboard } from '@/components/AdminDashboard'
 import { useAudio } from '@/hooks/useAudio'
+import { Button } from '@/components/ui/button'
 
 function App() {
   const [currentSection, setCurrentSection] = useState<string>('hero')
   const [menuVisible, setMenuVisible] = useState(false)
   const [show3D, setShow3D] = useState(true)
+  const [showDebug, setShowDebug] = useState(false)
   const { playSwooshSound } = useAudio()
+
+  // All available sections for debugging
+  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin']
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -39,6 +44,7 @@ function App() {
   }
 
   const handleNavigateToSite = () => {
+    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
     setCurrentSection('about') // Navigate to the about section as default entry point
     setShow3D(false)
     setMenuVisible(false)
@@ -68,6 +74,47 @@ function App() {
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-background text-foreground">
+        {/* Debug Navigation Panel */}
+        {showDebug && (
+          <div className="fixed top-4 left-4 z-50 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border max-w-xs">
+            <h3 className="text-sm font-bold mb-2">Debug Navigation</h3>
+            <p className="text-xs mb-2">Current: {currentSection}</p>
+            <p className="text-xs mb-2">3D: {show3D ? 'Yes' : 'No'}</p>
+            <p className="text-xs mb-3">Menu: {menuVisible ? 'Open' : 'Closed'}</p>
+            <div className="grid grid-cols-2 gap-1">
+              {allSections.map(section => (
+                <Button
+                  key={section}
+                  size="sm"
+                  variant={currentSection === section ? "default" : "outline"}
+                  className="text-xs h-6"
+                  onClick={() => handleNavigate(section)}
+                >
+                  {section}
+                </Button>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-2 text-xs h-6"
+              onClick={() => setShowDebug(false)}
+            >
+              Hide Debug
+            </Button>
+          </div>
+        )}
+
+        {/* Debug Toggle */}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="fixed bottom-4 left-4 z-40 bg-white/10 backdrop-blur-sm text-white"
+          onClick={() => setShowDebug(!showDebug)}
+        >
+          Debug
+        </Button>
+
         {/* 3D Visualization or Content */}
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">

@@ -113,7 +113,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<'uk' | 'en'>('uk')
   
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations['uk']] || key
+    const translation = translations[language][key as keyof typeof translations['uk']]
+    return translation || key
   }
   
   return (
