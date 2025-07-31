@@ -44,6 +44,16 @@ interface GameStats {
   naturalness: number
   isDrawing: boolean
   currentPath: TrajectoryPoint[]
+  waves: WaveEffect[]
+}
+
+interface WaveEffect {
+  x: number
+  y: number
+  radius: number
+  maxRadius: number
+  opacity: number
+  timestamp: number
 }
 
 interface Recipe {
@@ -91,9 +101,11 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentPath, setCurrentPath] = useState<TrajectoryPoint[]>([])
   const [trajectoryHistory, setTrajectoryHistory] = useState<TrajectoryPoint[][]>([])
+  const [waveEffects, setWaveEffects] = useState<WaveEffect[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const isDrawingRef = useRef(false)
   const pathRef = useRef<TrajectoryPoint[]>([])
+  const waveAnimationRef = useRef<number>(0)
 
   // Game UI state
   const [showGameUI, setShowGameUI] = useState(false)
@@ -215,7 +227,18 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setCurrentPath(newPath)
     pathRef.current = newPath
     
-    // Draw on canvas
+    // Add wave effect at drawing point
+    const newWave: WaveEffect = {
+      x,
+      y,
+      radius: 0,
+      maxRadius: 30 + Math.random() * 20,
+      opacity: 0.8,
+      timestamp: Date.now()
+    }
+    setWaveEffects(prev => [...prev, newWave])
+    
+    // Draw trajectory on canvas with gradient
     if (canvasRef.current) {
       const canvas = canvasRef.current
       const ctx = canvas.getContext('2d')
@@ -223,89 +246,218 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         const prev = pathRef.current[pathRef.current.length - 2]
         const curr = pathRef.current[pathRef.current.length - 1]
         
-        ctx.strokeStyle = '#3b82f6'
-        ctx.lineWidth = 3
+        // Create gradient for trajectory
+        const gradient = ctx.createLinearGradient(prev.x, prev.y, curr.x, curr.y)
+        gradient.addColorStop(0, '#3b82f6')
+        gradient.addColorStop(0.5, '#06b6d4')
+        gradient.addColorStop(1, '#8b5cf6')
+        
+        ctx.strokeStyle = gradient
+        ctx.lineWidth = 4
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
+        ctx.shadowColor = '#3b82f6'
+        ctx.shadowBlur = 8
         
         ctx.beginPath()
         ctx.moveTo(prev.x, prev.y)
         ctx.lineTo(curr.x, curr.y)
         ctx.stroke()
+        
+        // Reset shadow
+        ctx.shadowBlur = 0
       }
+    }
+    
+    // Play drawing sound
+    if (Math.random() < 0.1) { // Play sound occasionally to avoid spam
+      playBubbleSound({ volume: 0.2, playbackRate: 1 + Math.random() * 0.4 })
     }
   }
 
-  const finishDrawing = () => {
-    if (!isDrawingRef.current || gameState.gamePhase !== 'trajectory') return
+  // Trajectory scoring algorithms
+  const calculateTrajectoryComplexity = (path: TrajectoryPoint[]): number => {
+    if (path.length < 3) return 0
     
-    setIsDrawing(false)
-    isDrawingRef.current = false
+    let totalCurvature = 0
+    let totalLength = 0
+    let directionChanges = 0
     
-    if (pathRef.current.length < 3) {
-      toast.error("Траєкторія занадто коротка! Намалюйте більш складний трюк.")
-      setCurrentPath([])
-      pathRef.current = []
-      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
-      return
+    for (let i = 1; i < path.length - 1; i++) {
+      const p1 = path[i - 1]
+      const p2 = path[i]
+      const p3 = path[i + 1]
+      
+      // Calculate curvature using three points
+      const a = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+      const b = Math.sqrt((p3.x - p2.x) ** 2 + (p3.y - p2.y) ** 2)
+      const c = Math.sqrt((p3.x - p1.x) ** 2 + (p3.y - p1.y) ** 2)
+      
+      if (a > 0 && b > 0 && c > 0) {
+        // Calculate angle using law of cosines
+        const angle = Math.acos((a * a + b * b - c * c) / (2 * a * b))
+        totalCurvature += Math.abs(Math.PI - angle) // Deviation from straight line
+        
+        // Check for direction changes
+        if (i > 1) {
+          const prevDir = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+          const currDir = Math.atan2(p3.y - p2.y, p3.x - p2.x)
+          const dirChange = Math.abs(prevDir - currDir)
+          if (dirChange > Math.PI / 4) directionChanges++ // Significant direction change
+        }
+      }
+      
+      totalLength += Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
     }
     
-    // Analyze trajectory
-    const trajectory = pathRef.current
-    const complexity = calculateTrajectoryComplexity(trajectory)
-    const naturalness = calculateNaturalness(trajectory)
+    // Normalize complexity (0-10 scale)
+    const curvatureScore = Math.min(totalCurvature / (path.length * 0.5), 6)
+    const lengthScore = Math.min(totalLength / 1000, 2)
+    const changeScore = Math.min(directionChanges / 5, 2)
     
-    let points = 0
-    let prawnFate: 'alive' | 'dead' = 'alive'
+    return Math.min(curvatureScore + lengthScore + changeScore, 10)
+  }
+  
+  const calculateNaturalness = (path: TrajectoryPoint[]): number => {
+    if (path.length < 5) return 0
     
-    // Scoring logic
-    if (naturalness > 0.9) {
-      // Supernatural movement - prawn dies
-      points = 0
-      prawnFate = 'dead'
-      setGameState(prev => ({ 
-        ...prev, 
-        prawnMood: 'dead',
-        score: 0,
-        trajectoryPoints: 0,
-        lives: 0
-      }))
-      toast.error("❌ Надприродний рух! ChefBot-2000 вимкнувся. Починайте спочатку!")
-      playRippleSound({ volume: 0.8, playbackRate: 0.5 })
-    } else {
-      // Calculate points based on complexity and naturalness
-      const basePoints = Math.floor(complexity * 10)
-      const naturalBonus = Math.floor((0.7 - naturalness) * 5) // Bonus for natural movement
-      points = Math.min(10, Math.max(1, basePoints + naturalBonus))
+    let smoothnessScore = 10
+    let speedConsistency = 10
+    let naturalMotion = 10
+    
+    // Check for smoothness (sudden jumps are unnatural)
+    for (let i = 1; i < path.length; i++) {
+      const distance = Math.sqrt(
+        (path[i].x - path[i-1].x) ** 2 + 
+        (path[i].y - path[i-1].y) ** 2
+      )
       
+      // Penalize jumps that are too large (unnatural)
+      if (distance > 50) smoothnessScore -= 1
+      
+      // Check time consistency
+      const timeDiff = path[i].timestamp - path[i-1].timestamp
+      if (timeDiff > 100) speedConsistency -= 0.5 // Too slow
+      if (timeDiff < 5) speedConsistency -= 0.5   // Too fast
+    }
+    
+    // Check for natural swimming patterns (curves are more natural than straight lines)
+    let straightLineSegments = 0
+    for (let i = 2; i < path.length; i++) {
+      const p1 = path[i-2]
+      const p2 = path[i-1]  
+      const p3 = path[i]
+      
+      // Check if three consecutive points are nearly in a straight line
+      const area = Math.abs((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y))
+      if (area < 100) straightLineSegments++
+    }
+    
+    naturalMotion -= straightLineSegments * 0.3
+    
+    return Math.max(0, Math.min(10, (smoothnessScore + speedConsistency + naturalMotion) / 3))
+  }
+
+  // Game control functions
+  const resetGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      gamePhase: 'exploring',
+      score: 0,
+      trajectoryPoints: 0,
+      currentQuestion: 0,
+      correctAnswers: 0,
+      lives: 1,
+      prawnMood: 'calm',
+      isRobotMode: false
+    }))
+    setTrajectoryHistory([])
+    setCurrentPath([])
+    pathRef.current = []
+    setWaveEffects([])
+    setShowGameUI(false)
+    
+    // Clear canvas
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d')
+      ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+    }
+    
+    toast.info("🔄 Гру перезапущено!")
+  }
+
+  const generateQuestion = () => {
+    const questionIndex = gameState.currentQuestion
+    if (questionIndex < cookingQuestions.length) {
+      const question = cookingQuestions[questionIndex]
+      setGameQuestion(question.question)
+      setGameOptions([...question.options].sort(() => Math.random() - 0.5)) // Shuffle options
+      setCorrectAnswer(question.correct)
+      setUserAnswer('')
+    }
+  }
+
+  const handleAnswerSubmit = (answer: string) => {
+    setUserAnswer(answer)
+    
+    if (answer === correctAnswer) {
+      const newScore = gameState.score + 25
       setGameState(prev => ({ 
         ...prev, 
-        score: prev.score + points,
-        trajectoryPoints: prev.trajectoryPoints + points,
+        correctAnswers: prev.correctAnswers + 1,
+        score: newScore,
         prawnMood: 'excited'
       }))
       
-      toast.success(`🎯 Трюк оцінено: +${points} балів! (Складність: ${(complexity * 10).toFixed(1)}/10, Природність: ${((1 - naturalness) * 10).toFixed(1)}/10)`)
-      playBubbleSound({ volume: 0.6, playbackRate: 1.2 })
-    }
-    
-    // Add to history
-    setTrajectoryHistory(prev => [...prev, trajectory])
-    setCurrentPath([])
-    pathRef.current = []
-    
-    // Check if ready for quiz (need 100 points from trajectories)
-    if (prawnFate === 'alive' && gameState.score + points >= 100) {
+      playClickSound({ volume: 0.6, playbackRate: 1.3 })
+      toast.success("🎉 Правильно! +25 балів")
+      
       setTimeout(() => {
-        startQuizPhase()
+        if (gameState.currentQuestion < 3) {
+          // Next question
+          setGameState(prev => ({ 
+            ...prev, 
+            currentQuestion: prev.currentQuestion + 1 
+          }))
+          generateQuestion()
+        } else {
+          // All questions answered
+          if (gameState.correctAnswers >= 3) {
+            // Success - can use recipe generator
+            setGameState(prev => ({ 
+              ...prev, 
+              gamePhase: 'cooking',
+              prawnMood: 'cooking'
+            }))
+            setShowRecipeGenerator(true)
+            toast.success("🍽️ Вітаємо! ChefBot-2000 готовий створити рецепт!")
+          } else {
+            // Failed - reset
+            resetGame()
+            toast.error("❌ Недостатньо правильних відповідей. Спробуйте ще раз!")
+          }
+        }
       }, 2000)
-    } else if (prawnFate === 'dead') {
+    } else {
+      // Wrong answer - reset everything
+      setGameState(prev => ({ 
+        ...prev, 
+        score: 0,
+        trajectoryPoints: 0,
+        correctAnswers: 0,
+        prawnMood: 'dead'
+      }))
+      
+      playRippleSound({ volume: 0.8, playbackRate: 0.5 })
+      toast.error("❌ Помилка! Всі бали згоріли. Починайте спочатку!")
+      
       setTimeout(() => {
-        // Reset everything
         resetGame()
       }, 3000)
     }
   }
+
+
 
   const calculateTrajectoryComplexity = (path: TrajectoryPoint[]): number => {
     if (path.length < 3) return 0
@@ -345,45 +497,123 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     return (curvatureScore + directionScore + lengthScore) / 3
   }
 
-  const calculateNaturalness = (path: TrajectoryPoint[]): number => {
-    if (path.length < 3) return 0
+  const finishDrawing = () => {
+    if (!isDrawingRef.current || gameState.gamePhase !== 'trajectory') return
     
-    let unnaturalMovements = 0
-    const maxSpeed = 50 // pixels per frame
-    const maxAcceleration = 20 // change in speed per frame
+    setIsDrawing(false)
+    isDrawingRef.current = false
     
-    for (let i = 2; i < path.length; i++) {
-      const p1 = path[i - 2]
-      const p2 = path[i - 1] 
-      const p3 = path[i]
-      
-      // Calculate speeds
-      const speed1 = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2) / Math.max(1, p2.timestamp - p1.timestamp)
-      const speed2 = Math.sqrt((p3.x - p2.x) ** 2 + (p3.y - p2.y) ** 2) / Math.max(1, p3.timestamp - p2.timestamp)
-      
-      // Check for supernatural speed
-      if (speed1 > maxSpeed || speed2 > maxSpeed) {
-        unnaturalMovements += 2
-      }
-      
-      // Check for supernatural acceleration
-      const acceleration = Math.abs(speed2 - speed1)
-      if (acceleration > maxAcceleration) {
-        unnaturalMovements += 1
-      }
-      
-      // Check for impossible right angles
-      const angle1 = Math.atan2(p2.y - p1.y, p2.x - p1.x)
-      const angle2 = Math.atan2(p3.y - p2.y, p3.x - p2.x)
-      let angleDiff = Math.abs(angle2 - angle1)
-      if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff
-      
-      if (angleDiff > Math.PI * 0.8) { // Near 180-degree turns
-        unnaturalMovements += 1
-      }
+    if (pathRef.current.length < 3) {
+      toast.error("Траєкторія занадто коротка! Намалюйте більш складний трюк.")
+      setCurrentPath([])
+      pathRef.current = []
+      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+      return
     }
     
-    return Math.min(1, unnaturalMovements / (path.length / 3))
+    // Calculate trajectory score
+    const complexityScore = calculateTrajectoryComplexity(pathRef.current)
+    const naturalnessScore = calculateNaturalness(pathRef.current)
+    const totalScore = Math.round(Math.max(1, Math.min(10, complexityScore * 10)))
+    
+    // Check for supernatural trajectory (death condition)
+    if (complexityScore > 0.95 && naturalnessScore < 0.2) {
+      setGameState(prev => ({ 
+        ...prev, 
+        prawnMood: 'dead', 
+        score: 0, 
+        lives: 0,
+        gamePhase: 'exploring'
+      }))
+      playRippleSound({ volume: 0.8, playbackRate: 0.5 })
+      toast.error("💀 РобоКреветка перегрілася від надприродного трюку! Бали згоріли!")
+      
+      // Clear canvas
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d')
+        ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+      }
+      
+      setTimeout(() => {
+        setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+        setShowGameUI(false)
+      }, 3000)
+      return
+    }
+    
+    // Award points
+    const newScore = gameState.score + totalScore
+    setGameState(prev => ({ 
+      ...prev, 
+      score: newScore,
+      trajectoryPoints: prev.trajectoryPoints + totalScore,
+      prawnMood: 'excited'
+    }))
+    
+    // Add to trajectory history
+    setTrajectoryHistory(prev => [...prev, pathRef.current])
+    setCurrentPath([])
+    pathRef.current = []
+    
+    playClickSound({ volume: 0.4, playbackRate: 1.4 })
+    toast.success(`🎯 Трюк оцінено на ${totalScore} балів! (Складність: ${(complexityScore * 10).toFixed(1)}/10, Природність: ${(naturalnessScore * 10).toFixed(1)}/10)`)
+    
+    // Check if ready for quiz phase
+    if (newScore >= 100) {
+      setTimeout(() => {
+        setGameState(prev => ({ ...prev, gamePhase: 'quiz', prawnMood: 'thinking' }))
+        generateQuestion()
+        toast.info("🧠 Достатньо балів для вікторини! Дайте правильні відповіді на питання.")
+      }, 2000)
+    }
+    
+    // Clear canvas after a delay to show final trajectory
+    setTimeout(() => {
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d')
+        ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+      }
+    }, 2000)
+  }
+
+  const calculateNaturalness = (path: TrajectoryPoint[]): number => {
+    if (path.length < 5) return 0.5 // Default moderate naturalness for short paths
+    
+    let smoothnessScore = 10
+    let speedConsistency = 10
+    let naturalMotion = 10
+    
+    // Check for smoothness (sudden jumps are unnatural)
+    for (let i = 1; i < path.length; i++) {
+      const distance = Math.sqrt(
+        (path[i].x - path[i-1].x) ** 2 + 
+        (path[i].y - path[i-1].y) ** 2
+      )
+      
+      // Penalize jumps that are too large (unnatural)
+      if (distance > 50) smoothnessScore -= 1
+      
+      // Check time consistency
+      const timeDiff = path[i].timestamp - path[i-1].timestamp
+      if (timeDiff > 100) speedConsistency -= 0.5 // Too slow
+      if (timeDiff < 5) speedConsistency -= 0.5   // Too fast
+    }
+    
+    // Check for natural swimming patterns (curves are more natural than straight lines)
+    let straightLineSegments = 0
+    for (let i = 2; i < path.length; i++) {
+      const p1 = path[i-2]
+      const p2 = path[i-1]  
+      const p3 = path[i]
+      
+      // Check if three consecutive points are nearly in a straight line
+      const area = Math.abs((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y))
+      if (area < 100) straightLineSegments++
+    }
+    
+    naturalMotion -= straightLineSegments * 0.3
+    
+    return Math.max(0, Math.min(1, (smoothnessScore + speedConsistency + naturalMotion) / 30))
   }
 
   const startQuizPhase = () => {
@@ -1857,6 +2087,69 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       setIsLoaded(true)
     }
 
+    // Wave animation loop
+    const animateWaves = () => {
+      if (!canvasRef.current) {
+        waveAnimationRef.current = requestAnimationFrame(animateWaves)
+        return
+      }
+
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      // Update wave effects
+      const currentTime = Date.now()
+      setWaveEffects(prevWaves => {
+        const activeWaves = prevWaves
+          .map(wave => {
+            const age = currentTime - wave.timestamp
+            const progress = age / 1000 // 1 second duration
+            
+            if (progress >= 1) return null
+            
+            return {
+              ...wave,
+              radius: wave.maxRadius * progress,
+              opacity: 0.8 * (1 - progress)
+            }
+          })
+          .filter(Boolean) as WaveEffect[]
+
+        // Clear and redraw waves
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        
+        activeWaves.forEach(wave => {
+          // Draw multiple concentric circles for wave effect
+          for (let i = 0; i < 3; i++) {
+            const circleRadius = wave.radius * (1 - i * 0.3)
+            const circleOpacity = wave.opacity * (1 - i * 0.4)
+            
+            if (circleRadius > 0 && circleOpacity > 0) {
+              ctx.strokeStyle = `rgba(59, 130, 246, ${circleOpacity})`
+              ctx.lineWidth = 2 - i * 0.5
+              ctx.beginPath()
+              ctx.arc(wave.x, wave.y, circleRadius, 0, Math.PI * 2)
+              ctx.stroke()
+              
+              // Add shimmering effect
+              ctx.strokeStyle = `rgba(139, 92, 246, ${circleOpacity * 0.6})`
+              ctx.lineWidth = 1 - i * 0.3
+              ctx.beginPath()
+              ctx.arc(wave.x, wave.y, circleRadius * 0.7, 0, Math.PI * 2)
+              ctx.stroke()
+            }
+          }
+        })
+
+        return activeWaves
+      })
+
+      waveAnimationRef.current = requestAnimationFrame(animateWaves)
+    }
+
+    waveAnimationRef.current = requestAnimationFrame(animateWaves)
+
     // Initialize ambient sound after a delay
     setTimeout(() => {
       if (mounted && audioEnabled) {
@@ -1871,6 +2164,9 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       window.removeEventListener('resize', handleResize)
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
+      }
+      if (waveAnimationRef.current) {
+        cancelAnimationFrame(waveAnimationRef.current)
       }
       if (ambientSoundRef.current) {
         ambientSoundRef.current.stop()
@@ -2204,6 +2500,33 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                             style={{ width: `${Math.min(100, gameState.score)}%` }}
                           ></div>
                         </div>
+                        
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="font-semibold text-blue-600">Трюків:</div>
+                            <div className="text-blue-800">{trajectoryHistory.length}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-semibold text-green-600">Життів:</div>
+                            <div className="text-green-800">{gameState.lives}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-semibold text-purple-600">Балів/трюк:</div>
+                            <div className="text-purple-800">
+                              {trajectoryHistory.length > 0 ? Math.round(gameState.score / trajectoryHistory.length) : 0}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-blue-800 text-sm font-medium mb-2">🖱️ Інструкції для малювання:</p>
+                        <ol className="text-blue-700 text-xs space-y-1">
+                          <li>1. Натисніть та утримуйте кнопку миші</li>
+                          <li>2. Малюйте плавну траєкторію руху креветки</li>
+                          <li>3. Відпустіть кнопку миші щоб завершити трюк</li>
+                          <li>4. Дивіться як хвилі розходяться від вашого малюнка!</li>
+                        </ol>
                       </div>
                     </div>
                     
