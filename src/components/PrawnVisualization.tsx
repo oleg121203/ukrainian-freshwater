@@ -24,7 +24,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     prawnMood: 'calm', // 'calm', 'excited', 'swimming', 'feeding'
     interactionCount: 0,
     isFeeding: false,
-    isSwimming: false
+    isSwimming: false,
+    currentSwimPattern: 'circular' as 'circular' | 'figure8' | 'random' | 'patrol'
   })
   
   // Animation states for realistic behavior
@@ -34,7 +35,21 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     antennaeSway: 0,
     eyeRotation: 0,
     breathingIntensity: 1,
-    swimDirection: new THREE.Vector3(0, 0, 0)
+    swimDirection: new THREE.Vector3(0, 0, 0),
+    // Swimming animation states
+    isAutoSwimming: true,
+    swimPhase: 0,
+    swimTarget: new THREE.Vector3(0, 0, 0),
+    swimSpeed: 0.02,
+    swimPattern: 'circular', // 'circular', 'figure8', 'random', 'patrol'
+    patternProgress: 0,
+    swimBounds: {
+      x: { min: -3, max: 3 },
+      y: { min: -2, max: 2 },
+      z: { min: -2, max: 2 }
+    },
+    lastDirectionChange: 0,
+    swimIntensity: 1
   })
   
   // Audio hook for sound effects
@@ -349,6 +364,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       if (distance > 0.3) {
         setGameState(prev => ({ ...prev, prawnMood: 'excited' }))
         animationStateRef.current.breathingIntensity = 1.5
+        // Mouse interaction temporarily overrides auto-swimming
+        animationStateRef.current.isAutoSwimming = false
+        // Reset auto-swimming after 3 seconds of no mouse movement
+        setTimeout(() => {
+          animationStateRef.current.isAutoSwimming = true
+        }, 3000)
       } else {
         setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
         animationStateRef.current.breathingIntensity = 1
@@ -385,43 +406,162 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           rightEye
         } = prawnGroupRef.current.userData
 
-        // Smooth rotation based on mouse position with momentum
-        const targetRotationY = mouseRef.current.x * Math.PI * 0.4
-        const targetRotationX = mouseRef.current.y * Math.PI * 0.3
-        
-        prawnGroupRef.current.rotation.y += (targetRotationY - prawnGroupRef.current.rotation.y) * 0.03
-        prawnGroupRef.current.rotation.x += (targetRotationX - prawnGroupRef.current.rotation.x) * 0.03
-        
-        // Realistic floating animation (neutral buoyancy)
-        const baseY = Math.sin(time * 0.8) * 0.2
-        const breathingY = Math.sin(time * 3) * 0.05 * animationStateRef.current.breathingIntensity
-        prawnGroupRef.current.position.y = baseY + breathingY
-        
-        // Gentle horizontal drifting
-        prawnGroupRef.current.position.x += Math.sin(time * 0.3) * 0.001
-        prawnGroupRef.current.position.z += Math.cos(time * 0.2) * 0.001
-        
-        // Body segment wave motion (like real prawn movement)
+        // Auto-swimming patterns
+        if (animationStateRef.current.isAutoSwimming) {
+          const swimState = animationStateRef.current
+          swimState.patternProgress += swimState.swimSpeed
+          
+          let targetX = 0, targetY = 0, targetZ = 0
+          
+          // Different swimming patterns
+          switch (swimState.swimPattern) {
+            case 'circular':
+              const radius = 2.5
+              targetX = Math.cos(swimState.patternProgress) * radius
+              targetY = Math.sin(swimState.patternProgress * 0.5) * 1.2
+              targetZ = Math.sin(swimState.patternProgress) * radius
+              break
+              
+            case 'figure8':
+              const fig8Scale = 2
+              targetX = Math.sin(swimState.patternProgress) * fig8Scale
+              targetY = Math.sin(swimState.patternProgress * 0.7) * 1.5
+              targetZ = Math.sin(swimState.patternProgress * 2) * fig8Scale
+              break
+              
+            case 'random':
+              // Change direction every 5 seconds
+              if (time - swimState.lastDirectionChange > 5) {
+                swimState.swimTarget.set(
+                  (Math.random() - 0.5) * 6,
+                  (Math.random() - 0.5) * 4,
+                  (Math.random() - 0.5) * 4
+                )
+                swimState.lastDirectionChange = time
+              }
+              targetX = swimState.swimTarget.x
+              targetY = swimState.swimTarget.y
+              targetZ = swimState.swimTarget.z
+              break
+              
+            case 'patrol':
+              const patrolTime = swimState.patternProgress % (Math.PI * 4)
+              if (patrolTime < Math.PI) {
+                targetX = -2.5 + (patrolTime / Math.PI) * 5
+                targetY = Math.sin(patrolTime * 2) * 0.8
+                targetZ = 1
+              } else if (patrolTime < Math.PI * 2) {
+                targetX = 2.5
+                targetY = Math.sin((patrolTime - Math.PI) * 3) * 1.2
+                targetZ = 1 - ((patrolTime - Math.PI) / Math.PI) * 2
+              } else if (patrolTime < Math.PI * 3) {
+                targetX = 2.5 - ((patrolTime - Math.PI * 2) / Math.PI) * 5
+                targetY = Math.sin((patrolTime - Math.PI * 2) * 2) * 0.8
+                targetZ = -1
+              } else {
+                targetX = -2.5
+                targetY = Math.sin((patrolTime - Math.PI * 3) * 3) * 1.2
+                targetZ = -1 + ((patrolTime - Math.PI * 3) / Math.PI) * 2
+              }
+              break
+          }
+          
+          // Smooth movement towards target with boundary checking
+          const smoothFactor = 0.02
+          const newX = prawnGroupRef.current.position.x + (targetX - prawnGroupRef.current.position.x) * smoothFactor
+          const newY = prawnGroupRef.current.position.y + (targetY - prawnGroupRef.current.position.y) * smoothFactor
+          const newZ = prawnGroupRef.current.position.z + (targetZ - prawnGroupRef.current.position.z) * smoothFactor
+          
+          // Apply boundaries with soft bounce and pattern changes
+          const bounds = swimState.swimBounds
+          if (newX < bounds.x.min || newX > bounds.x.max) {
+            const newPattern = 'random' as const
+            swimState.swimPattern = newPattern // Change pattern when hitting boundary
+            swimState.patternProgress = 0
+            setGameState(prev => ({ ...prev, currentSwimPattern: newPattern }))
+          }
+          if (newY < bounds.y.min || newY > bounds.y.max) {
+            const newPattern = 'circular' as const
+            swimState.swimPattern = newPattern // Return to safe pattern
+            setGameState(prev => ({ ...prev, currentSwimPattern: newPattern }))
+          }
+          if (newZ < bounds.z.min || newZ > bounds.z.max) {
+            const newPattern = 'figure8' as const
+            swimState.swimPattern = newPattern // Change to contained pattern
+            setGameState(prev => ({ ...prev, currentSwimPattern: newPattern }))
+          }
+          
+          prawnGroupRef.current.position.x = Math.max(bounds.x.min, Math.min(bounds.x.max, newX))
+          prawnGroupRef.current.position.y = Math.max(bounds.y.min, Math.min(bounds.y.max, newY))
+          prawnGroupRef.current.position.z = Math.max(bounds.z.min, Math.min(bounds.z.max, newZ))
+          
+          // Calculate swimming direction for orientation
+          const direction = new THREE.Vector3(
+            targetX - prawnGroupRef.current.position.x,
+            targetY - prawnGroupRef.current.position.y,
+            targetZ - prawnGroupRef.current.position.z
+          ).normalize()
+          
+          // Orient prawn to swimming direction
+          const targetRotationY = Math.atan2(direction.x, direction.z)
+          const targetRotationX = Math.asin(-direction.y) * 0.5
+          
+          prawnGroupRef.current.rotation.y += (targetRotationY - prawnGroupRef.current.rotation.y) * 0.05
+          prawnGroupRef.current.rotation.x += (targetRotationX - prawnGroupRef.current.rotation.x) * 0.05
+          
+          // Change swimming pattern occasionally
+          if (Math.random() < 0.001) { // Very rare pattern change
+            const patterns = ['circular', 'figure8', 'random', 'patrol'] as const
+            const newPattern = patterns[Math.floor(Math.random() * patterns.length)]
+            swimState.swimPattern = newPattern
+            swimState.patternProgress = 0
+            setGameState(prev => ({ ...prev, currentSwimPattern: newPattern }))
+          }
+          
+          // Enhanced swimming intensity based on movement
+          swimState.swimIntensity = 1 + direction.length() * 2
+          setGameState(prev => ({ ...prev, prawnMood: 'swimming', isSwimming: true }))
+        } else {
+          // Manual control via mouse when not auto-swimming
+          const targetRotationY = mouseRef.current.x * Math.PI * 0.4
+          const targetRotationX = mouseRef.current.y * Math.PI * 0.3
+          
+          prawnGroupRef.current.rotation.y += (targetRotationY - prawnGroupRef.current.rotation.y) * 0.03
+          prawnGroupRef.current.rotation.x += (targetRotationX - prawnGroupRef.current.rotation.x) * 0.03
+          
+          // Gentle floating when under manual control
+          const baseY = Math.sin(time * 0.8) * 0.2
+          const breathingY = Math.sin(time * 3) * 0.05 * animationStateRef.current.breathingIntensity
+          prawnGroupRef.current.position.y = baseY + breathingY
+          
+          animationStateRef.current.swimIntensity = animationStateRef.current.breathingIntensity
+          setGameState(prev => ({ ...prev, isSwimming: false }))
+        }
+
+        // Body segment wave motion (enhanced during swimming)
         bodySegments.forEach((segment, index) => {
           if (index > 0) { // Skip the cephalothorax
-            const wave = Math.sin(time * 2 + index * 0.3) * 0.1
-            segment.rotation.y = wave * (gameState.prawnMood === 'excited' ? 1.5 : 1)
+            const wave = Math.sin(time * (2 * animationStateRef.current.swimIntensity) + index * 0.3) * 0.1
+            const swimWave = animationStateRef.current.isAutoSwimming ? Math.sin(time * 4 + index * 0.5) * 0.15 : 0
+            segment.rotation.y = (wave + swimWave) * (gameState.prawnMood === 'excited' ? 1.5 : 1)
           }
         })
 
-        // Antennae swaying (very important for realism)
+        // Enhanced antennae swaying during swimming
         antennaeSegments.forEach((segment, index) => {
           const sway = Math.sin(time * 1.5 + index * 0.1) * 0.15
+          const swimSway = animationStateRef.current.isAutoSwimming ? Math.sin(time * 3 + index * 0.2) * 0.1 : 0
           const side = index < antennaeSegments.length / 2 ? -1 : 1
-          segment.rotation.z += sway * side * 0.1
+          segment.rotation.z += (sway + swimSway) * side * 0.1
           segment.rotation.x += Math.cos(time * 1.2 + index * 0.1) * 0.05
         })
 
-        // Claw movements (territorial displays)
+        // Enhanced claw movements during swimming
         clawSegments.forEach((claw, index) => {
-          const clawTime = time * (1.2 + index * 0.3)
+          const clawTime = time * (1.2 + index * 0.3) * animationStateRef.current.swimIntensity
           const movement = Math.sin(clawTime) * 0.1
-          claw.rotation.y += movement * (index % 2 === 0 ? 1 : -1) * 0.05
+          const swimMovement = animationStateRef.current.isAutoSwimming ? Math.sin(clawTime * 2) * 0.05 : 0
+          claw.rotation.y += (movement + swimMovement) * (index % 2 === 0 ? 1 : -1) * 0.05
           
           // Occasional claw snapping
           if (Math.sin(clawTime * 0.1) > 0.95 && gameState.prawnMood === 'excited') {
@@ -431,55 +571,79 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }
         })
 
-        // Swimming legs movement (constant paddling)
+        // Enhanced swimming legs movement (rapid paddling during swimming)
         swimmingLegs.forEach((leg, index) => {
-          const legTime = time * 4 + index * 0.2
+          const legTime = time * (4 * animationStateRef.current.swimIntensity) + index * 0.2
           const paddling = Math.sin(legTime) * 0.3
-          leg.rotation.z = paddling
+          const swimPaddling = animationStateRef.current.isAutoSwimming ? Math.sin(legTime * 1.5) * 0.2 : 0
+          leg.rotation.z = paddling + swimPaddling
           leg.material.opacity = 0.6 + Math.sin(legTime) * 0.2
         })
 
-        // Walking legs movement
+        // Walking legs movement (minimal during swimming)
         walkingLegs.forEach((leg, index) => {
-          const legTime = time * 2 + index * 0.4
+          const legTime = time * (2 - animationStateRef.current.swimIntensity * 0.5) + index * 0.4
           leg.rotation.y = Math.sin(legTime) * 0.2
         })
 
-        // Tail fan movement (steering and propulsion)
+        // Enhanced tail fan movement (primary propulsion during swimming)
         if (tailFan) {
-          const tailMovement = Math.sin(time * 1.8) * 0.2
-          tailFan.rotation.y = tailMovement
+          const tailTime = time * (1.8 * animationStateRef.current.swimIntensity)
+          const tailMovement = Math.sin(tailTime) * 0.2
+          const swimThrustMovement = animationStateRef.current.isAutoSwimming ? Math.sin(tailTime * 2) * 0.3 : 0
+          tailFan.rotation.y = tailMovement + swimThrustMovement
           tailFan.material.opacity = 0.7 + Math.sin(time * 2) * 0.1
         }
 
-        // Eye movement (tracking mouse)
+        // Eye movement (tracking movement direction during swimming)
         if (leftEye && rightEye) {
-          const eyeTargetX = mouseRef.current.x * 0.3
-          const eyeTargetY = mouseRef.current.y * 0.2
-          
-          leftEye.lookAt(
-            leftEye.position.x + eyeTargetX,
-            leftEye.position.y + eyeTargetY,
-            leftEye.position.z + 1
-          )
-          rightEye.lookAt(
-            rightEye.position.x + eyeTargetX,
-            rightEye.position.y + eyeTargetY,
-            rightEye.position.z + 1
-          )
+          if (animationStateRef.current.isAutoSwimming) {
+            // Eyes look in swimming direction
+            const swimDirection = animationStateRef.current.swimDirection
+            const eyeTargetX = swimDirection.x * 0.5
+            const eyeTargetY = swimDirection.y * 0.3
+            
+            leftEye.lookAt(
+              leftEye.position.x + eyeTargetX,
+              leftEye.position.y + eyeTargetY,
+              leftEye.position.z + 1
+            )
+            rightEye.lookAt(
+              rightEye.position.x + eyeTargetX,
+              rightEye.position.y + eyeTargetY,
+              rightEye.position.z + 1
+            )
+          } else {
+            // Eyes track mouse
+            const eyeTargetX = mouseRef.current.x * 0.3
+            const eyeTargetY = mouseRef.current.y * 0.2
+            
+            leftEye.lookAt(
+              leftEye.position.x + eyeTargetX,
+              leftEye.position.y + eyeTargetY,
+              leftEye.position.z + 1
+            )
+            rightEye.lookAt(
+              rightEye.position.x + eyeTargetX,
+              rightEye.position.y + eyeTargetY,
+              rightEye.position.z + 1
+            )
+          }
         }
 
         // Mood-based overall scaling
-        const moodScale = gameState.prawnMood === 'excited' ? 1.05 : 1
+        const moodScale = gameState.prawnMood === 'excited' ? 1.05 : 
+                          gameState.prawnMood === 'swimming' ? 1.02 : 1
         const breathingScale = 1 + Math.sin(time * 3) * 0.02 * animationStateRef.current.breathingIntensity
         prawnGroupRef.current.scale.setScalar(moodScale * breathingScale)
 
-        // Reactive lighting based on interaction
+        // Reactive lighting based on swimming activity
         if (scene.children.find(child => child.type === 'PointLight')) {
           const lights = scene.children.filter(child => child.type === 'PointLight') as THREE.PointLight[]
           lights.forEach((light, index) => {
-            const intensity = gameState.prawnMood === 'excited' ? 0.8 : 0.6
-            light.intensity = intensity + Math.sin(time * 2 + index) * 0.1
+            const baseIntensity = gameState.prawnMood === 'excited' ? 0.8 : 
+                                 gameState.prawnMood === 'swimming' ? 0.7 : 0.6
+            light.intensity = baseIntensity + Math.sin(time * 2 + index) * 0.1 * animationStateRef.current.swimIntensity
           })
         }
       }
@@ -645,9 +809,19 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-sm font-medium">
             Настрій: {gameState.prawnMood === 'calm' ? '🧘 Спокійний' : 
                      gameState.prawnMood === 'excited' ? '⚡ Збуджений' : 
-                     gameState.prawnMood === 'feeding' ? '🍽️ Годування' : '🏊 Плавання'}
+                     gameState.prawnMood === 'feeding' ? '🍽️ Годування' : 
+                     gameState.prawnMood === 'swimming' ? '🏊 Плавання' : '🎮 Інтерактив'}
           </p>
           <p className="text-xs opacity-75 mt-1">Взаємодій: {gameState.interactionCount}</p>
+          {gameState.isSwimming && (
+            <motion.p 
+              className="text-xs text-blue-300 mt-1"
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              🌊 Автоматичне плавання
+            </motion.p>
+          )}
           {gameState.isFeeding && (
             <motion.p 
               className="text-xs text-yellow-300 mt-1"
@@ -697,10 +871,54 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-sm opacity-75 mt-1">
             {menuVisible 
               ? "Натисніть будь-де для входу на сайт"
-              : "🖱️ Рухайте мишкою • 🎯 Клік = меню • 🌊 Фон = вхід • 🍽️ Подвійний клік = годування"
+              : gameState.isSwimming 
+                ? "🌊 Креветка плаває автоматично • 🖱️ Рухайте мишкою для керування"
+                : "🖱️ Рухайте мишкою • 🎯 Клік = меню • 🌊 Фон = вхід • 🍽️ Подвійний клік = годування"
             }
           </p>
         </div>
+      </motion.div>
+
+      {/* Swimming pattern control */}
+      <motion.button
+        onClick={() => {
+          const patterns = ['circular', 'figure8', 'random', 'patrol'] as const
+          const currentIndex = patterns.indexOf(animationStateRef.current.swimPattern)
+          const nextIndex = (currentIndex + 1) % patterns.length
+          const nextPattern = patterns[nextIndex]
+          animationStateRef.current.swimPattern = nextPattern
+          animationStateRef.current.patternProgress = 0
+          setGameState(prev => ({ ...prev, currentSwimPattern: nextPattern }))
+          
+          if (audioEnabled) {
+            playClickSound({ volume: 0.3, playbackRate: 1.3 })
+          }
+        }}
+        className="absolute top-44 left-8 bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/20 text-white hover:bg-white/20 transition-all duration-300"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
+        transition={{ delay: 3 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+          <path d="M19 15L20.09 18.26L24 19L20.09 19.74L19 23L17.91 19.74L14 19L17.91 18.26L19 15Z"/>
+          <path d="M5 15L6.09 18.26L10 19L6.09 19.74L5 23L3.91 19.74L0 19L3.91 18.26L5 15Z"/>
+        </svg>
+      </motion.button>
+
+      {/* Swimming pattern indicator */}
+      <motion.div
+        className="absolute top-56 left-4 bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-sm pointer-events-none"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : -10 }}
+        transition={{ delay: 3.5 }}
+      >
+        Патерн: {gameState.currentSwimPattern === 'circular' ? '🔄 Коло' :
+                 gameState.currentSwimPattern === 'figure8' ? '∞ Вісімка' :
+                 gameState.currentSwimPattern === 'random' ? '🎲 Випадково' :
+                 '🚶 Патруль'}
       </motion.div>
 
       {/* Audio toggle button */}
