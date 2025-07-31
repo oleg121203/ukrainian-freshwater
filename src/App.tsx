@@ -18,14 +18,27 @@ function App() {
   const [show3D, setShow3D] = useState(true)
 
   const handleNavigate = (section: string) => {
-    setCurrentSection(section)
-    setShow3D(false)
+    if (section === 'hero') {
+      // If going back to hero, show 3D
+      setCurrentSection('hero')
+      setShow3D(true)
+    } else {
+      // Going to any other section, hide 3D
+      setCurrentSection(section)
+      setShow3D(false)
+    }
     setMenuVisible(false)
   }
 
   const handleBackToHero = () => {
     setCurrentSection('hero')
     setShow3D(true)
+  }
+
+  const handleNavigateToSite = () => {
+    setCurrentSection('about') // Navigate to the about section as default entry point
+    setShow3D(false)
+    setMenuVisible(false)
   }
 
   const renderCurrentSection = () => {
@@ -58,6 +71,7 @@ function App() {
             <PrawnVisualization 
               onMenuToggle={setMenuVisible}
               menuVisible={menuVisible}
+              onNavigateToSite={handleNavigateToSite}
             />
           </div>
         ) : (

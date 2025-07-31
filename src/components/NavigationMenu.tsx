@@ -13,7 +13,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
   const { language, setLanguage, t } = useLanguage()
 
   const menuItems = [
-    { key: 'home', icon: Fish, label: t('nav.home') },
+    { key: 'hero', icon: Fish, label: t('nav.home') },
     { key: 'about', icon: BookOpen, label: t('nav.about') },
     { key: 'products', icon: ShoppingCart, label: t('nav.products') },
     { key: 'gallery', icon: Images, label: t('nav.gallery') },

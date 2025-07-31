@@ -5,9 +5,10 @@ import { motion } from 'framer-motion'
 interface PrawnVisualizationProps {
   onMenuToggle: (show: boolean) => void
   menuVisible: boolean
+  onNavigateToSite?: () => void
 }
 
-export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualizationProps) {
+export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite }: PrawnVisualizationProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -20,6 +21,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
   useEffect(() => {
     if (!mountRef.current) return
 
+    let mounted = true
+    
     // Scene setup
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -32,7 +35,11 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
     
     sceneRef.current = scene
     rendererRef.current = renderer
-    mountRef.current.appendChild(renderer.domElement)
+    
+    // Only append if still mounted
+    if (mounted && mountRef.current) {
+      mountRef.current.appendChild(renderer.domElement)
+    }
 
     // Create prawn geometry - stylized using basic shapes
     const prawnGroup = new THREE.Group()
@@ -148,6 +155,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
 
     // Mouse interaction
     const handleMouseMove = (event: MouseEvent) => {
+      if (!mounted) return
       mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1
       mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1
     }
@@ -156,6 +164,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
 
     // Animation loop
     const animate = () => {
+      if (!mounted) return
       frameRef.current = requestAnimationFrame(animate)
 
       if (prawnGroupRef.current) {
@@ -174,38 +183,59 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
         prawnGroupRef.current.scale.setScalar(breathScale)
       }
 
-      renderer.render(scene, camera)
+      if (rendererRef.current && sceneRef.current) {
+        rendererRef.current.render(sceneRef.current, camera)
+      }
     }
 
     // Resize handler
     const handleResize = () => {
+      if (!mounted || !rendererRef.current) return
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight)
     }
 
     window.addEventListener('resize', handleResize)
 
     // Start animation
     animate()
-    setIsLoaded(true)
+    if (mounted) {
+      setIsLoaded(true)
+    }
 
     // Cleanup
     return () => {
+      mounted = false
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('resize', handleResize)
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
       }
-      if (mountRef.current && renderer.domElement) {
+      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement)
       }
       renderer.dispose()
     }
   }, [])
 
-  const handleClick = () => {
-    onMenuToggle(!menuVisible)
+  const handleClick = (event: React.MouseEvent) => {
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    
+    // Check if click is on the central area of the prawn (for menu)
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+    
+    if (distance < 150) {
+      // Click on prawn - toggle menu
+      onMenuToggle(!menuVisible)
+    } else {
+      // Click on background - navigate to main site
+      onNavigateToSite?.()
+    }
   }
 
   return (
@@ -243,7 +273,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible }: PrawnVisualiza
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/20">
           <p className="text-base font-medium">Рухайте мишкою для обертання креветки</p>
-          <p className="text-sm opacity-75 mt-1">Натисніть для відкриття меню</p>
+          <p className="text-sm opacity-75 mt-1">Натисніть на креветку для меню • Натисніть на фон для входу на сайт</p>
         </div>
       </motion.div>
 
