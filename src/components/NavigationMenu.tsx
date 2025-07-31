@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe } from '@phosphor-icons/react'
+import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe, GearSix } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
 
@@ -20,6 +20,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
     { key: 'recipes', icon: BookOpen, label: t('nav.recipes') },
     { key: 'reviews', icon: Star, label: t('nav.reviews') },
     { key: 'contact', icon: Phone, label: t('nav.contact') },
+    { key: 'admin', icon: GearSix, label: 'Адмін' },
   ]
 
   const containerVariants = {

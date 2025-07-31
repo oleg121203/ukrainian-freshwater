@@ -10,6 +10,7 @@ import { GallerySection } from '@/components/GallerySection'
 import { RecipesSection } from '@/components/RecipesSection'
 import { ReviewsSection } from '@/components/ReviewsSection'
 import { ContactSection } from '@/components/ContactSection'
+import { AdminDashboard } from '@/components/AdminDashboard'
 
 function App() {
   const [currentSection, setCurrentSection] = useState<string>('hero')
@@ -41,6 +42,8 @@ function App() {
         return <ReviewsSection />
       case 'contact':
         return <ContactSection />
+      case 'admin':
+        return <AdminDashboard />
       default:
         return <HeroSection onNavigate={handleNavigate} />
     }
