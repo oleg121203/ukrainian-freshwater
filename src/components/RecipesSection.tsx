@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Users, ChefHat, Heart, ShoppingCart, Images, ArrowRight } from '@phosphor-icons/react'
+import { Clock, Users, ChefHat, Heart, ShoppingCart, Images, ArrowRight, Robot } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,18 @@ interface Recipe {
   image: string
 }
 
+// AI-generated recipe interface
+interface AIRecipe {
+  id: string
+  title: string
+  ingredients: string[]
+  instructions: string[]
+  authorName: string
+  authorEmail: string
+  createdAt: string
+  aiGenerated: boolean
+}
+
 interface RecipesSectionProps {
   onNavigate?: (section: string) => void
 }
@@ -32,6 +44,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
   const { language } = useLanguage()
   const [favoriteRecipes, setFavoriteRecipes] = useKV<string[]>('favorite-recipes', [])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [aiRecipes] = useKV<AIRecipe[]>('chef-prawn-recipes', [])
 
   const recipes: Recipe[] = [
     {
@@ -217,12 +230,19 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
     { key: 'appetizer', label_uk: 'Закуски', label_en: 'Appetizers' },
     { key: 'main', label_uk: 'Основні страви', label_en: 'Main Courses' },
     { key: 'soup', label_uk: 'Супи', label_en: 'Soups' },
-    { key: 'salad', label_uk: 'Салати', label_en: 'Salads' }
+    { key: 'salad', label_uk: 'Салати', label_en: 'Salads' },
+    { key: 'ai-generated', label_uk: '🤖 ШІ-рецепти', label_en: '🤖 AI Recipes' }
   ]
 
   const filteredRecipes = selectedCategory === 'all' 
     ? recipes 
-    : recipes.filter(recipe => recipe.category === selectedCategory)
+    : selectedCategory === 'ai-generated'
+      ? []  // AI recipes will be shown separately
+      : recipes.filter(recipe => recipe.category === selectedCategory)
+
+  const filteredAIRecipes = selectedCategory === 'all' || selectedCategory === 'ai-generated'
+    ? aiRecipes
+    : []
 
   const toggleFavorite = (recipeId: string) => {
     setFavoriteRecipes((current) => {
@@ -374,6 +394,131 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
             </motion.div>
           ))}
         </div>
+
+        {/* AI-Generated Recipes */}
+        {filteredAIRecipes.length > 0 && (
+          <>
+            <motion.div
+              className="mt-12 mb-8"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <Robot size={32} className="text-primary" />
+                <h3 className="text-2xl font-bold text-gradient-primary">
+                  {language === 'uk' ? 'Рецепти створені ШІ-кухарем' : 'AI Chef Created Recipes'}
+                </h3>
+                <Badge className="bg-primary/10 text-primary border-primary/20">
+                  {filteredAIRecipes.length} {language === 'uk' ? 'рецептів' : 'recipes'}
+                </Badge>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAIRecipes.map((recipe, index) => (
+                <motion.div
+                  key={recipe.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50 h-full relative overflow-hidden">
+                    {/* AI Badge */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                        🤖 ШІ
+                      </Badge>
+                    </div>
+
+                    <div className="text-6xl text-center pt-8 pb-4 group-hover:scale-110 transition-transform duration-300">
+                      🦐
+                    </div>
+
+                    <CardContent className="p-6 pt-0">
+                      <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                        {recipe.title}
+                      </h3>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <ChefHat size={16} />
+                            <span>{recipe.authorName}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock size={16} />
+                            <span>{new Date(recipe.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+                            {language === 'uk' ? 'Інгредієнти:' : 'Ingredients:'}
+                          </h4>
+                          <ul className="text-sm space-y-1">
+                            {recipe.ingredients.slice(0, 3).map((ingredient, i) => (
+                              <li key={i} className="flex items-center text-muted-foreground">
+                                <span className="w-1 h-1 bg-primary rounded-full mr-2"></span>
+                                {ingredient}
+                              </li>
+                            ))}
+                            {recipe.ingredients.length > 3 && (
+                              <li className="text-xs text-primary">
+                                +{recipe.ingredients.length - 3} {language === 'uk' ? 'більше' : 'more'}
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+
+                        <div className="pt-2">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {language === 'uk' ? 'Автор:' : 'Author:'} {recipe.authorName}
+                          </p>
+                          <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                            {language === 'uk' ? 'Переглянути рецепт' : 'View Recipe'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Show message if no AI recipes when AI category is selected */}
+        {selectedCategory === 'ai-generated' && filteredAIRecipes.length === 0 && (
+          <motion.div
+            className="mt-12 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Card className="p-12 border-dashed border-2">
+              <Robot size={64} className="text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-muted-foreground">
+                {language === 'uk' ? 'Поки що немає ШІ-рецептів' : 'No AI recipes yet'}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {language === 'uk' 
+                  ? 'Поверніться до 3D креветки та зіграйте в кулінарну гру, щоб створити перший рецепт!'
+                  : 'Return to the 3D prawn and play the cooking game to create your first recipe!'
+                }
+              </p>
+              <Button 
+                onClick={() => onNavigate?.('hero')}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                🤖 {language === 'uk' ? 'Грати з ШІ-кухарем' : 'Play with AI Chef'}
+              </Button>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Additional sections */}
         <motion.div

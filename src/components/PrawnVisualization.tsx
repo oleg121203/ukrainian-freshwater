@@ -1,12 +1,43 @@
 import { useRef, useEffect, useState } from 'react'
 import * as THREE from 'three'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAudio } from '@/hooks/useAudio'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { useKV } from '@github/spark/hooks'
+import { toast } from 'sonner'
 
 interface PrawnVisualizationProps {
   onMenuToggle: (show: boolean) => void
   menuVisible: boolean
   onNavigateToSite?: () => void
+}
+
+interface GameState {
+  prawnMood: 'calm' | 'excited' | 'swimming' | 'feeding' | 'cooking' | 'thinking'
+  interactionCount: number
+  isFeeding: boolean
+  isSwimming: boolean
+  currentSwimPattern: 'circular' | 'figure8' | 'random' | 'patrol'
+  gamePhase: 'exploring' | 'playing' | 'cooking' | 'completed'
+  score: number
+  correctAnswers: number
+  isRobotMode: boolean
+  hasAI: boolean
+}
+
+interface Recipe {
+  id: string
+  title: string
+  ingredients: string[]
+  instructions: string[]
+  authorName: string
+  authorEmail: string
+  createdAt: string
+  aiGenerated: boolean
 }
 
 export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite }: PrawnVisualizationProps) {
@@ -20,13 +51,72 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
   const [isLoaded, setIsLoaded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
-  const [gameState, setGameState] = useState({
-    prawnMood: 'calm', // 'calm', 'excited', 'swimming', 'feeding'
+  
+  // Enhanced game state for robot-chef prawn
+  const [gameState, setGameState] = useState<GameState>({
+    prawnMood: 'calm',
     interactionCount: 0,
     isFeeding: false,
     isSwimming: false,
-    currentSwimPattern: 'circular' as 'circular' | 'figure8' | 'random' | 'patrol'
+    currentSwimPattern: 'circular',
+    gamePhase: 'exploring',
+    score: 0,
+    correctAnswers: 0,
+    isRobotMode: false,
+    hasAI: false
   })
+
+  // Game UI state
+  const [showGameUI, setShowGameUI] = useState(false)
+  const [gameQuestion, setGameQuestion] = useState('')
+  const [gameOptions, setGameOptions] = useState<string[]>([])
+  const [correctAnswer, setCorrectAnswer] = useState('')
+  const [userAnswer, setUserAnswer] = useState('')
+  const [showRecipeGenerator, setShowRecipeGenerator] = useState(false)
+  const [userIngredients, setUserIngredients] = useState('')
+  const [isGeneratingRecipe, setIsGeneratingRecipe] = useState(false)
+  const [generatedRecipe, setGeneratedRecipe] = useState<Recipe | null>(null)
+  const [userName, setUserName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+
+  // Persistent storage for recipes and admin settings
+  const [recipes, setRecipes] = useKV<Recipe[]>('chef-prawn-recipes', [])
+  const [geminiApiKey, setGeminiApiKey] = useKV<string>('gemini-api-key', '')
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+
+  // Cooking game questions about seafood and Macrobrachium rosenbergii
+  const cookingQuestions = [
+    {
+      question: "Яка оптимальна температура води для вирощування Macrobrachium rosenbergii?",
+      options: ["15-20°C", "25-30°C", "35-40°C", "45-50°C"],
+      correct: "25-30°C",
+      explanation: "Малайзійські креветки потребують теплої тропічної води для оптимального росту."
+    },
+    {
+      question: "Скільки часу готувати свіжі креветки Macrobrachium rosenbergii?",
+      options: ["1-2 хвилини", "3-4 хвилини", "7-10 хвилин", "15-20 хвилин"],
+      correct: "3-4 хвилини",
+      explanation: "Переготовлення робить креветки жорсткими та втрачає їх ніжний смак."
+    },
+    {
+      question: "Який розмір досягають дорослі самці Macrobrachium rosenbergii?",
+      options: ["5-8 см", "12-15 см", "25-30 см", "40-45 см"],
+      correct: "25-30 см",
+      explanation: "Самці малайзійських креветок можуть досягати вражаючих розмірів до 30 см!"
+    },
+    {
+      question: "Яка особливість малайзійських креветок відрізняє їх від морських?",
+      options: ["Живуть у солоній воді", "Живуть у прісній воді", "Мають панцир", "Мають клешні"],
+      correct: "Живуть у прісній воді",
+      explanation: "Macrobrachium rosenbergii - прісноводні креветки, що робить їх унікальними."
+    },
+    {
+      question: "Яка найкраща приправа для креветок у французькій кухні?",
+      options: ["Часник та петрушка", "Карі та кокос", "Соєвий соус", "Лимон та розмарин"],
+      correct: "Часник та петрушка",
+      explanation: "Класична французька комбінація підкреслює природний смак креветок."
+    }
+  ]
   
   // Animation states for realistic behavior
   const animationStateRef = useRef({
@@ -52,7 +142,224 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     swimIntensity: 1
   })
   
+  // Game mechanics
+  const startCookingGame = () => {
+    if (!audioEnabled) return
+    
+    setGameState(prev => ({ 
+      ...prev, 
+      gamePhase: 'playing', 
+      prawnMood: 'thinking',
+      isRobotMode: true,
+      hasAI: !!geminiApiKey
+    }))
+    
+    // Generate random question
+    const randomQuestion = cookingQuestions[Math.floor(Math.random() * cookingQuestions.length)]
+    setGameQuestion(randomQuestion.question)
+    setGameOptions([...randomQuestion.options].sort(() => Math.random() - 0.5)) // Shuffle options
+    setCorrectAnswer(randomQuestion.correct)
+    setUserAnswer('')
+    setShowGameUI(true)
+    
+    playClickSound({ volume: 0.5, playbackRate: 1.3 })
+    toast.success("🤖 Креветка-робот активована! Відповідайте на кулінарні питання.")
+  }
+
+  const handleAnswerSubmit = (answer: string) => {
+    setUserAnswer(answer)
+    
+    if (answer === correctAnswer) {
+      setGameState(prev => ({ 
+        ...prev, 
+        score: prev.score + 10,
+        correctAnswers: prev.correctAnswers + 1,
+        prawnMood: 'excited'
+      }))
+      playBubbleSound({ volume: 0.6, playbackRate: 1.5 })
+      toast.success("🎉 Правильно! +10 балів")
+      
+      // Check if game is won (3 correct answers)
+      if (gameState.correctAnswers + 1 >= 3) {
+        setTimeout(() => {
+          setGameState(prev => ({ 
+            ...prev, 
+            gamePhase: 'cooking',
+            prawnMood: 'cooking'
+          }))
+          setShowGameUI(false)
+          setShowRecipeGenerator(true)
+          toast.success("🏆 Ви виграли! Тепер можете створити рецепт з ШІ!")
+        }, 2000)
+      } else {
+        // Next question
+        setTimeout(() => {
+          const randomQuestion = cookingQuestions[Math.floor(Math.random() * cookingQuestions.length)]
+          setGameQuestion(randomQuestion.question)
+          setGameOptions([...randomQuestion.options].sort(() => Math.random() - 0.5))
+          setCorrectAnswer(randomQuestion.correct)
+          setUserAnswer('')
+        }, 2000)
+      }
+    } else {
+      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+      playRippleSound({ volume: 0.4, playbackRate: 0.8 })
+      toast.error("❌ Неправильно. Спробуйте ще раз!")
+      
+      setTimeout(() => {
+        setUserAnswer('')
+      }, 1500)
+    }
+  }
+
+  const generateRecipeWithAI = async () => {
+    if (!geminiApiKey) {
+      toast.error("Потрібно налаштувати Gemini API ключ в панелі адміністратора")
+      return
+    }
+
+    if (!userIngredients.trim()) {
+      toast.error("Введіть інгредієнти для рецепту")
+      return
+    }
+
+    setIsGeneratingRecipe(true)
+    setGameState(prev => ({ ...prev, prawnMood: 'thinking' }))
+
+    try {
+      const prompt = spark.llmPrompt`Створи детальний кулінарний рецепт з морепродуктами та креветками Macrobrachium rosenbergii, використовуючи ці інгредієнти: ${userIngredients}. 
+
+Відповідь повинна бути у форматі JSON:
+{
+  "title": "Назва рецепту українською",
+  "ingredients": ["список інгредієнтів з кількістю"],
+  "instructions": ["покрокові інструкції приготування"],
+  "cookingTime": "час приготування",
+  "difficulty": "складність (легко/середньо/складно)",
+  "tips": ["корисні поради"]
+}
+
+Рецепт повинен бути оригінальним та смачним, з акцентом на креветки Macrobrachium rosenbergii як основний інгредієнт.`
+
+      const response = await spark.llm(prompt, "gpt-4o", true)
+      const recipeData = JSON.parse(response)
+      
+      const newRecipe: Recipe = {
+        id: Date.now().toString(),
+        title: recipeData.title,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.instructions,
+        authorName: userName,
+        authorEmail: userEmail,
+        createdAt: new Date().toISOString(),
+        aiGenerated: true
+      }
+
+      setGeneratedRecipe(newRecipe)
+      setGameState(prev => ({ ...prev, prawnMood: 'excited', gamePhase: 'completed' }))
+      playBubbleSound({ volume: 0.8, playbackRate: 1.2 })
+      toast.success("🍽️ Рецепт створено ШІ-кухарем!")
+
+    } catch (error) {
+      console.error('Error generating recipe:', error)
+      setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
+      toast.error("Помилка при створенні рецепту. Перевірте API ключ.")
+    } finally {
+      setIsGeneratingRecipe(false)
+    }
+  }
+
+  const saveRecipe = async () => {
+    if (!generatedRecipe || !userName.trim() || !userEmail.trim()) {
+      toast.error("Заповніть всі поля (ім'я та email)")
+      return
+    }
+
+    try {
+      // Add recipe to collection
+      const updatedRecipes = [...recipes, { ...generatedRecipe, authorName: userName, authorEmail: userEmail }]
+      setRecipes(updatedRecipes)
+      
+      // Send email simulation (in real app would send actual email)
+      const emailData = {
+        to: userEmail,
+        subject: `Ваш рецепт: ${generatedRecipe.title}`,
+        recipe: generatedRecipe
+      }
+      
+      toast.success(`📧 Рецепт збережено та надіслано на ${userEmail}!`)
+      
+      // Reset game
+      setShowRecipeGenerator(false)
+      setGeneratedRecipe(null)
+      setUserIngredients('')
+      setUserName('')
+      setUserEmail('')
+      setGameState(prev => ({ 
+        ...prev, 
+        gamePhase: 'exploring',
+        score: 0,
+        correctAnswers: 0,
+        isRobotMode: false,
+        prawnMood: 'calm'
+      }))
+      
+    } catch (error) {
+      console.error('Error saving recipe:', error)
+      toast.error("Помилка при збереженні рецепту")
+    }
+  }
+  
   // Audio hook for sound effects
+  const { 
+    playBubbleSound, 
+    playRippleSound, 
+    playClickSound, 
+    playSwooshSound,
+    playAmbientSound,
+    resumeAudioContext 
+  } = useAudio()
+
+  const saveRecipe = async () => {
+    if (!generatedRecipe || !userName.trim() || !userEmail.trim()) {
+      toast.error("Заповніть всі поля (ім'я та email)")
+      return
+    }
+
+    try {
+      // Add recipe to collection
+      const updatedRecipes = [...recipes, { ...generatedRecipe, authorName: userName, authorEmail: userEmail }]
+      setRecipes(updatedRecipes)
+      
+      // Send email simulation (in real app would send actual email)
+      const emailData = {
+        to: userEmail,
+        subject: `Ваш рецепт: ${generatedRecipe.title}`,
+        recipe: generatedRecipe
+      }
+      
+      toast.success(`📧 Рецепт збережено та надіслано на ${userEmail}!`)
+      
+      // Reset game
+      setShowRecipeGenerator(false)
+      setGeneratedRecipe(null)
+      setUserIngredients('')
+      setUserName('')
+      setUserEmail('')
+      setGameState(prev => ({ 
+        ...prev, 
+        gamePhase: 'exploring',
+        score: 0,
+        correctAnswers: 0,
+        isRobotMode: false,
+        prawnMood: 'calm'
+      }))
+      
+    } catch (error) {
+      console.error('Error saving recipe:', error)
+      toast.error("Помилка при збереженні рецепту")
+    }
+  }
   const { 
     playBubbleSound, 
     playRippleSound, 
@@ -96,20 +403,82 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     const prawnGroup = new THREE.Group()
     prawnGroupRef.current = prawnGroup
 
-    // Advanced materials with realistic textures
+    // Advanced materials with robotic enhancements
     const createPrawnMaterial = (baseColor: number, roughness = 0.3, metalness = 0.1, options: any = {}) => {
       const material = new THREE.MeshStandardMaterial({
         color: baseColor,
         roughness,
-        metalness,
+        metalness: gameState.isRobotMode ? metalness + 0.3 : metalness,
         transparent: true,
         opacity: options.opacity || 0.95,
         side: THREE.DoubleSide,
+        emissive: gameState.isRobotMode ? new THREE.Color(0x002244) : new THREE.Color(0x000000),
+        emissiveIntensity: gameState.isRobotMode ? 0.1 : 0,
         ...options
       })
       
-      // Add subtle texture variation using vertex colors
-      if (options.addNoise) {
+      // Add robotic texture when in robot mode
+      if (gameState.isRobotMode && options.addNoise) {
+        material.onBeforeCompile = (shader) => {
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <common>',
+            `
+            #include <common>
+            varying vec3 vWorldPosition;
+            varying vec3 vNormal;
+            uniform float time;
+            `
+          )
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `
+            #include <begin_vertex>
+            vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+            vNormal = normalize(normalMatrix * normal);
+            `
+          )
+          
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <common>',
+            `
+            #include <common>
+            varying vec3 vWorldPosition;
+            varying vec3 vNormal;
+            uniform float time;
+            
+            float noise(vec3 p) {
+              return fract(sin(dot(p, vec3(12.9898, 78.233, 54.321))) * 43758.5453);
+            }
+            `
+          )
+          
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <color_fragment>',
+            `
+            #include <color_fragment>
+            
+            // Robotic panel lines and circuits
+            float panelLines = abs(sin(vWorldPosition.y * 15.0)) * 0.2;
+            float circuits = abs(sin(vWorldPosition.x * 20.0)) * abs(cos(vWorldPosition.z * 25.0)) * 0.15;
+            float digitalNoise = noise(vWorldPosition * 8.0 + time * 0.5) * 0.1;
+            
+            // Cyber glow effect
+            float glow = pow(1.0 - abs(dot(vNormal, normalize(vWorldPosition - cameraPosition))), 3.0);
+            vec3 cyberColor = vec3(0.0, 0.8, 1.0) * glow * 0.3;
+            
+            // AI processing indicator
+            float aiPulse = sin(time * 3.0) * 0.1 + 0.9;
+            
+            diffuseColor.rgb = mix(
+              diffuseColor.rgb, 
+              diffuseColor.rgb + cyberColor + vec3(panelLines + circuits + digitalNoise) * aiPulse, 
+              0.7
+            );
+            `
+          )
+        }
+      } else if (options.addNoise) {
+        // Original organic texture
         material.onBeforeCompile = (shader) => {
           shader.vertexShader = shader.vertexShader.replace(
             '#include <common>',
@@ -1147,26 +1516,43 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }
         }
 
-        // Mood-based overall scaling
+        // Mood-based overall scaling with robotic effects
         const moodScale = gameState.prawnMood === 'excited' ? 1.05 : 
-                          gameState.prawnMood === 'swimming' ? 1.02 : 1
-        const breathingScale = 1 + Math.sin(time * 3) * 0.02 * animationStateRef.current.breathingIntensity
-        prawnGroupRef.current.scale.setScalar(moodScale * breathingScale)
+                          gameState.prawnMood === 'swimming' ? 1.02 : 
+                          gameState.prawnMood === 'cooking' ? 1.08 :
+                          gameState.prawnMood === 'thinking' ? 1.03 : 1
+        const breathingScale = 1 + Math.sin(time * (gameState.isRobotMode ? 5 : 3)) * 0.02 * animationStateRef.current.breathingIntensity
+        const roboticScale = gameState.isRobotMode ? 1 + Math.sin(time * 8) * 0.01 : 1
+        prawnGroupRef.current.scale.setScalar(moodScale * breathingScale * roboticScale)
 
-        // Reactive lighting based on swimming activity with enhanced effects
+        // Enhanced robotic lighting effects
         if (scene.children.find(child => child.type === 'PointLight')) {
           const lights = scene.children.filter(child => child.type === 'PointLight') as THREE.PointLight[]
           lights.forEach((light, index) => {
             const baseIntensity = gameState.prawnMood === 'excited' ? 0.9 : 
-                                 gameState.prawnMood === 'swimming' ? 0.8 : 0.7
-            light.intensity = baseIntensity + Math.sin(time * 2 + index) * 0.1 * animationStateRef.current.swimIntensity
+                                 gameState.prawnMood === 'swimming' ? 0.8 :
+                                 gameState.prawnMood === 'cooking' ? 1.2 :
+                                 gameState.prawnMood === 'thinking' ? 1.0 : 0.7
             
-            // Add subtle color shifting for underwater ambiance
+            const roboticPulse = gameState.isRobotMode ? Math.sin(time * 4 + index) * 0.3 : 0
+            light.intensity = baseIntensity + Math.sin(time * 2 + index) * 0.1 * animationStateRef.current.swimIntensity + roboticPulse
+            
+            // Enhanced color shifting for robotic mode
             const colorShift = Math.sin(time * 0.5 + index) * 0.1
-            if (index === 0) {
-              light.color.setHSL(0.55 + colorShift * 0.1, 0.8, 0.6)
-            } else if (index === 1) {
-              light.color.setHSL(0.5 + colorShift * 0.1, 0.7, 0.6)
+            if (gameState.isRobotMode) {
+              // Cyber blue colors for robot mode
+              if (index === 0) {
+                light.color.setHSL(0.6 + colorShift * 0.1, 0.9, 0.7 + Math.sin(time * 3) * 0.1)
+              } else if (index === 1) {
+                light.color.setHSL(0.55 + colorShift * 0.1, 0.8, 0.6 + Math.cos(time * 4) * 0.1)
+              }
+            } else {
+              // Natural underwater colors
+              if (index === 0) {
+                light.color.setHSL(0.55 + colorShift * 0.1, 0.8, 0.6)
+              } else if (index === 1) {
+                light.color.setHSL(0.5 + colorShift * 0.1, 0.7, 0.6)
+              }
             }
           })
         }
@@ -1383,12 +1769,25 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
           <p className="text-sm font-medium">
-            Настрій: {gameState.prawnMood === 'calm' ? '🧘 Спокійний' : 
-                     gameState.prawnMood === 'excited' ? '⚡ Збуджений' : 
-                     gameState.prawnMood === 'feeding' ? '🍽️ Годування' : 
-                     gameState.prawnMood === 'swimming' ? '🏊 Плавання' : '🎮 Інтерактив'}
+            {gameState.isRobotMode ? '🤖 Робот-Кухар' : 'Настрій'}: {
+              gameState.prawnMood === 'calm' ? '🧘 Спокійний' : 
+              gameState.prawnMood === 'excited' ? '⚡ Збуджений' : 
+              gameState.prawnMood === 'feeding' ? '🍽️ Годування' : 
+              gameState.prawnMood === 'swimming' ? '🏊 Плавання' : 
+              gameState.prawnMood === 'cooking' ? '👨‍🍳 Готує' :
+              gameState.prawnMood === 'thinking' ? '🧠 Думає' : '🎮 Інтерактив'
+            }
           </p>
           <p className="text-xs opacity-75 mt-1">Взаємодій: {gameState.interactionCount}</p>
+          {gameState.gamePhase !== 'exploring' && (
+            <p className="text-xs text-green-300 mt-1">
+              🎯 Рахунок: {gameState.score} | 🎪 Фаза: {
+                gameState.gamePhase === 'playing' ? 'Гра' :
+                gameState.gamePhase === 'cooking' ? 'Готування' :
+                gameState.gamePhase === 'completed' ? 'Завершено' : 'Дослідження'
+              }
+            </p>
+          )}
           {gameState.isSwimming && (
             <motion.p 
               className="text-xs text-blue-300 mt-1"
@@ -1409,6 +1808,316 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           )}
         </div>
       </motion.div>
+
+      {/* Cooking Game Button */}
+      {isLoaded && !menuVisible && gameState.gamePhase === 'exploring' && (
+        <motion.button
+          onClick={startCookingGame}
+          className="absolute top-44 right-8 bg-orange-500/80 hover:bg-orange-600/90 backdrop-blur-sm rounded-full px-6 py-3 border border-orange-300/50 text-white font-medium transition-all duration-300 hover:scale-105 shadow-lg"
+          initial={{ opacity: 0, scale: 0.8, x: 20 }}
+          animate={{ opacity: audioEnabled ? 1 : 0.7, scale: 1, x: 0 }}
+          transition={{ delay: 4 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          disabled={!audioEnabled}
+        >
+          <span className="text-2xl mr-2">🤖</span>
+          <span>Кулінарна Гра</span>
+        </motion.button>
+      )}
+
+      {/* Game UI Overlay */}
+      <AnimatePresence>
+        {showGameUI && (
+          <motion.div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className="max-w-2xl w-full mx-4 bg-white/95 backdrop-blur-lg">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl text-gradient-primary flex items-center justify-center gap-2">
+                  🤖 Робот-Кухар Креветка
+                  <Badge variant="secondary">ШІ на борту</Badge>
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Рахунок: {gameState.score} | Правильних відповідей: {gameState.correctAnswers}/3
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-primary/10 p-4 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3">{gameQuestion}</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {gameOptions.map((option, index) => (
+                      <Button
+                        key={index}
+                        variant={userAnswer === option ? 
+                          (option === correctAnswer ? "default" : "destructive") : 
+                          "outline"
+                        }
+                        className="text-left justify-start p-4 h-auto"
+                        onClick={() => handleAnswerSubmit(option)}
+                        disabled={!!userAnswer}
+                      >
+                        <span className="font-medium mr-2">{String.fromCharCode(65 + index)})</span>
+                        {option}
+                      </Button>
+                    ))}
+                  </div>
+                  {userAnswer && (
+                    <motion.div
+                      className="mt-4 p-3 rounded-lg bg-secondary/20"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <p className="text-sm">
+                        {userAnswer === correctAnswer 
+                          ? "✅ Правильно! Креветка радіє вашим знанням."
+                          : "❌ Неправильно. Креветка вчить вас кулінарії."
+                        }
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Recipe Generator UI */}
+      <AnimatePresence>
+        {showRecipeGenerator && (
+          <motion.div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-lg">
+              <CardHeader className="text-center">
+                <CardTitle className="text-3xl text-gradient-primary flex items-center justify-center gap-3">
+                  🏆 Ви виграли! 👨‍🍳 ШІ-Кухар активований
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Креветка-робот створить унікальний рецепт на основі ваших інгредієнтів
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!generatedRecipe ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        🥘 Введіть основні інгредієнти (через кому)
+                      </label>
+                      <Textarea
+                        placeholder="Наприклад: креветки Macrobrachium rosenbergii, часник, лимон, олія, спеції..."
+                        value={userIngredients}
+                        onChange={(e) => setUserIngredients(e.target.value)}
+                        rows={3}
+                        className="resize-none"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">👤 Ваше ім'я</label>
+                        <Input
+                          placeholder="Ім'я кухаря"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">📧 Email</label>
+                        <Input
+                          type="email"
+                          placeholder="email@example.com"
+                          value={userEmail}
+                          onChange={(e) => setUserEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={generateRecipeWithAI}
+                        disabled={isGeneratingRecipe || !geminiApiKey || !userIngredients.trim()}
+                        className="flex-1"
+                      >
+                        {isGeneratingRecipe ? (
+                          <>
+                            <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></div>
+                            ШІ створює рецепт...
+                          </>
+                        ) : (
+                          <>🧠 Створити рецепт з ШІ</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowRecipeGenerator(false)
+                          setGameState(prev => ({ ...prev, gamePhase: 'exploring', isRobotMode: false }))
+                        }}
+                      >
+                        Скасувати
+                      </Button>
+                    </div>
+
+                    {!geminiApiKey && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p className="text-yellow-800 text-sm">
+                          ⚠️ Для роботи ШІ-генератора потрібно налаштувати Gemini API ключ в панелі адміністратора
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => setShowAdminPanel(true)}
+                        >
+                          Налаштувати API
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      <h3 className="text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                        🍽️ {generatedRecipe.title}
+                        <Badge className="bg-green-100 text-green-800">ШІ-генерований</Badge>
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold text-green-700 mb-3">🥘 Інгредієнти:</h4>
+                          <ul className="space-y-1">
+                            {generatedRecipe.ingredients.map((ingredient, index) => (
+                              <li key={index} className="text-sm text-green-600">• {ingredient}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-semibold text-green-700 mb-3">👨‍🍳 Приготування:</h4>
+                          <ol className="space-y-2">
+                            {generatedRecipe.instructions.map((step, index) => (
+                              <li key={index} className="text-sm text-green-600">
+                                <span className="font-medium">{index + 1}.</span> {step}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">👤 Ваше ім'я</label>
+                        <Input
+                          placeholder="Ім'я автора"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">📧 Email для надсилання</label>
+                        <Input
+                          type="email"
+                          placeholder="email@example.com"
+                          value={userEmail}
+                          onChange={(e) => setUserEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={saveRecipe}
+                        className="flex-1"
+                        disabled={!userName.trim() || !userEmail.trim()}
+                      >
+                        📧 Зберегти та надіслати рецепт
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setGeneratedRecipe(null)
+                          setUserIngredients('')
+                        }}
+                      >
+                        Створити новий
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Panel */}
+      <AnimatePresence>
+        {showAdminPanel && (
+          <motion.div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className="max-w-md w-full bg-white/95 backdrop-blur-lg">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  ⚙️ Панель адміністратора
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">🔑 Gemini API Key</label>
+                  <Input
+                    type="password"
+                    placeholder="Введіть ваш Gemini API ключ"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Отримайте ключ на: https://makersuite.google.com/app/apikey
+                  </p>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="font-medium text-blue-800 mb-2">📊 Статистика рецептів</h4>
+                  <p className="text-sm text-blue-600">Всього рецептів: {recipes.length}</p>
+                  <p className="text-sm text-blue-600">
+                    ШІ-генерованих: {recipes.filter(r => r.aiGenerated).length}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowAdminPanel(false)
+                      toast.success("Налаштування збережено!")
+                    }}
+                    className="flex-1"
+                  >
+                    Зберегти
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAdminPanel(false)}
+                  >
+                    Скасувати
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Enter site hint - only show when menu is NOT visible */}
       {!menuVisible && isLoaded && (
@@ -1443,13 +2152,19 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         transition={{ delay: 1.5 }}
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/20 max-w-md">
-          <p className="text-base font-medium">🎮 Фотореалістична креветка</p>
+          <p className="text-base font-medium">
+            {gameState.isRobotMode ? '🤖 Робот-Кухар Креветка' : '🎮 Фотореалістична креветка'}
+          </p>
           <p className="text-sm opacity-75 mt-1">
             {menuVisible 
               ? "Натисніть будь-де для входу на сайт"
-              : gameState.isSwimming 
-                ? "🌊 Креветка плаває автоматично • 🖱️ Рухайте мишкою для керування"
-                : "🖱️ Рухайте мишкою • 🎯 Клік = меню • 🌊 Фон = вхід • 🍽️ Подвійний клік = годування"
+              : gameState.gamePhase === 'playing'
+                ? "🧠 Відповідайте на кулінарні питання"
+                : gameState.gamePhase === 'cooking'
+                  ? "👨‍🍳 ШІ створює рецепт з ваших інгредієнтів"
+                  : gameState.isSwimming 
+                    ? "🌊 Креветка плаває автоматично • 🖱️ Рухайте мишкою"
+                    : "🤖 Кнопка гри • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
             }
           </p>
         </div>
@@ -1540,6 +2255,21 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         Натисніть для увімкнення звуку
       </motion.div>
 
+      {/* Admin Panel Access Button */}
+      <motion.button
+        onClick={() => setShowAdminPanel(true)}
+        className="absolute bottom-44 right-8 bg-purple-500/80 hover:bg-purple-600/90 backdrop-blur-sm rounded-full p-3 border border-purple-300/50 text-white transition-all duration-300 hover:scale-105 shadow-lg"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
+        transition={{ delay: 5 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </motion.button>
+
       {/* Enhanced hover effect indicator */}
       {isHovered && isLoaded && !menuVisible && (
         <motion.div
@@ -1587,7 +2317,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           </div>
           <div className="absolute bottom-20 right-32 text-white/60 text-center">
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-              <p className="text-xs">🎮 Гра з креветкою</p>
+              <p className="text-xs">{gameState.gamePhase === 'exploring' ? '🤖 Кулінарна гра' : '🎮 Робот-креветка'}</p>
+            </div>
+          </div>
+          <div className="absolute bottom-32 right-20 text-white/60 text-center">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <p className="text-xs">⚙️ Налаштування ШІ</p>
             </div>
           </div>
         </motion.div>
