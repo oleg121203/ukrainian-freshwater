@@ -45,6 +45,7 @@ interface GameStats {
   isDrawing: boolean
   currentPath: TrajectoryPoint[]
   waves: WaveEffect[]
+  particles: ParticleEffect[]
 }
 
 interface WaveEffect {
@@ -53,6 +54,21 @@ interface WaveEffect {
   radius: number
   maxRadius: number
   opacity: number
+  timestamp: number
+  color?: string
+  intensity?: number
+}
+
+interface ParticleEffect {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  life: number
+  maxLife: number
+  size: number
+  color: string
+  type: 'spark' | 'bubble' | 'glitter' | 'trail'
   timestamp: number
 }
 
@@ -102,10 +118,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
   const [currentPath, setCurrentPath] = useState<TrajectoryPoint[]>([])
   const [trajectoryHistory, setTrajectoryHistory] = useState<TrajectoryPoint[][]>([])
   const [waveEffects, setWaveEffects] = useState<WaveEffect[]>([])
+  const [particleEffects, setParticleEffects] = useState<ParticleEffect[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const isDrawingRef = useRef(false)
   const pathRef = useRef<TrajectoryPoint[]>([])
   const waveAnimationRef = useRef<number>(0)
+  const particleAnimationRef = useRef<number>(0)
 
   // Game UI state
   const [showGameUI, setShowGameUI] = useState(false)
@@ -227,18 +245,105 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setCurrentPath(newPath)
     pathRef.current = newPath
     
-    // Add wave effect at drawing point
+    // Add enhanced wave effect at drawing point
+    const waveIntensity = Math.random() * 0.5 + 0.5
     const newWave: WaveEffect = {
       x,
       y,
       radius: 0,
       maxRadius: 30 + Math.random() * 20,
-      opacity: 0.8,
-      timestamp: Date.now()
+      opacity: 0.8 * waveIntensity,
+      timestamp: Date.now(),
+      color: ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981', '#f59e0b'][Math.floor(Math.random() * 5)],
+      intensity: waveIntensity
     }
     setWaveEffects(prev => [...prev, newWave])
     
-    // Draw trajectory on canvas with gradient
+    // Add enhanced particle effects
+    const particleCount = Math.floor(Math.random() * 8) + 5 // 5-12 particles per point
+    const newParticles: ParticleEffect[] = []
+    
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5
+      const speed = Math.random() * 3 + 1
+      const particleType = ['spark', 'bubble', 'glitter', 'trail'][Math.floor(Math.random() * 4)] as 'spark' | 'bubble' | 'glitter' | 'trail'
+      
+      newParticles.push({
+        x: x + (Math.random() - 0.5) * 10,
+        y: y + (Math.random() - 0.5) * 10,
+        vx: Math.cos(angle) * speed * (Math.random() * 0.5 + 0.5),
+        vy: Math.sin(angle) * speed * (Math.random() * 0.5 + 0.5),
+        life: 1,
+        maxLife: Math.random() * 1500 + 500, // 0.5-2 seconds
+        size: Math.random() * 4 + 2,
+        color: newWave.color || '#3b82f6',
+        type: particleType,
+        timestamp: Date.now()
+      })
+    }
+    
+    // Add special effects based on drawing speed and direction
+    if (pathRef.current.length > 1) {
+      const prevPoint = pathRef.current[pathRef.current.length - 2]
+      const speed = Math.sqrt((x - prevPoint.x) ** 2 + (y - prevPoint.y) ** 2)
+      
+      // Fast movement creates more intense effects
+      if (speed > 20) {
+        const trailParticles: ParticleEffect[] = []
+        for (let i = 0; i < 3; i++) {
+          trailParticles.push({
+            x: prevPoint.x + (x - prevPoint.x) * (i / 3),
+            y: prevPoint.y + (y - prevPoint.y) * (i / 3),
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            life: 1,
+            maxLife: 800,
+            size: Math.random() * 6 + 3,
+            color: '#ff6b35',
+            type: 'trail',
+            timestamp: Date.now()
+          })
+        }
+        newParticles.push(...trailParticles)
+      }
+      
+      // Sharp turns create spark effects
+      if (pathRef.current.length > 2) {
+        const p1 = pathRef.current[pathRef.current.length - 3]
+        const p2 = pathRef.current[pathRef.current.length - 2]
+        const p3 = pathRef.current[pathRef.current.length - 1]
+        
+        const angle1 = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+        const angle2 = Math.atan2(p3.y - p2.y, p3.x - p2.x)
+        let angleDiff = Math.abs(angle2 - angle1)
+        if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff
+        
+        if (angleDiff > Math.PI / 4) { // Sharp turn detected
+          const sparkParticles: ParticleEffect[] = []
+          for (let i = 0; i < 6; i++) {
+            const sparkAngle = Math.random() * Math.PI * 2
+            const sparkSpeed = Math.random() * 5 + 3
+            sparkParticles.push({
+              x: x + (Math.random() - 0.5) * 5,
+              y: y + (Math.random() - 0.5) * 5,
+              vx: Math.cos(sparkAngle) * sparkSpeed,
+              vy: Math.sin(sparkAngle) * sparkSpeed,
+              life: 1,
+              maxLife: 600,
+              size: Math.random() * 3 + 1,
+              color: '#fbbf24',
+              type: 'spark',
+              timestamp: Date.now()
+            })
+          }
+          newParticles.push(...sparkParticles)
+        }
+      }
+    }
+    
+    setParticleEffects(prev => [...prev, ...newParticles])
+    
+    // Draw trajectory on canvas with enhanced gradient and glow effects
     if (canvasRef.current) {
       const canvas = canvasRef.current
       const ctx = canvas.getContext('2d')
@@ -246,32 +351,49 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         const prev = pathRef.current[pathRef.current.length - 2]
         const curr = pathRef.current[pathRef.current.length - 1]
         
-        // Create gradient for trajectory
+        // Create enhanced gradient for trajectory
         const gradient = ctx.createLinearGradient(prev.x, prev.y, curr.x, curr.y)
-        gradient.addColorStop(0, '#3b82f6')
-        gradient.addColorStop(0.5, '#06b6d4')
-        gradient.addColorStop(1, '#8b5cf6')
+        gradient.addColorStop(0, newWave.color || '#3b82f6')
+        gradient.addColorStop(0.3, '#06b6d4')
+        gradient.addColorStop(0.7, '#8b5cf6')
+        gradient.addColorStop(1, '#10b981')
         
+        // Draw main trajectory line with glow effect
+        ctx.save()
         ctx.strokeStyle = gradient
-        ctx.lineWidth = 4
+        ctx.lineWidth = 6
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
-        ctx.shadowColor = '#3b82f6'
-        ctx.shadowBlur = 8
+        ctx.shadowColor = newWave.color || '#3b82f6'
+        ctx.shadowBlur = 15
+        ctx.globalAlpha = 0.9
         
         ctx.beginPath()
         ctx.moveTo(prev.x, prev.y)
         ctx.lineTo(curr.x, curr.y)
         ctx.stroke()
         
-        // Reset shadow
-        ctx.shadowBlur = 0
+        // Add inner bright line
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineWidth = 2
+        ctx.shadowBlur = 5
+        ctx.shadowColor = '#ffffff'
+        ctx.globalAlpha = 0.7
+        
+        ctx.beginPath()
+        ctx.moveTo(prev.x, prev.y)
+        ctx.lineTo(curr.x, curr.y)
+        ctx.stroke()
+        
+        ctx.restore()
       }
     }
     
-    // Play drawing sound
-    if (Math.random() < 0.1) { // Play sound occasionally to avoid spam
-      playBubbleSound({ volume: 0.2, playbackRate: 1 + Math.random() * 0.4 })
+    // Play enhanced drawing sound
+    if (Math.random() < 0.15) { // Play sound occasionally to avoid spam
+      const pitch = 1 + Math.random() * 0.6
+      const volume = Math.min(0.4, waveIntensity * 0.3)
+      playBubbleSound({ volume, playbackRate: pitch })
     }
   }
 
@@ -375,6 +497,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setCurrentPath([])
     pathRef.current = []
     setWaveEffects([])
+    setParticleEffects([])
     setShowGameUI(false)
     
     // Clear canvas
@@ -650,6 +773,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setCurrentPath([])
     setTrajectoryHistory([])
     pathRef.current = []
+    setWaveEffects([])
+    setParticleEffects([])
     
     // Clear canvas
     if (canvasRef.current) {
@@ -2111,7 +2236,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             return {
               ...wave,
               radius: wave.maxRadius * progress,
-              opacity: 0.8 * (1 - progress)
+              opacity: (wave.opacity || 0.8) * (1 - progress)
             }
           })
           .filter(Boolean) as WaveEffect[]
@@ -2121,23 +2246,48 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         
         activeWaves.forEach(wave => {
           // Draw multiple concentric circles for wave effect
-          for (let i = 0; i < 3; i++) {
-            const circleRadius = wave.radius * (1 - i * 0.3)
-            const circleOpacity = wave.opacity * (1 - i * 0.4)
+          for (let i = 0; i < 4; i++) {
+            const circleRadius = wave.radius * (1 - i * 0.2)
+            const circleOpacity = wave.opacity * (1 - i * 0.3)
             
             if (circleRadius > 0 && circleOpacity > 0) {
-              ctx.strokeStyle = `rgba(59, 130, 246, ${circleOpacity})`
-              ctx.lineWidth = 2 - i * 0.5
+              // Outer glow ring
+              ctx.strokeStyle = `rgba(59, 130, 246, ${circleOpacity * 0.3})`
+              ctx.lineWidth = 8 - i * 1.5
+              ctx.beginPath()
+              ctx.arc(wave.x, wave.y, circleRadius * 1.2, 0, Math.PI * 2)
+              ctx.stroke()
+              
+              // Main colored ring
+              ctx.strokeStyle = wave.color ? 
+                wave.color.replace('rgb', 'rgba').replace(')', `, ${circleOpacity})`) :
+                `rgba(59, 130, 246, ${circleOpacity})`
+              ctx.lineWidth = 3 - i * 0.6
               ctx.beginPath()
               ctx.arc(wave.x, wave.y, circleRadius, 0, Math.PI * 2)
               ctx.stroke()
               
-              // Add shimmering effect
-              ctx.strokeStyle = `rgba(139, 92, 246, ${circleOpacity * 0.6})`
-              ctx.lineWidth = 1 - i * 0.3
+              // Inner bright highlight
+              ctx.strokeStyle = `rgba(255, 255, 255, ${circleOpacity * 0.8})`
+              ctx.lineWidth = 1
               ctx.beginPath()
               ctx.arc(wave.x, wave.y, circleRadius * 0.7, 0, Math.PI * 2)
               ctx.stroke()
+              
+              // Add shimmering sparkles
+              if (wave.intensity && wave.intensity > 0.7) {
+                const sparkleCount = Math.floor(circleRadius / 15)
+                for (let j = 0; j < sparkleCount; j++) {
+                  const sparkleAngle = (Math.PI * 2 * j) / sparkleCount + (currentTime * 0.01)
+                  const sparkleX = wave.x + Math.cos(sparkleAngle) * circleRadius
+                  const sparkleY = wave.y + Math.sin(sparkleAngle) * circleRadius
+                  
+                  ctx.fillStyle = `rgba(255, 255, 255, ${circleOpacity * 0.6})`
+                  ctx.beginPath()
+                  ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2)
+                  ctx.fill()
+                }
+              }
             }
           }
         })
@@ -2148,7 +2298,150 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       waveAnimationRef.current = requestAnimationFrame(animateWaves)
     }
 
+    // Particle animation loop
+    const animateParticles = () => {
+      if (!canvasRef.current) {
+        particleAnimationRef.current = requestAnimationFrame(animateParticles)
+        return
+      }
+
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const currentTime = Date.now()
+      
+      // Update and draw particles
+      setParticleEffects(prevParticles => {
+        const activeParticles = prevParticles
+          .map(particle => {
+            const age = currentTime - particle.timestamp
+            const lifeProgress = age / particle.maxLife
+            
+            if (lifeProgress >= 1) return null
+            
+            // Update particle position
+            const newX = particle.x + particle.vx
+            const newY = particle.y + particle.vy
+            
+            // Apply physics based on particle type
+            let newVx = particle.vx
+            let newVy = particle.vy
+            
+            switch (particle.type) {
+              case 'spark':
+                newVy += 0.1 // Gravity
+                newVx *= 0.98 // Air resistance
+                newVy *= 0.98
+                break
+              case 'bubble':
+                newVy -= 0.05 // Float upward
+                newVx *= 0.99
+                newVy *= 0.99
+                break
+              case 'glitter':
+                newVx *= 0.95
+                newVy *= 0.95
+                break
+              case 'trail':
+                newVx *= 0.92
+                newVy *= 0.92
+                break
+            }
+            
+            return {
+              ...particle,
+              x: newX,
+              y: newY,
+              vx: newVx,
+              vy: newVy,
+              life: 1 - lifeProgress
+            }
+          })
+          .filter(Boolean) as ParticleEffect[]
+
+        // Draw particles on canvas
+        activeParticles.forEach(particle => {
+          const alpha = particle.life
+          ctx.save()
+          
+          switch (particle.type) {
+            case 'spark':
+              // Draw spark as a bright star
+              ctx.fillStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha})`)
+              ctx.shadowColor = particle.color
+              ctx.shadowBlur = 8
+              ctx.beginPath()
+              for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 * i) / 8
+                const radius = i % 2 === 0 ? particle.size : particle.size * 0.5
+                const x = particle.x + Math.cos(angle) * radius
+                const y = particle.y + Math.sin(angle) * radius
+                if (i === 0) ctx.moveTo(x, y)
+                else ctx.lineTo(x, y)
+              }
+              ctx.closePath()
+              ctx.fill()
+              break
+              
+            case 'bubble':
+              // Draw bubble as a circle with highlight
+              ctx.strokeStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha * 0.6})`)
+              ctx.fillStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha * 0.1})`)
+              ctx.lineWidth = 1
+              ctx.beginPath()
+              ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
+              ctx.fill()
+              ctx.stroke()
+              
+              // Add highlight
+              ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`
+              ctx.beginPath()
+              ctx.arc(particle.x - particle.size * 0.3, particle.y - particle.size * 0.3, particle.size * 0.3, 0, Math.PI * 2)
+              ctx.fill()
+              break
+              
+            case 'glitter':
+              // Draw glitter as rotating diamond
+              ctx.fillStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha})`)
+              ctx.shadowColor = particle.color
+              ctx.shadowBlur = 6
+              ctx.translate(particle.x, particle.y)
+              ctx.rotate(currentTime * 0.01)
+              ctx.beginPath()
+              ctx.moveTo(0, -particle.size)
+              ctx.lineTo(particle.size * 0.7, 0)
+              ctx.lineTo(0, particle.size)
+              ctx.lineTo(-particle.size * 0.7, 0)
+              ctx.closePath()
+              ctx.fill()
+              break
+              
+            case 'trail':
+              // Draw trail as a fading line
+              ctx.strokeStyle = particle.color.replace('rgb', 'rgba').replace(')', `, ${alpha})`)
+              ctx.lineWidth = particle.size
+              ctx.lineCap = 'round'
+              ctx.shadowColor = particle.color
+              ctx.shadowBlur = 4
+              ctx.beginPath()
+              ctx.moveTo(particle.x - particle.vx * 3, particle.y - particle.vy * 3)
+              ctx.lineTo(particle.x, particle.y)
+              ctx.stroke()
+              break
+          }
+          
+          ctx.restore()
+        })
+
+        return activeParticles
+      })
+
+      particleAnimationRef.current = requestAnimationFrame(animateParticles)
+    }
+
     waveAnimationRef.current = requestAnimationFrame(animateWaves)
+    particleAnimationRef.current = requestAnimationFrame(animateParticles)
 
     // Initialize ambient sound after a delay
     setTimeout(() => {
@@ -2167,6 +2460,9 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       }
       if (waveAnimationRef.current) {
         cancelAnimationFrame(waveAnimationRef.current)
+      }
+      if (particleAnimationRef.current) {
+        cancelAnimationFrame(particleAnimationRef.current)
       }
       if (ambientSoundRef.current) {
         ambientSoundRef.current.stop()
@@ -2407,10 +2703,13 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-xs opacity-80">• Складність і природність = бали (макс. 10 за трюк)</p>
           <p className="text-xs opacity-80">• Надприродний рух = смерть креветки ❌</p>
           <p className="text-xs opacity-80">• Потрібно 100 балів для доступу до питань</p>
+          <p className="text-xs opacity-80 mt-1">✨ Нові ефекти: хвилі, іскри, бульбашки, сяйво!</p>
           
           <div className="mt-3 text-xs bg-white/20 rounded-lg p-2">
             <p>🎯 Поточний рахунок: {gameState.score}/100 балів</p>
             <p>🎪 Траєкторії: {gameState.trajectoryPoints} балів</p>
+            <p>🌊 Активних хвиль: {waveEffects.length}</p>
+            <p>✨ Активних частинок: {particleEffects.length}</p>
           </div>
         </motion.div>
       )}
@@ -2526,7 +2825,16 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                           <li>2. Малюйте плавну траєкторію руху креветки</li>
                           <li>3. Відпустіть кнопку миші щоб завершити трюк</li>
                           <li>4. Дивіться як хвилі розходяться від вашого малюнка!</li>
+                          <li>5. ✨ Нові ефекти: іскри, бульбашки, сяйво та хвилі!</li>
                         </ol>
+                        
+                        <div className="mt-3 p-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded">
+                          <p className="text-xs font-medium text-purple-800">🌈 Спеціальні ефекти:</p>
+                          <p className="text-xs text-purple-700">• Швидкі рухи створюють сліди 🔥</p>
+                          <p className="text-xs text-purple-700">• Різкі повороти генерують іскри ⚡</p>
+                          <p className="text-xs text-purple-700">• Кольорові хвилі та бульбашки 🌊</p>
+                          <p className="text-xs text-purple-700">• Сяючі діаманти та зірки ✨</p>
+                        </div>
                       </div>
                     </div>
                     
@@ -2867,20 +3175,21 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           <p className="text-base font-medium">
             {gameState.isRobotMode ? '🤖 ChefBot-2000 Робот-Креветка' : '🎮 Фотореалістична креветка'}
           </p>
-          <p className="text-sm opacity-75 mt-1">
-            {menuVisible 
-              ? "Натисніть будь-де для входу на сайт"
-              : gameState.gamePhase === 'trajectory'
-                ? "🎪 Малюйте траєкторії трюків мишкою • Потрібно 100 балів"
-                : gameState.gamePhase === 'quiz'
-                  ? "🧠 ChefBot-2000 тестує ваші кулінарні знання • 4 питання"
-                  : gameState.gamePhase === 'cooking'
-                    ? "👨‍🍳 ChefBot-2000 аналізує інгредієнти та створює рецепт"
-                    : gameState.isSwimming 
-                      ? "🌊 Автономне плавання • 🖱️ Ручне керування"
-                      : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
-            }
-          </p>
+          {!menuVisible && isLoaded && (
+            <p className="text-sm opacity-75 mt-1">
+              {menuVisible 
+                ? "Натисніть будь-де для входу на сайт"
+                : gameState.gamePhase === 'trajectory'
+                  ? "🎪 Малюйте траєкторії з ефектами ✨ • Потрібно 100 балів"
+                  : gameState.gamePhase === 'quiz'
+                    ? "🧠 ChefBot-2000 тестує ваші кулінарні знання • 4 питання"
+                    : gameState.gamePhase === 'cooking'
+                      ? "👨‍🍳 ChefBot-2000 аналізує інгредієнти та створює рецепт"
+                      : gameState.isSwimming 
+                        ? "🌊 Автономне плавання • 🖱️ Ручне керування"
+                        : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
+              }
+            </p>
         </div>
       </motion.div>
 
