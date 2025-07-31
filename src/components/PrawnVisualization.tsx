@@ -1152,6 +1152,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       return () => clearInterval(interval)
     }
   }, [gameState.gamePhase, gameState.comboCount, gameState.lastTrickTime, gameState.comboTimeWindow])
+
+  useEffect(() => {
     if (!mountRef.current) return
 
     let mounted = true
@@ -3496,6 +3498,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                         : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
               }
             </p>
+          )}
         </div>
       </motion.div>
 
