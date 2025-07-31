@@ -163,7 +163,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setShowGameUI(true)
     
     playClickSound({ volume: 0.5, playbackRate: 1.3 })
-    toast.success("🤖 Креветка-робот активована! Відповідайте на кулінарні питання.")
+    toast.success("🤖 РобоКреветка-Кухар ChefBot-2000 активована! Відповідайте на кулінарні питання.")
   }
 
   const handleAnswerSubmit = (answer: string) => {
@@ -177,7 +177,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
         prawnMood: 'excited'
       }))
       playBubbleSound({ volume: 0.6, playbackRate: 1.5 })
-      toast.success("🎉 Правильно! +10 балів")
+      toast.success("🎉 Правильно! ChefBot-2000 схвалює! +10 балів")
       
       // Check if game is won (3 correct answers)
       if (gameState.correctAnswers + 1 >= 3) {
@@ -189,7 +189,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           }))
           setShowGameUI(false)
           setShowRecipeGenerator(true)
-          toast.success("🏆 Ви виграли! Тепер можете створити рецепт з ШІ!")
+          toast.success("🏆 Ви виграли! ChefBot-2000 активує ШІ-кухаря!")
         }, 2000)
       } else {
         // Next question
@@ -204,7 +204,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     } else {
       setGameState(prev => ({ ...prev, prawnMood: 'calm' }))
       playRippleSound({ volume: 0.4, playbackRate: 0.8 })
-      toast.error("❌ Неправильно. Спробуйте ще раз!")
+      toast.error("❌ Неправильно. ChefBot-2000 вчить вас кулінарії!")
       
       setTimeout(() => {
         setUserAnswer('')
@@ -227,16 +227,19 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     setGameState(prev => ({ ...prev, prawnMood: 'thinking' }))
 
     try {
-      const prompt = spark.llmPrompt`Створи детальний кулінарний рецепт з морепродуктами та креветками Macrobrachium rosenbergii, використовуючи ці інгредієнти: ${userIngredients}. 
+      const prompt = spark.llmPrompt`Ти - ChefBot-2000, розумна робот-креветка Macrobrachium rosenbergii з вбудованим штучним інтелектом. Ти експерт у приготуванні морепродуктів та креветок. Створи детальний кулінарний рецепт з морепродуктами та креветками Macrobrachium rosenbergii, використовуючи ці інгредієнти: ${userIngredients}. 
+
+Говори від імені ChefBot-2000 і будь креативним! Додай власні поради як досвідчений робот-кухар.
 
 Відповідь повинна бути у форматі JSON:
 {
-  "title": "Назва рецепту українською",
-  "ingredients": ["список інгредієнтів з кількістю"],
-  "instructions": ["покрокові інструкції приготування"],
+  "title": "Назва рецепту українською з підписом від ChefBot-2000",
+  "ingredients": ["список інгредієнтів з точною кількістю"],
+  "instructions": ["покрокові інструкції від ChefBot-2000"],
   "cookingTime": "час приготування",
   "difficulty": "складність (легко/середньо/складно)",
-  "tips": ["корисні поради"]
+  "tips": ["ексклюзивні поради від ChefBot-2000"],
+  "chefbotNotes": "Особисті коментарі від ChefBot-2000 про цей рецепт"
 }
 
 Рецепт повинен бути оригінальним та смачним, з акцентом на креветки Macrobrachium rosenbergii як основний інгредієнт.`
@@ -258,7 +261,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       setGeneratedRecipe(newRecipe)
       setGameState(prev => ({ ...prev, prawnMood: 'excited', gamePhase: 'completed' }))
       playBubbleSound({ volume: 0.8, playbackRate: 1.2 })
-      toast.success("🍽️ Рецепт створено ШІ-кухарем!")
+      toast.success("🍽️ ChefBot-2000 створив унікальний рецепт!")
 
     } catch (error) {
       console.error('Error generating recipe:', error)
@@ -358,19 +361,20 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     const createPrawnMaterial = (baseColor: number, roughness = 0.3, metalness = 0.1, options: any = {}) => {
       const material = new THREE.MeshStandardMaterial({
         color: baseColor,
-        roughness,
-        metalness: gameState.isRobotMode ? metalness + 0.3 : metalness,
+        roughness: gameState.isRobotMode ? Math.max(0.1, roughness - 0.2) : roughness,
+        metalness: gameState.isRobotMode ? Math.min(0.9, metalness + 0.5) : metalness,
         transparent: true,
-        opacity: options.opacity || 0.95,
+        opacity: options.opacity || (gameState.isRobotMode ? 0.98 : 0.95),
         side: THREE.DoubleSide,
-        emissive: gameState.isRobotMode ? new THREE.Color(0x002244) : new THREE.Color(0x000000),
-        emissiveIntensity: gameState.isRobotMode ? 0.1 : 0,
+        emissive: gameState.isRobotMode ? new THREE.Color(0x0066cc) : new THREE.Color(0x000000),
+        emissiveIntensity: gameState.isRobotMode ? 0.2 : 0,
         ...options
       })
       
       // Add robotic texture when in robot mode
       if (gameState.isRobotMode && options.addNoise) {
         material.onBeforeCompile = (shader) => {
+          shader.uniforms.time = { value: 0 }
           shader.vertexShader = shader.vertexShader.replace(
             '#include <common>',
             `
@@ -400,6 +404,21 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             float noise(vec3 p) {
               return fract(sin(dot(p, vec3(12.9898, 78.233, 54.321))) * 43758.5453);
             }
+            
+            // Hexagonal panel grid for robot plating
+            float hexGrid(vec2 uv, float scale) {
+              uv *= scale;
+              vec2 gv = fract(uv) - 0.5;
+              vec2 id = floor(uv);
+              
+              float d1 = length(gv);
+              float d2 = length(gv - vec2(0.5, 0.0));
+              float d3 = length(gv - vec2(-0.5, 0.0));
+              float d4 = length(gv - vec2(0.0, 0.5));
+              float d5 = length(gv - vec2(0.0, -0.5));
+              
+              return min(min(min(min(d1, d2), d3), d4), d5);
+            }
             `
           )
           
@@ -408,25 +427,45 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             `
             #include <color_fragment>
             
-            // Robotic panel lines and circuits
-            float panelLines = abs(sin(vWorldPosition.y * 15.0)) * 0.2;
-            float circuits = abs(sin(vWorldPosition.x * 20.0)) * abs(cos(vWorldPosition.z * 25.0)) * 0.15;
-            float digitalNoise = noise(vWorldPosition * 8.0 + time * 0.5) * 0.1;
+            // Robot shell plating with hexagonal panels
+            vec2 panelUV = vWorldPosition.xy * 0.8;
+            float hexPattern = hexGrid(panelUV, 8.0);
+            float panelLines = smoothstep(0.05, 0.1, hexPattern) * 0.3;
             
-            // Cyber glow effect
-            float glow = pow(1.0 - abs(dot(vNormal, normalize(vWorldPosition - cameraPosition))), 3.0);
-            vec3 cyberColor = vec3(0.0, 0.8, 1.0) * glow * 0.3;
+            // Circuit board traces
+            float circuitX = abs(sin(vWorldPosition.x * 25.0)) * step(0.95, abs(sin(vWorldPosition.y * 15.0)));
+            float circuitY = abs(sin(vWorldPosition.z * 20.0)) * step(0.9, abs(sin(vWorldPosition.x * 12.0)));
+            float circuits = (circuitX + circuitY) * 0.4;
             
-            // AI processing indicator
-            float aiPulse = sin(time * 3.0) * 0.1 + 0.9;
+            // LED indicator dots
+            float ledPattern = step(0.98, sin(vWorldPosition.x * 30.0) * sin(vWorldPosition.y * 25.0) * sin(vWorldPosition.z * 35.0));
+            vec3 ledColor = vec3(0.0, 0.8, 1.0) * ledPattern * (sin(time * 5.0) * 0.5 + 1.0);
             
-            diffuseColor.rgb = mix(
-              diffuseColor.rgb, 
-              diffuseColor.rgb + cyberColor + vec3(panelLines + circuits + digitalNoise) * aiPulse, 
-              0.7
-            );
+            // Digital noise overlay
+            float digitalNoise = noise(vWorldPosition * 12.0 + time * 2.0) * 0.1;
+            
+            // Holographic rim lighting
+            float rim = pow(1.0 - abs(dot(vNormal, normalize(vWorldPosition - cameraPosition))), 2.0);
+            vec3 hologram = vec3(0.0, 1.0, 1.0) * rim * 0.4;
+            
+            // AI status pulse
+            float aiPulse = sin(time * 4.0) * 0.15 + 0.85;
+            
+            // Combine all robotic effects
+            vec3 roboticOverlay = ledColor + hologram + vec3(panelLines + circuits + digitalNoise) * aiPulse;
+            diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb + roboticOverlay, 0.8);
+            
+            // Metallic sheen for robot surface
+            diffuseColor.rgb += vec3(0.1, 0.15, 0.2) * rim * 0.5;
             `
           )
+          
+          // Update time uniform
+          const updateTime = () => {
+            shader.uniforms.time.value = Date.now() * 0.001
+            requestAnimationFrame(updateTime)
+          }
+          updateTime()
         }
       } else if (options.addNoise) {
         // Original organic texture
@@ -494,35 +533,130 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     // Main body segments (realistic Macrobrachium anatomy)
     const bodySegments: THREE.Mesh[] = []
     
-    // Cephalothorax (head-chest region) - more detailed and realistic
-    const cephalothoraxGeometry = new THREE.SphereGeometry(0.5, 20, 16)
-    cephalothoraxGeometry.scale(1.3, 0.9, 1.6) // More elongated and realistic
+    // Cephalothorax (head-chest region) - more detailed robotic appearance
+    const cephalothoraxGeometry = new THREE.SphereGeometry(0.5, 24, 20)
+    cephalothoraxGeometry.scale(1.4, 1.0, 1.8) // More pronounced and robotic
     
-    // Add surface detail to cephalothorax
+    // Add detailed surface modifications for robotic appearance
     const positions = cephalothoraxGeometry.attributes.position.array as Float32Array
     for (let i = 0; i < positions.length; i += 3) {
       const x = positions[i]
       const y = positions[i + 1]
       const z = positions[i + 2]
       
-      // Add subtle bumps and ridges for realism
-      const bump = Math.sin(x * 8) * Math.cos(y * 6) * Math.sin(z * 4) * 0.05
-      const ridge = Math.abs(Math.sin(z * 12)) * 0.03
-      
-      positions[i] = x + bump
-      positions[i + 1] = y + ridge
-      positions[i + 2] = z + bump * 0.5
+      if (gameState.isRobotMode) {
+        // Robotic hexagonal plating pattern
+        const hexSize = 0.15
+        const hexX = Math.floor(x / hexSize) * hexSize
+        const hexY = Math.floor(y / hexSize) * hexSize
+        const hexZ = Math.floor(z / hexSize) * hexSize
+        
+        const hexOffset = ((Math.floor(x / hexSize) + Math.floor(y / hexSize) + Math.floor(z / hexSize)) % 2) * 0.02
+        const panelDepth = Math.sin(hexX * 25) * Math.cos(hexY * 20) * Math.sin(hexZ * 30) * 0.015
+        
+        positions[i] = x + hexOffset + panelDepth
+        positions[i + 1] = y + hexOffset + panelDepth * 0.5
+        positions[i + 2] = z + hexOffset + panelDepth
+      } else {
+        // Original organic bumps and ridges
+        const bump = Math.sin(x * 8) * Math.cos(y * 6) * Math.sin(z * 4) * 0.05
+        const ridge = Math.abs(Math.sin(z * 12)) * 0.03
+        
+        positions[i] = x + bump
+        positions[i + 1] = y + ridge
+        positions[i + 2] = z + bump * 0.5
+      }
     }
     cephalothoraxGeometry.attributes.position.needsUpdate = true
     cephalothoraxGeometry.computeVertexNormals()
     
-    const cephalothoraxMaterial = createPrawnMaterial(0xd4844a, 0.35, 0.25, { addNoise: true })
+    const cephalothoraxMaterial = createPrawnMaterial(
+      gameState.isRobotMode ? 0x6699cc : 0xd4844a, 
+      gameState.isRobotMode ? 0.15 : 0.35, 
+      gameState.isRobotMode ? 0.8 : 0.25, 
+      { addNoise: true }
+    )
     const cephalothorax = new THREE.Mesh(cephalothoraxGeometry, cephalothoraxMaterial)
     cephalothorax.position.set(0, 0, 0.3)
     cephalothorax.castShadow = true
     cephalothorax.receiveShadow = true
     prawnGroup.add(cephalothorax)
     bodySegments.push(cephalothorax)
+    // Add robotic armor plates when in robot mode
+    if (gameState.isRobotMode) {
+      // Add main armor plate on the cephalothorax
+      const armorPlateGeometry = new THREE.BoxGeometry(1.2, 0.8, 1.4)
+      const armorPlatePositions = armorPlateGeometry.attributes.position.array as Float32Array
+      
+      // Add armor plate details
+      for (let i = 0; i < armorPlatePositions.length; i += 3) {
+        const x = armorPlatePositions[i]
+        const y = armorPlatePositions[i + 1]
+        const z = armorPlatePositions[i + 2]
+        
+        // Add beveled edges and panel lines
+        const bevel = Math.max(0, 0.05 - Math.sqrt(x*x + y*y) * 0.03)
+        const panelLine = Math.abs(Math.sin(x * 5)) * Math.abs(Math.sin(z * 5)) * 0.01
+        
+        armorPlatePositions[i] = x * (1 - bevel)
+        armorPlatePositions[i + 1] = y * (1 - bevel) + panelLine
+        armorPlatePositions[i + 2] = z * (1 - bevel)
+      }
+      
+      armorPlateGeometry.attributes.position.needsUpdate = true
+      armorPlateGeometry.computeVertexNormals()
+      
+      const armorPlateMaterial = new THREE.MeshStandardMaterial({
+        color: 0x334466,
+        roughness: 0.1,
+        metalness: 0.9,
+        transparent: true,
+        opacity: 0.8,
+        emissive: new THREE.Color(0x001122),
+        emissiveIntensity: 0.2
+      })
+      
+      const armorPlate = new THREE.Mesh(armorPlateGeometry, armorPlateMaterial)
+      armorPlate.position.set(0, 0.1, 0.3)
+      armorPlate.castShadow = true
+      prawnGroup.add(armorPlate)
+      
+      // Add LED status indicators
+      for (let i = 0; i < 6; i++) {
+        const ledGeometry = new THREE.SphereGeometry(0.03, 8, 6)
+        const ledMaterial = new THREE.MeshStandardMaterial({
+          color: 0x00ffcc,
+          emissive: new THREE.Color(0x00ffcc),
+          emissiveIntensity: 0.8,
+          transparent: true,
+          opacity: 0.9
+        })
+        
+        const led = new THREE.Mesh(ledGeometry, ledMaterial)
+        const angle = (i / 6) * Math.PI * 2
+        led.position.set(
+          Math.cos(angle) * 0.5,
+          0.3,
+          0.4 + Math.sin(angle) * 0.3
+        )
+        prawnGroup.add(led)
+      }
+      
+      // Add chest display panel
+      const displayGeometry = new THREE.PlaneGeometry(0.4, 0.2)
+      const displayMaterial = new THREE.MeshStandardMaterial({
+        color: 0x002244,
+        emissive: new THREE.Color(0x0066cc),
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.8
+      })
+      
+      const display = new THREE.Mesh(displayGeometry, displayMaterial)
+      display.position.set(0, 0, 0.9)
+      display.rotation.x = -0.2
+      prawnGroup.add(display)
+    }
 
     // Abdomen segments (6 segments like real prawns) - enhanced realism
     for (let i = 0; i < 6; i++) {
@@ -590,7 +724,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     rostrum.castShadow = true
     prawnGroup.add(rostrum)
 
-    // Eyes (compound eyes on stalks) - more realistic
+    // Eyes (compound eyes with robotic enhancements)
     const eyeStalkGeometry = new THREE.CylinderGeometry(0.06, 0.09, 0.25, 12)
     
     // Add texture to eye stalks
@@ -600,44 +734,70 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       const y = eyeStalkPositions[i + 1]
       const z = eyeStalkPositions[i + 2]
       
-      // Add subtle surface texture
-      const texture = Math.sin(y * 20) * Math.cos(Math.atan2(z, x) * 8) * 0.008
-      eyeStalkPositions[i] = x + texture
-      eyeStalkPositions[i + 2] = z + texture
+      if (gameState.isRobotMode) {
+        // Robotic servo joints
+        const joint = Math.abs(y) > 0.1 ? Math.sin(y * 15) * 0.015 : 0
+        eyeStalkPositions[i] = x + joint
+        eyeStalkPositions[i + 2] = z + joint
+      } else {
+        // Organic texture
+        const texture = Math.sin(y * 20) * Math.cos(Math.atan2(z, x) * 8) * 0.008
+        eyeStalkPositions[i] = x + texture
+        eyeStalkPositions[i + 2] = z + texture
+      }
     }
     eyeStalkGeometry.attributes.position.needsUpdate = true
     eyeStalkGeometry.computeVertexNormals()
     
-    const eyeGeometry = new THREE.SphereGeometry(0.14, 16, 12)
+    const eyeGeometry = new THREE.SphereGeometry(0.14, 20, 16)
     
-    // Create compound eye texture
+    // Create compound eye texture or robotic camera
     const eyePositions = eyeGeometry.attributes.position.array as Float32Array
     for (let i = 0; i < eyePositions.length; i += 3) {
       const x = eyePositions[i]
       const y = eyePositions[i + 1]
       const z = eyePositions[i + 2]
       
-      // Create faceted compound eye surface
-      const facetX = Math.floor((Math.atan2(y, x) + Math.PI) / (Math.PI / 6))
-      const facetY = Math.floor((Math.acos(z / Math.sqrt(x*x + y*y + z*z)) + Math.PI) / (Math.PI / 6))
-      const facetOffset = ((facetX + facetY) % 2) * 0.01
-      
-      const length = Math.sqrt(x*x + y*y + z*z)
-      eyePositions[i] = x * (1 + facetOffset)
-      eyePositions[i + 1] = y * (1 + facetOffset)
-      eyePositions[i + 2] = z * (1 + facetOffset)
+      if (gameState.isRobotMode) {
+        // Robotic camera lens with focusing rings
+        const angle = Math.atan2(y, x)
+        const radius = Math.sqrt(x*x + y*y)
+        const rings = Math.sin(radius * 25) * 0.01
+        const lensPattern = Math.sin(angle * 12) * 0.005
+        
+        eyePositions[i] = x + rings + lensPattern
+        eyePositions[i + 1] = y + rings + lensPattern
+        eyePositions[i + 2] = z + rings
+      } else {
+        // Create faceted compound eye surface
+        const facetX = Math.floor((Math.atan2(y, x) + Math.PI) / (Math.PI / 6))
+        const facetY = Math.floor((Math.acos(z / Math.sqrt(x*x + y*y + z*z)) + Math.PI) / (Math.PI / 6))
+        const facetOffset = ((facetX + facetY) % 2) * 0.01
+        
+        eyePositions[i] = x * (1 + facetOffset)
+        eyePositions[i + 1] = y * (1 + facetOffset)
+        eyePositions[i + 2] = z * (1 + facetOffset)
+      }
     }
     eyeGeometry.attributes.position.needsUpdate = true
     eyeGeometry.computeVertexNormals()
     
-    const eyeStalkMaterial = createPrawnMaterial(0xff9966, 0.5, 0.15, { addNoise: true })
+    const eyeStalkMaterial = createPrawnMaterial(
+      gameState.isRobotMode ? 0x4488cc : 0xff9966, 
+      gameState.isRobotMode ? 0.2 : 0.5, 
+      gameState.isRobotMode ? 0.7 : 0.15, 
+      { addNoise: true }
+    )
+    
     const eyeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a0f0a,
-      roughness: 0.05,
-      metalness: 0.9,
+      color: gameState.isRobotMode ? 0x00ffcc : 0x1a0f0a,
+      roughness: gameState.isRobotMode ? 0.02 : 0.05,
+      metalness: gameState.isRobotMode ? 0.95 : 0.9,
       transparent: true,
       opacity: 0.95,
-      envMapIntensity: 2
+      envMapIntensity: gameState.isRobotMode ? 3 : 2,
+      emissive: gameState.isRobotMode ? new THREE.Color(0x0088ff) : new THREE.Color(0x000000),
+      emissiveIntensity: gameState.isRobotMode ? 0.3 : 0
     })
 
     const leftEyeStalk = new THREE.Mesh(eyeStalkGeometry, eyeStalkMaterial)
@@ -1720,13 +1880,13 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
           <p className="text-sm font-medium">
-            {gameState.isRobotMode ? '🤖 Робот-Кухар' : 'Настрій'}: {
+            {gameState.isRobotMode ? '🤖 ChefBot-2000' : 'Настрій'}: {
               gameState.prawnMood === 'calm' ? '🧘 Спокійний' : 
               gameState.prawnMood === 'excited' ? '⚡ Збуджений' : 
               gameState.prawnMood === 'feeding' ? '🍽️ Годування' : 
               gameState.prawnMood === 'swimming' ? '🏊 Плавання' : 
-              gameState.prawnMood === 'cooking' ? '👨‍🍳 Готує' :
-              gameState.prawnMood === 'thinking' ? '🧠 Думає' : '🎮 Інтерактив'
+              gameState.prawnMood === 'cooking' ? '👨‍🍳 Готує рецепт' :
+              gameState.prawnMood === 'thinking' ? '🧠 Аналізує дані' : '🎮 Інтерактив'
             }
           </p>
           <p className="text-xs opacity-75 mt-1">Взаємодій: {gameState.interactionCount}</p>
@@ -1773,7 +1933,7 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           disabled={!audioEnabled}
         >
           <span className="text-2xl mr-2">🤖</span>
-          <span>Кулінарна Гра</span>
+          <span>ChefBot-2000 Кулінарна Гра</span>
         </motion.button>
       )}
 
@@ -1789,8 +1949,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             <Card className="max-w-2xl w-full mx-4 bg-white/95 backdrop-blur-lg">
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl text-gradient-primary flex items-center justify-center gap-2">
-                  🤖 Робот-Кухар Креветка
-                  <Badge variant="secondary">ШІ на борту</Badge>
+                  🤖 РобоКреветка-Кухар "ChefBot-2000"
+                  <Badge variant="secondary">{gameState.hasAI ? 'ШІ Активно' : 'ШІ Очікує'}</Badge>
                 </CardTitle>
                 <p className="text-muted-foreground mt-2">
                   Рахунок: {gameState.score} | Правильних відповідей: {gameState.correctAnswers}/3
@@ -1824,8 +1984,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                     >
                       <p className="text-sm">
                         {userAnswer === correctAnswer 
-                          ? "✅ Правильно! Креветка радіє вашим знанням."
-                          : "❌ Неправильно. Креветка вчить вас кулінарії."
+                          ? "✅ Правильно! ChefBot-2000: 'Ваші кулінарні знання вражаючі! Системи схвалення активовані.'"
+                          : "❌ Неправильно. ChefBot-2000: 'Мої датабази містять правильну відповідь. Давайте вчитися разом!'"
                         }
                       </p>
                     </motion.div>
@@ -1849,10 +2009,10 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-lg">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl text-gradient-primary flex items-center justify-center gap-3">
-                  🏆 Ви виграли! 👨‍🍳 ШІ-Кухар активований
+                  🏆 Ви виграли! 👨‍🍳 ChefBot-2000 ШІ-Кухар активований
                 </CardTitle>
                 <p className="text-muted-foreground mt-2">
-                  Креветка-робот створить унікальний рецепт на основі ваших інгредієнтів
+                  РобоКреветка-Кухар створить унікальний рецепт на основі ваших інгредієнтів
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -1900,10 +2060,10 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                         {isGeneratingRecipe ? (
                           <>
                             <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></div>
-                            ШІ створює рецепт...
+                            ChefBot-2000 створює рецепт...
                           </>
                         ) : (
-                          <>🧠 Створити рецепт з ШІ</>
+                          <>🧠 ChefBot-2000 створити рецепт</>
                         )}
                       </Button>
                       <Button
@@ -1962,6 +2122,16 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                           </ol>
                         </div>
                       </div>
+                      
+                      {/* ChefBot-2000 Notes */}
+                      {recipeData.chefbotNotes && (
+                        <div className="col-span-1 md:col-span-2 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <h4 className="font-semibold text-blue-700 mb-2 flex items-center gap-2">
+                            🤖 ChefBot-2000 Коментарі:
+                          </h4>
+                          <p className="text-sm text-blue-600 italic">"{recipeData.chefbotNotes}"</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2040,10 +2210,10 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
                 </div>
                 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="font-medium text-blue-800 mb-2">📊 Статистика рецептів</h4>
+                  <h4 className="font-medium text-blue-800 mb-2">📊 ChefBot-2000 Статистика</h4>
                   <p className="text-sm text-blue-600">Всього рецептів: {recipes.length}</p>
                   <p className="text-sm text-blue-600">
-                    ШІ-генерованих: {recipes.filter(r => r.aiGenerated).length}
+                    ChefBot-2000 рецептів: {recipes.filter(r => r.aiGenerated).length}
                   </p>
                 </div>
 
@@ -2104,18 +2274,18 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
       >
         <div className="bg-black/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/20 max-w-md">
           <p className="text-base font-medium">
-            {gameState.isRobotMode ? '🤖 Робот-Кухар Креветка' : '🎮 Фотореалістична креветка'}
+            {gameState.isRobotMode ? '🤖 ChefBot-2000 Робот-Креветка' : '🎮 Фотореалістична креветка'}
           </p>
           <p className="text-sm opacity-75 mt-1">
             {menuVisible 
               ? "Натисніть будь-де для входу на сайт"
               : gameState.gamePhase === 'playing'
-                ? "🧠 Відповідайте на кулінарні питання"
+                ? "🧠 ChefBot-2000 тестує ваші кулінарні знання"
                 : gameState.gamePhase === 'cooking'
-                  ? "👨‍🍳 ШІ створює рецепт з ваших інгредієнтів"
+                  ? "👨‍🍳 ChefBot-2000 аналізує інгредієнти та створює рецепт"
                   : gameState.isSwimming 
-                    ? "🌊 Креветка плаває автоматично • 🖱️ Рухайте мишкою"
-                    : "🤖 Кнопка гри • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
+                    ? "🌊 Автономне плавання • 🖱️ Ручне керування"
+                    : "🤖 Активувати ChefBot • 🖱️ Керування • 🎯 Клік = меню • 🍽️ Подвійний клік = годування"
             }
           </p>
         </div>
@@ -2235,8 +2405,8 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
             <div className="w-64 h-64 border border-white/10 rounded-full m-16"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <div className="text-white text-center bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full">
-                <p className="text-sm font-medium">🎮 Фотореалістична креветка</p>
-                <p className="text-xs opacity-75 mt-1">Клік для меню • Подвійний клік для годування</p>
+                <p className="text-sm font-medium">🎮 ChefBot-2000 Робот-Креветка</p>
+                <p className="text-xs opacity-75 mt-1">Клік для активації • Подвійний клік для годування</p>
               </div>
             </div>
           </div>
@@ -2268,12 +2438,12 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
           </div>
           <div className="absolute bottom-20 right-32 text-white/60 text-center">
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-              <p className="text-xs">{gameState.gamePhase === 'exploring' ? '🤖 Кулінарна гра' : '🎮 Робот-креветка'}</p>
+              <p className="text-xs">{gameState.gamePhase === 'exploring' ? '🤖 ChefBot-2000' : '🎮 Робот-креветка'}</p>
             </div>
           </div>
           <div className="absolute bottom-32 right-20 text-white/60 text-center">
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
-              <p className="text-xs">⚙️ Налаштування ШІ</p>
+              <p className="text-xs">⚙️ ChefBot-2000 ШІ</p>
             </div>
           </div>
         </motion.div>
