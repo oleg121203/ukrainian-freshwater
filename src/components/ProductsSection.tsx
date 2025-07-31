@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Plus, Minus } from '@phosphor-icons/react'
+import { ShoppingCart, Plus, Minus, Phone, BookOpen, ArrowRight } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,11 @@ interface CartItem extends Product {
   quantity: number
 }
 
-export function ProductsSection() {
+interface ProductsSectionProps {
+  onNavigate?: (section: string) => void
+}
+
+export function ProductsSection({ onNavigate }: ProductsSectionProps) {
   const { language, t } = useLanguage()
   const [cart, setCart] = useKV<CartItem[]>('shopping-cart', [])
   const [quantities, setQuantities] = useState<Record<string, number>>({})
@@ -234,6 +238,51 @@ export function ProductsSection() {
             </motion.div>
           ))}
         </div>
+
+        {/* Additional Info Section */}
+        <motion.div
+          className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('contact')}>
+            <CardContent className="p-8 text-center">
+              <Phone size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Індивідуальні замовлення' : 'Custom Orders'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Потрібні особливі розміри або великі обсяги? Зв\'яжіться з нами для індивідуального пропозиції.'
+                  : 'Need special sizes or large volumes? Contact us for a custom offer.'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Зв\'язатися' : 'Contact'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('recipes')}>
+            <CardContent className="p-8 text-center">
+              <BookOpen size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Рецепти приготування' : 'Cooking Recipes'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Дізнайтеся секрети приготування найсмачніших страв з наших креветок.'
+                  : 'Learn the secrets of cooking the most delicious dishes with our prawns.'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Cart summary */}
         {cart.length > 0 && (

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight } from '@phosphor-icons/react'
+import { X, ChevronLeft, ChevronRight, ShoppingCart, BookOpen, ArrowRight } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface GalleryImage {
   id: string
@@ -14,7 +15,11 @@ interface GalleryImage {
   category: 'farm' | 'process' | 'product'
 }
 
-export function GallerySection() {
+interface GallerySectionProps {
+  onNavigate?: (section: string) => void
+}
+
+export function GallerySection({ onNavigate }: GallerySectionProps) {
   const { language } = useLanguage()
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -269,6 +274,51 @@ export function GallerySection() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Additional Actions */}
+        <motion.div
+          className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+            <CardContent className="p-8 text-center">
+              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Замовити креветки' : 'Order Prawns'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Оберіть та замовте свіжі креветки з нашої ферми'
+                  : 'Choose and order fresh prawns from our farm'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'До каталогу' : 'To Catalog'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('recipes')}>
+            <CardContent className="p-8 text-center">
+              <BookOpen size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Рецепти з креветками' : 'Prawn Recipes'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Дізнайтеся як готувати смачні страви з креветок'
+                  : 'Learn how to cook delicious dishes with prawns'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </section>
   )

@@ -53,17 +53,17 @@ function App() {
   const renderCurrentSection = () => {
     switch (currentSection) {
       case 'about':
-        return <AboutSection />
+        return <AboutSection onNavigate={handleNavigate} />
       case 'products':
-        return <ProductsSection />
+        return <ProductsSection onNavigate={handleNavigate} />
       case 'gallery':
-        return <GallerySection />
+        return <GallerySection onNavigate={handleNavigate} />
       case 'recipes':
-        return <RecipesSection />
+        return <RecipesSection onNavigate={handleNavigate} />
       case 'reviews':
-        return <ReviewsSection />
+        return <ReviewsSection onNavigate={handleNavigate} />
       case 'contact':
-        return <ContactSection />
+        return <ContactSection onNavigate={handleNavigate} />
       case 'admin':
         return <AdminDashboard />
       default:

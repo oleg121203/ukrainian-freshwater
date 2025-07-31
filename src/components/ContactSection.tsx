@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Clock, Send } from '@phosphor-icons/react'
+import { Phone, Mail, MapPin, Clock, Send, ShoppingCart, Star, ArrowRight } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
-export function ContactSection() {
+interface ContactSectionProps {
+  onNavigate?: (section: string) => void
+}
+
+export function ContactSection({ onNavigate }: ContactSectionProps) {
   const { language, t } = useLanguage()
   const [formData, setFormData] = useState({
     name: '',
@@ -359,6 +363,51 @@ export function ContactSection() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Quick Actions */}
+        <motion.div
+          className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+            <CardContent className="p-8 text-center">
+              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Зробити замовлення' : 'Place an Order'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Перегляньте наш каталог та оберіть свіжі креветки'
+                  : 'Browse our catalog and choose fresh prawns'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'До каталогу' : 'To Catalog'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('reviews')}>
+            <CardContent className="p-8 text-center">
+              <Star size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Відгуки клієнтів' : 'Customer Reviews'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Прочитайте що кажуть наші клієнти про якість продукції'
+                  : 'Read what our customers say about product quality'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Читати відгуки' : 'Read Reviews'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </section>
   )

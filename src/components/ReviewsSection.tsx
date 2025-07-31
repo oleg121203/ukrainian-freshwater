@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Heart, Trophy, Gift } from '@phosphor-icons/react'
+import { Star, Heart, Trophy, Gift, ShoppingCart, Phone, ArrowRight } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,11 @@ interface LoyaltyProgram {
   benefits: string[]
 }
 
-export function ReviewsSection() {
+interface ReviewsSectionProps {
+  onNavigate?: (section: string) => void
+}
+
+export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
   const { language } = useLanguage()
   const [loyaltyData, setLoyaltyData] = useKV<LoyaltyProgram>('loyalty-program', {
     level: 'Bronze',
@@ -264,6 +268,51 @@ export function ReviewsSection() {
             </motion.div>
           </div>
         </div>
+
+        {/* Call to Action */}
+        <motion.div
+          className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+            <CardContent className="p-8 text-center">
+              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Спробуйте самі' : 'Try for Yourself'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Замовте креветки та переконайтеся в їх якості'
+                  : 'Order prawns and experience their quality'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Зробити замовлення' : 'Place Order'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('contact')}>
+            <CardContent className="p-8 text-center">
+              <Phone size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-xl font-semibold mb-3">
+                {language === 'uk' ? 'Залишити відгук' : 'Leave a Review'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {language === 'uk' 
+                  ? 'Поділіться своїм досвідом з нашими креветками'
+                  : 'Share your experience with our prawns'
+                }
+              </p>
+              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                {language === 'uk' ? 'Зв\'язатися' : 'Contact Us'} <ArrowRight size={16} className="ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </section>
   )
