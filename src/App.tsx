@@ -16,6 +16,10 @@ import { TechnologySection } from '@/components/TechnologySection'
 import { DeliverySection } from '@/components/DeliverySection'
 import { ProfessionalSection } from '@/components/ProfessionalSection'
 import { FeedingSimulation } from '@/components/FeedingSimulation'
+import { OrdersManagement } from '@/components/OrdersManagement'
+import { ShoppingCart } from '@/components/ShoppingCart'
+import { FloatingCart } from '@/components/FloatingCart'
+import { ShoppingTest } from '@/components/ShoppingTest'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
@@ -24,10 +28,11 @@ function App() {
   const [menuVisible, setMenuVisible] = useState(false)
   const [show3D, setShow3D] = useState(true)
   const [showDebug, setShowDebug] = useState(false)
+  const [showCart, setShowCart] = useState(false)
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
-  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding']
+  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding', 'orders', 'shop-test']
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -91,6 +96,10 @@ function App() {
             console.log('Prawn stats updated:', stats)
           }}
         />
+      case 'orders':
+        return <OrdersManagement onNavigate={handleNavigate} />
+      case 'shop-test':
+        return <ShoppingTest onNavigate={handleNavigate} />
       default:
         return <HeroSection onNavigate={handleNavigate} />
     }
@@ -115,6 +124,8 @@ function App() {
                     case 'delivery': return 'Ship'
                     case 'professional': return 'Pro'
                     case 'feeding': return 'Feed'
+                    case 'orders': return 'Orders'
+                    case 'shop-test': return 'Test'
                     default: return sectionName
                   }
                 }
@@ -186,6 +197,17 @@ function App() {
           isVisible={menuVisible}
           onNavigate={handleNavigate}
           onClose={() => setMenuVisible(false)}
+        />
+
+        {/* Floating Cart - only show when not on products page and not in 3D mode */}
+        {!show3D && currentSection !== 'products' && (
+          <FloatingCart onClick={() => setShowCart(true)} />
+        )}
+
+        {/* Shopping Cart Modal */}
+        <ShoppingCart 
+          isVisible={showCart}
+          onClose={() => setShowCart(false)}
         />
 
         {/* Toast Notifications */}

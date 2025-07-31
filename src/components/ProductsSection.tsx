@@ -1,30 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Plus, Minus, Phone, BookOpen, ArrowRight } from '@phosphor-icons/react'
+import { ShoppingCart, Plus, Minus, Phone, BookOpen, ArrowRight, Package } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
-
-interface Product {
-  id: string
-  name_uk: string
-  name_en: string
-  description_uk: string
-  description_en: string
-  price: number
-  currency: string
-  image: string
-  category: 'fresh' | 'frozen' | 'live'
-  weight: string
-  inStock: boolean
-}
-
-interface CartItem extends Product {
-  quantity: number
-}
+import { ShoppingCart as ShoppingCartComponent } from '@/components/ShoppingCart'
+import { useShoppingCart, SAMPLE_PRODUCTS } from '@/hooks/useShoppingCart'
 
 interface ProductsSectionProps {
   onNavigate?: (section: string) => void
@@ -32,80 +16,15 @@ interface ProductsSectionProps {
 
 export function ProductsSection({ onNavigate }: ProductsSectionProps) {
   const { language, t } = useLanguage()
-  const [cart, setCart] = useKV<CartItem[]>('shopping-cart', [])
+  const { cart, addToCart, getTotalItems, getTotalPrice } = useShoppingCart()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const [showCart, setShowCart] = useState(false)
 
-  const products: Product[] = [
-    {
-      id: 'fresh-prawns-1kg',
-      name_uk: 'Свіжі креветки (1 кг)',
-      name_en: 'Fresh Prawns (1 kg)',
-      description_uk: 'Свіжі малайзійські креветки найвищої якості, виловлені сьогодні вранці',
-      description_en: 'Fresh Malaysian prawns of the highest quality, caught this morning',
-      price: 850,
-      currency: 'UAH',
-      image: '🦐',
-      category: 'fresh',
-      weight: '1 kg',
-      inStock: true
-    },
-    {
-      id: 'frozen-prawns-500g',
-      name_uk: 'Заморожені креветки (500 г)',
-      name_en: 'Frozen Prawns (500 g)',
-      description_uk: 'Швидко заморожені креветки, зберігають усі корисні властивості',
-      description_en: 'Quick-frozen prawns that retain all beneficial properties',
-      price: 320,
-      currency: 'UAH',
-      image: '🧊',
-      category: 'frozen',
-      weight: '500 g',
-      inStock: true
-    },
-    {
-      id: 'live-prawns-2kg',
-      name_uk: 'Живі креветки (2 кг)',
-      name_en: 'Live Prawns (2 kg)',
-      description_uk: 'Живі креветки для ресторанів та особливих випадків',
-      description_en: 'Live prawns for restaurants and special occasions',
-      price: 1600,
-      currency: 'UAH',
-      image: '🌊',
-      category: 'live',
-      weight: '2 kg',
-      inStock: true
-    },
-    {
-      id: 'premium-selection',
-      name_uk: 'Преміум відбірні (750 г)',
-      name_en: 'Premium Selection (750 g)',
-      description_uk: 'Відбірні великі креветки для найвибагливіших гурманів',
-      description_en: 'Selected large prawns for the most discerning gourmets',
-      price: 950,
-      currency: 'UAH',
-      image: '⭐',
-      category: 'fresh',
-      weight: '750 g',
-      inStock: false
-    }
-  ]
+  const products = SAMPLE_PRODUCTS
 
-  const addToCart = (product: Product) => {
+  const handleAddToCart = (product: typeof products[0]) => {
     const quantity = quantities[product.id] || 1
-    
-    setCart((currentCart) => {
-      const existingItem = currentCart.find(item => item.id === product.id)
-      
-      if (existingItem) {
-        return currentCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      } else {
-        return [...currentCart, { ...product, quantity }]
-      }
-    })
+    addToCart(product, quantity)
 
     toast.success(
       language === 'uk' 
@@ -228,7 +147,7 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
                   <Button
                     className="w-full"
                     disabled={!product.inStock}
-                    onClick={() => addToCart(product)}
+                    onClick={() => handleAddToCart(product)}
                   >
                     <ShoppingCart size={18} className="mr-2" />
                     {t('products.add-to-cart')}
@@ -292,16 +211,19 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="bg-primary text-primary-foreground shadow-lg">
+            <Card 
+              className="bg-primary text-primary-foreground shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+              onClick={() => setShowCart(true)}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <ShoppingCart size={24} />
                   <div>
                     <p className="font-semibold">
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)} {language === 'uk' ? 'товарів' : 'items'}
+                      {getTotalItems()} {language === 'uk' ? 'товарів' : 'items'}
                     </p>
                     <p className="text-sm opacity-90">
-                      {cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)} UAH
+                      {getTotalPrice()} UAH
                     </p>
                   </div>
                 </div>
@@ -309,6 +231,45 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
             </Card>
           </motion.div>
         )}
+
+        {/* Additional Action Buttons */}
+        <motion.div
+          className="mt-16 flex flex-col sm:flex-row gap-4 justify-center"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <Button 
+            size="lg" 
+            variant="outline"
+            onClick={() => setShowCart(true)}
+            className="flex items-center gap-3"
+          >
+            <ShoppingCart size={20} />
+            {language === 'uk' ? 'Переглянути кошик' : 'View Cart'}
+            {cart.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {getTotalItems()}
+              </Badge>
+            )}
+          </Button>
+          
+          <Button 
+            size="lg" 
+            onClick={() => onNavigate?.('orders')}
+            className="flex items-center gap-3"
+          >
+            <Package size={20} />
+            {language === 'uk' ? 'Мої замовлення' : 'My Orders'}
+          </Button>
+        </motion.div>
+
+        {/* Shopping Cart Modal */}
+        <ShoppingCartComponent 
+          isVisible={showCart}
+          onClose={() => setShowCart(false)}
+        />
       </div>
     </section>
   )
