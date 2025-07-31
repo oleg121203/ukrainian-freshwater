@@ -320,55 +320,6 @@ export function PrawnVisualization({ onMenuToggle, menuVisible, onNavigateToSite
     resumeAudioContext 
   } = useAudio()
 
-  const saveRecipe = async () => {
-    if (!generatedRecipe || !userName.trim() || !userEmail.trim()) {
-      toast.error("Заповніть всі поля (ім'я та email)")
-      return
-    }
-
-    try {
-      // Add recipe to collection
-      const updatedRecipes = [...recipes, { ...generatedRecipe, authorName: userName, authorEmail: userEmail }]
-      setRecipes(updatedRecipes)
-      
-      // Send email simulation (in real app would send actual email)
-      const emailData = {
-        to: userEmail,
-        subject: `Ваш рецепт: ${generatedRecipe.title}`,
-        recipe: generatedRecipe
-      }
-      
-      toast.success(`📧 Рецепт збережено та надіслано на ${userEmail}!`)
-      
-      // Reset game
-      setShowRecipeGenerator(false)
-      setGeneratedRecipe(null)
-      setUserIngredients('')
-      setUserName('')
-      setUserEmail('')
-      setGameState(prev => ({ 
-        ...prev, 
-        gamePhase: 'exploring',
-        score: 0,
-        correctAnswers: 0,
-        isRobotMode: false,
-        prawnMood: 'calm'
-      }))
-      
-    } catch (error) {
-      console.error('Error saving recipe:', error)
-      toast.error("Помилка при збереженні рецепту")
-    }
-  }
-  const { 
-    playBubbleSound, 
-    playRippleSound, 
-    playClickSound, 
-    playSwooshSound,
-    playAmbientSound,
-    resumeAudioContext 
-  } = useAudio()
-
   useEffect(() => {
     if (!mountRef.current) return
 
