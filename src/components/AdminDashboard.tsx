@@ -27,8 +27,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
           <CardHeader>
             <CardTitle>{language === 'uk' ? 'Адміністративна панель' : 'Admin Panel'}</CardTitle>
             <CardDescription>
-              {language === 'uk' 
-                ? 'Увійдіть для доступу до налаштувань' 
+              {language === 'uk'
+                ? 'Увійдіть для доступу до налаштувань'
                 : 'Login to access settings'}
             </CardDescription>
           </CardHeader>
@@ -62,7 +62,11 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
           <CardTitle>{language === 'uk' ? 'Панель адміністратора' : 'Admin Dashboard'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>{language === 'uk' ? 'Адміністративна панель в розробці' : 'Admin panel under development'}</p>
+          <p>
+            {language === 'uk'
+              ? 'Адміністративна панель в розробці'
+              : 'Admin panel under development'}
+          </p>
         </CardContent>
       </Card>
     </div>
