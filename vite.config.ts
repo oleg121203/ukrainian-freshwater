@@ -13,4 +13,21 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src'),
     },
   },
+  // Dev server config adjusted for GitHub Codespaces / remote proxies
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    hmr: process.env.CODESPACE_NAME && process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+      ? {
+          protocol: 'wss',
+          host: `${process.env.CODESPACE_NAME}-5173.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`,
+          clientPort: 443,
+        }
+      : undefined,
+  },
 })

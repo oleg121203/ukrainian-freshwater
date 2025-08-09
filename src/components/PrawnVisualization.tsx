@@ -1,9 +1,14 @@
 import { useRef, useEffect, useState } from 'react'
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { motion } from 'framer-motion'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { PetkaQuiz } from '@/components/PetkaQuiz'
 
 // Локальні типи та логіка
 interface PrawnVisualizationProps {
@@ -20,12 +25,38 @@ export function PrawnVisualization({
   const mountRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const frameRef = useRef<number | null>(null)
   const prawnGroupRef = useRef<THREE.Group | null>(null)
   const mouseRef = useRef({ x: 0, y: 0 })
   const waterParticlesRef = useRef<THREE.Points | null>(null)
   const fishRef = useRef<THREE.Group[]>([])
   const plantsRef = useRef<THREE.Group[]>([])
+  const collectiblesRef = useRef<THREE.Group | null>(null)
+  const waterMeshRef = useRef<THREE.Mesh | null>(null)
+  const composerRef = useRef<EffectComposer | null>(null)
+  const controlsRef = useRef<OrbitControls | null>(null)
+  const drawDistanceRef = useRef<number>(6)
+  const drawMarkerRef = useRef<THREE.Mesh | null>(null)
+  const lastNDCRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const snapToFloorRef = useRef<boolean>(false)
+
+  const [postFX, setPostFX] = useState(true)
+  const [freeCam, setFreeCam] = useState(false)
+  const [species, setSpecies] = useState<'shrimp' | 'crayfish'>('shrimp')
+  const [drawDepth, setDrawDepth] = useState(6)
+  const [smoothness, setSmoothness] = useState(0.4)
+  const [snapToFloor, setSnapToFloor] = useState(false)
+
+  // Drawing / Path state
+  const raycasterRef = useRef(new THREE.Raycaster())
+  const navPlaneRef = useRef<THREE.Mesh | null>(null)
+  const isDrawingRef = useRef(false)
+  const draftPointsRef = useRef<THREE.Vector3[]>([])
+  const pathLineRef = useRef<THREE.Line | null>(null)
+  const pathTubeRef = useRef<THREE.Mesh | null>(null)
+  const curveRef = useRef<THREE.CatmullRomCurve3 | null>(null)
+  const followRef = useRef({ active: false, t: 0, speed: 0.06 })
 
   const animationStateRef = useRef({
     time: 0,
@@ -53,134 +84,198 @@ export function PrawnVisualization({
 
   const { playClickSound, playSwooshSound, playBubbleSound, resumeAudioContext } = useAudio()
 
-  // Create realistic prawn geometry
-  const createRealisticPrawn = () => {
-    const prawnGroup = new THREE.Group()
+  // Inventory / Recipe
+  type ItemKey = 'garlic' | 'herb' | 'lemon' | 'butter' | 'salt' | 'pepper'
+  const [inventory, setInventory] = useState<Record<ItemKey, number>>({
+    garlic: 0,
+    herb: 0,
+    lemon: 0,
+    butter: 0,
+    salt: 0,
+    pepper: 0,
+  })
+  const recipeRequirements: Record<ItemKey, number> = {
+    garlic: 1,
+    herb: 2,
+    lemon: 1,
+    butter: 1,
+    salt: 1,
+    pepper: 1,
+  }
+  const [showRecipe, setShowRecipe] = useState(false)
+  const [petkaOpen, setPetkaOpen] = useState(false)
+  const [petkaPassed, setPetkaPassed] = useState<boolean>(() => sessionStorage.getItem('petkaPassed') === '1')
+  const canCook = Object.entries(recipeRequirements).every(
+    ([k, v]) => (inventory as any)[k] >= v
+  )
+  // Prevent overlapping toasts on hero: single active toast id per type
+  const toastIdsRef = useRef<Record<string, string>>({})
 
-    // Main body - curved shrimp-like shape
-    const bodyGeometry = new THREE.CylinderGeometry(0.15, 0.25, 1.5, 16)
-    const bodyMaterial = new THREE.MeshLambertMaterial({
-      color: 0xff6b35,
+  // Create realistic shrimp (default) or crayfish model
+  const createCreature = (kind: 'shrimp' | 'crayfish') => {
+    const group = new THREE.Group()
+
+    const shrimpColor = 0xffa07a
+    const crayfishColor = 0x8f6b3e
+
+    const shellMat = new THREE.MeshPhysicalMaterial({
+      color: kind === 'shrimp' ? shrimpColor : crayfishColor,
+      metalness: 0.05,
+      roughness: 0.45,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.3,
+      transmission: kind === 'shrimp' ? 0.4 : 0.1,
+      thickness: 0.8,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
     })
-    
-    // Curve the body to look more shrimp-like
-    bodyGeometry.translate(0, 0, 0)
-    for (let i = 0; i < bodyGeometry.attributes.position.count; i++) {
-      const x = bodyGeometry.attributes.position.getX(i)
-      const y = bodyGeometry.attributes.position.getY(i)
-      const z = bodyGeometry.attributes.position.getZ(i)
-      
-      // Curve the body
-      const curve = Math.sin(y * 0.5) * 0.2
-      bodyGeometry.attributes.position.setX(i, x + curve)
-      bodyGeometry.attributes.position.setZ(i, z + Math.abs(y) * 0.1)
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6, metalness: 0.2 })
+
+    // Abdomen segments (6 for shrimp, 6 for crayfish)
+    const segments: THREE.Mesh[] = []
+    for (let s = 0; s < 6; s++) {
+      const baseR = kind === 'shrimp' ? 0.12 : 0.18
+      const segG = new THREE.CapsuleGeometry(baseR - s * 0.018, (kind === 'shrimp' ? 0.14 : 0.18) - s * 0.012, 8, 12)
+      const seg = new THREE.Mesh(segG, shellMat.clone())
+      seg.position.set(kind === 'shrimp' ? -0.14 - s * 0.14 : -0.18 - s * 0.18, 0, 0)
+      seg.rotation.z = Math.PI / 2
+      seg.castShadow = true
+      seg.receiveShadow = true
+      seg.userData.type = 'abdomen'
+      group.add(seg)
+      segments.push(seg)
     }
-    bodyGeometry.attributes.position.needsUpdate = true
-    bodyGeometry.computeVertexNormals()
 
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
-    body.rotation.z = Math.PI / 2
-    body.castShadow = true
-    body.receiveShadow = true
-    prawnGroup.add(body)
-
-    // Head
-    const headGeometry = new THREE.SphereGeometry(0.3, 12, 8)
-    const headMaterial = new THREE.MeshLambertMaterial({ color: 0xff4500 })
-    const head = new THREE.Mesh(headGeometry, headMaterial)
-    head.position.set(0.8, 0, 0)
-    head.scale.set(1, 0.8, 0.7)
+  // Head: round for shrimp, elongated capsule for crayfish
+    const head = new THREE.Mesh(
+      kind === 'shrimp'
+    ? new THREE.SphereGeometry(0.16, 20, 16)
+        : new THREE.CapsuleGeometry(0.3, 0.4, 10, 16),
+      shellMat.clone()
+    )
+  head.position.set(kind === 'shrimp' ? 0.48 : 0.7, 0, 0)
+    head.rotation.z = Math.PI / 2
+    head.scale.set(kind === 'shrimp' ? 1 : 1, kind === 'shrimp' ? 1 : 0.8, kind === 'shrimp' ? 1 : 0.8)
     head.castShadow = true
-    prawnGroup.add(head)
+    group.add(head)
+
+    // Rostrum (spike on head)
+  const rostrumG = new THREE.ConeGeometry(kind === 'shrimp' ? 0.03 : 0.06, kind === 'shrimp' ? 0.16 : 0.25, 8)
+    const rostrum = new THREE.Mesh(rostrumG, shellMat.clone())
+  rostrum.position.set(kind === 'shrimp' ? 0.78 : 1.0, 0, 0.02)
+    rostrum.rotation.z = Math.PI / 2
+    group.add(rostrum)
 
     // Eyes
     for (let i = 0; i < 2; i++) {
-      const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 6)
-      const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 })
-      const eye = new THREE.Mesh(eyeGeometry, eyeMaterial)
-      eye.position.set(0.9, i === 0 ? 0.15 : -0.15, 0.2)
-      prawnGroup.add(eye)
-    }
-
-    // Antennae (long, flexible)
-    for (let i = 0; i < 4; i++) {
-      const antennaGroup = new THREE.Group()
-      const segments = 8
-      
-      for (let j = 0; j < segments; j++) {
-        const segmentGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.15, 6)
-        const segmentMaterial = new THREE.MeshLambertMaterial({ color: 0xffaa44 })
-        const segment = new THREE.Mesh(segmentGeometry, segmentMaterial)
-        
-        segment.position.set(j * 0.15, 0, 0)
-        segment.rotation.z = Math.PI / 2
-        antennaGroup.add(segment)
+      const eyeRadius = kind === 'shrimp' ? 0.04 : 0.06
+      const eyeG = new THREE.SphereGeometry(eyeRadius, 16, 12)
+      const eyeMat = new THREE.MeshPhysicalMaterial({ color: 0x111111, roughness: 0.05, metalness: 0.7, clearcoat: 1, clearcoatRoughness: 0.05 })
+      const eye = new THREE.Mesh(eyeG, eyeMat)
+      const eyeX = kind === 'shrimp' ? 0.68 : 0.95
+      const eyeY = i === 0 ? (kind === 'shrimp' ? 0.09 : 0.14) : (kind === 'shrimp' ? -0.09 : -0.14)
+      eye.position.set(eyeX, eyeY, 0.1)
+      group.add(eye)
+      // Eye stalks for shrimp for realism
+      if (kind === 'shrimp') {
+        const stalkG = new THREE.CylinderGeometry(0.006, 0.008, 0.14, 8)
+        const stalk = new THREE.Mesh(stalkG, shellMat.clone())
+        stalk.position.set(eyeX - 0.06, eyeY, 0.08)
+        stalk.rotation.z = Math.PI / 2
+        group.add(stalk)
       }
-      
-      antennaGroup.position.set(1.1, i < 2 ? (i === 0 ? 0.1 : -0.1) : (i === 2 ? 0.2 : -0.2), 0.1)
-      antennaGroup.rotation.y = (i < 2 ? 0 : Math.PI / 6) * (i % 2 === 0 ? 1 : -1)
-      prawnGroup.add(antennaGroup)
     }
 
-    // Swimming legs (pleopods)
-    for (let i = 0; i < 5; i++) {
+    // Antennae (chain of thin cylinders)
+    for (let a = 0; a < 2; a++) {
+      const antGroup = new THREE.Group()
+      const segs = kind === 'shrimp' ? 16 : 10
+      for (let j = 0; j < segs; j++) {
+        const g = new THREE.CylinderGeometry(kind === 'shrimp' ? 0.005 : 0.01, kind === 'shrimp' ? 0.005 : 0.01, kind === 'shrimp' ? 0.2 : 0.16, 6)
+        const m = new THREE.MeshStandardMaterial({ color: 0xffc08a, roughness: 0.7 })
+        const part = new THREE.Mesh(g, m)
+        part.position.set(j * 0.15, 0, 0)
+        part.rotation.z = Math.PI / 2
+        antGroup.add(part)
+      }
+      antGroup.position.set(kind === 'shrimp' ? 0.82 : 1.0, a === 0 ? 0.1 : -0.1, 0.05)
+      antGroup.rotation.y = (a === 0 ? 1 : -1) * 0.2
+      antGroup.userData.type = 'antenna'
+      group.add(antGroup)
+    }
+
+    // Pleopods (swimming legs) under abdomen for shrimp; walking legs + claws for crayfish
+    if (kind === 'shrimp') {
+      for (let i = 0; i < 5; i++) {
+        for (let side = 0; side < 2; side++) {
+          const g = new THREE.CylinderGeometry(0.015, 0.01, 0.22, 6)
+          const m = new THREE.MeshStandardMaterial({ color: 0xffb499, roughness: 0.6 })
+          const leg = new THREE.Mesh(g, m)
+          leg.position.set(-0.25 + i * 0.18, side === 0 ? 0.18 : -0.18, -0.06)
+          leg.rotation.z = Math.PI / 2 + (side === 0 ? -0.3 : 0.3)
+          leg.userData = { type: 'pleopod', index: i, side }
+          group.add(leg)
+        }
+      }
+    } else {
+      // Crayfish walking legs (5 pairs)
+      for (let i = 0; i < 5; i++) {
+        for (let side = 0; side < 2; side++) {
+          const upperG = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6)
+          const lowerG = new THREE.CylinderGeometry(0.02, 0.015, 0.22, 6)
+          const upper = new THREE.Mesh(upperG, shellMat.clone())
+          const lower = new THREE.Mesh(lowerG, shellMat.clone())
+          const baseX = 0.2 - i * 0.18
+          const y = side === 0 ? 0.22 : -0.22
+          upper.position.set(baseX, y, 0)
+          upper.rotation.z = (side === 0 ? 1 : -1) * 0.5
+          lower.position.set(baseX - 0.12, y + (side === 0 ? -0.06 : 0.06), -0.02)
+          lower.rotation.z = (side === 0 ? 1 : -1) * 0.9
+          upper.userData = { type: 'legUpper', index: i, side }
+          lower.userData = { type: 'legLower', index: i, side }
+          group.add(upper)
+          group.add(lower)
+        }
+      }
+      // Claws (chelae)
       for (let side = 0; side < 2; side++) {
-        const legGeometry = new THREE.CylinderGeometry(0.02, 0.015, 0.3, 6)
-        const legMaterial = new THREE.MeshLambertMaterial({ color: 0xff7755 })
-        const leg = new THREE.Mesh(legGeometry, legMaterial)
-        
-        leg.position.set(-0.3 + i * 0.2, side === 0 ? 0.25 : -0.25, -0.1)
-        leg.rotation.z = Math.PI / 2 + (side === 0 ? -0.3 : 0.3)
-        leg.userData = { type: 'leg', index: i, side }
-        prawnGroup.add(leg)
+        const claw = new THREE.Group()
+        const armG = new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8)
+        const arm = new THREE.Mesh(armG, shellMat.clone())
+        arm.rotation.z = (side === 0 ? 1 : -1) * 0.6
+        claw.add(arm)
+        const pincerG = new THREE.BoxGeometry(0.18, 0.06, 0.06)
+        const pincer = new THREE.Mesh(pincerG, shellMat.clone())
+        pincer.position.set(0.2, 0, 0)
+        claw.add(pincer)
+        claw.position.set(0.45, side === 0 ? 0.25 : -0.25, 0)
+        claw.userData = { type: 'claw', side }
+        group.add(claw)
       }
     }
 
-    // Tail fan (uropods)
-    const tailFanGeometry = new THREE.ConeGeometry(0.4, 0.6, 8)
-    const tailFanMaterial = new THREE.MeshLambertMaterial({ 
-      color: 0xff8866,
-      transparent: true,
-      opacity: 0.8 
-    })
-    const tailFan = new THREE.Mesh(tailFanGeometry, tailFanMaterial)
-    tailFan.position.set(-1.2, 0, 0)
-    tailFan.rotation.z = Math.PI / 2
-    tailFan.userData = { type: 'tailFan' }
-    prawnGroup.add(tailFan)
+    // Tail fan
+  const tailG = new THREE.ConeGeometry(kind === 'shrimp' ? 0.22 : 0.32, kind === 'shrimp' ? 0.36 : 0.48, 10)
+    const tail = new THREE.Mesh(tailG, shellMat.clone())
+  tail.position.set(kind === 'shrimp' ? -0.85 : -1.1, 0, 0)
+    tail.rotation.z = Math.PI / 2
+    tail.userData = { type: 'tailFan' }
+    group.add(tail)
 
-    // Claws
-    for (let i = 0; i < 2; i++) {
-      const clawGroup = new THREE.Group()
-      
-      // Main claw segment
-      const clawGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.1)
-      const clawMaterial = new THREE.MeshLambertMaterial({ color: 0xdd3300 })
-      const claw = new THREE.Mesh(clawGeometry, clawMaterial)
-      clawGroup.add(claw)
-      
-      // Claw pincers
-      const pincerGeometry = new THREE.CylinderGeometry(0.02, 0.04, 0.2, 6)
-      const pincerMaterial = new THREE.MeshLambertMaterial({ color: 0xaa2200 })
-      
-      const pincer1 = new THREE.Mesh(pincerGeometry, pincerMaterial)
-      pincer1.position.set(0.2, 0.05, 0)
-      pincer1.rotation.z = 0.3
-      clawGroup.add(pincer1)
-      
-      const pincer2 = new THREE.Mesh(pincerGeometry, pincerMaterial)
-      pincer2.position.set(0.2, -0.05, 0)
-      pincer2.rotation.z = -0.3
-      clawGroup.add(pincer2)
-      
-      clawGroup.position.set(0.6, i === 0 ? 0.3 : -0.3, 0)
-      clawGroup.userData = { type: 'claw', index: i }
-      prawnGroup.add(clawGroup)
+    // Store metadata
+    group.userData.abdomenSegments = segments
+    group.userData.species = kind
+    if (kind === 'shrimp') {
+      // Much smaller shrimp with round head
+      group.scale.setScalar(0.3)
+      group.userData.pickupRadius = 0.15
+      group.userData.cameraOffset = new THREE.Vector3(1.6, 0.9, 1.6)
+    } else {
+      group.userData.pickupRadius = 0.4
+      group.userData.cameraOffset = new THREE.Vector3(4.5, 2.6, 4.5)
     }
 
-    return prawnGroup
+    return group
   }
 
   // Create realistic pond environment
@@ -204,10 +299,11 @@ export function PrawnVisualization({
     }
     vertices.needsUpdate = true
 
-    const water = new THREE.Mesh(waterGeometry, waterMaterial)
+  const water = new THREE.Mesh(waterGeometry, waterMaterial)
     water.rotation.x = -Math.PI / 2
     water.position.y = 2
     scene.add(water)
+  waterMeshRef.current = water
 
     // Pond bottom
     const bottomGeometry = new THREE.PlaneGeometry(18, 18)
@@ -356,6 +452,54 @@ export function PrawnVisualization({
     setInterval(() => {
       createBubble(scene)
     }, 2000 + Math.random() * 3000)
+
+    // Collectibles (ingredients)
+    const collectibles = new THREE.Group()
+    const itemTypes: ItemKey[] = ['garlic', 'herb', 'lemon', 'butter', 'salt', 'pepper']
+    const spawnItem = (type: ItemKey) => {
+      let geom: THREE.BufferGeometry
+      let mat: THREE.Material
+      switch (type) {
+        case 'garlic':
+          geom = new THREE.DodecahedronGeometry(0.12)
+          mat = new THREE.MeshStandardMaterial({ color: 0xf5e6c8, roughness: 0.7, metalness: 0.0 })
+          break
+        case 'herb':
+          geom = new THREE.CapsuleGeometry(0.06, 0.12, 6, 8)
+          mat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.6 })
+          break
+        case 'lemon':
+          geom = new THREE.SphereGeometry(0.12, 16, 12)
+          mat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 })
+          break
+        case 'butter':
+          geom = new THREE.BoxGeometry(0.18, 0.08, 0.12)
+          mat = new THREE.MeshStandardMaterial({ color: 0xffeb99, roughness: 0.8 })
+          break
+        case 'salt':
+          geom = new THREE.TetrahedronGeometry(0.09)
+          mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+          break
+        case 'pepper':
+        default:
+          geom = new THREE.IcosahedronGeometry(0.1, 0)
+          mat = new THREE.MeshStandardMaterial({ color: 0x8e5a2b, roughness: 0.8 })
+          break
+      }
+      const mesh = new THREE.Mesh(geom, mat)
+      mesh.userData.itemType = type
+      mesh.castShadow = true
+      const x = (Math.random() - 0.5) * 14
+      const z = (Math.random() - 0.5) * 14
+      mesh.position.set(x, -2.7 + Math.random() * 0.3, z)
+      collectibles.add(mesh)
+    }
+    // spawn a few of each
+    itemTypes.forEach((t) => {
+      for (let i = 0; i < 3; i++) spawnItem(t)
+    })
+    scene.add(collectibles)
+    collectiblesRef.current = collectibles
   }
 
   // Create sand texture
@@ -422,10 +566,111 @@ export function PrawnVisualization({
     animateBubble()
   }
 
+  // Build/update draft line while drawing
+  const updateDraftLine = () => {
+    const scene = sceneRef.current
+    if (!scene) return
+    const pts = draftPointsRef.current
+    if (pts.length < 2) return
+    const positions = new Float32Array(pts.length * 3)
+    pts.forEach((p, i) => {
+      positions[i * 3] = p.x
+      positions[i * 3 + 1] = p.y
+      positions[i * 3 + 2] = p.z
+    })
+    if (!pathLineRef.current) {
+      const geom = new THREE.BufferGeometry()
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      const mat = new THREE.LineBasicMaterial({ color: 0x00d1ff })
+      const line = new THREE.Line(geom, mat)
+      line.renderOrder = 2
+      scene.add(line)
+      pathLineRef.current = line
+    } else {
+      const geom = pathLineRef.current.geometry as THREE.BufferGeometry
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      geom.computeBoundingSphere()
+      geom.attributes.position.needsUpdate = true
+    }
+  }
+
+  const finalizePath = () => {
+    const scene = sceneRef.current
+    if (!scene) return
+    const pts = draftPointsRef.current
+    if (pts.length < 2) return
+    // Smooth with CatmullRom
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', smoothness)
+    curveRef.current = curve
+
+    // Remove old tube
+    if (pathTubeRef.current) {
+      scene.remove(pathTubeRef.current)
+      pathTubeRef.current.geometry.dispose()
+      ;(pathTubeRef.current.material as THREE.Material).dispose()
+      pathTubeRef.current = null
+    }
+    // Build tube for final path
+    const tubularSegments = Math.max(20, pts.length * 6)
+  const tubeGeom = new THREE.TubeGeometry(curve, tubularSegments, 0.02, 8, false)
+    const tubeMat = new THREE.MeshStandardMaterial({ color: 0x00c2ff, emissive: 0x002233, metalness: 0.2, roughness: 0.4, transparent: true, opacity: 0.85 })
+    const tube = new THREE.Mesh(tubeGeom, tubeMat)
+    tube.castShadow = false
+    tube.receiveShadow = false
+    tube.renderOrder = 1
+    scene.add(tube)
+    pathTubeRef.current = tube
+
+    // Prepare follow
+    followRef.current.t = 0
+    followRef.current.active = false
+  }
+
+  const pointFromNDC = (ndc: { x: number; y: number }) => {
+    if (!cameraRef.current) return null
+    const camera = cameraRef.current
+    const origin = new THREE.Vector3()
+    const direction = new THREE.Vector3()
+    const raycaster = raycasterRef.current
+    raycaster.setFromCamera(ndc as any, camera)
+    origin.copy(raycaster.ray.origin)
+    direction.copy(raycaster.ray.direction)
+    let pos: THREE.Vector3 | null = null
+    if (snapToFloorRef.current && navPlaneRef.current) {
+      const hit = raycaster.intersectObject(navPlaneRef.current, false)[0]
+      if (hit) pos = hit.point.clone()
+    }
+    if (!pos) {
+      // Place point at some distance from camera, clamped within pond bounds
+      const dist = drawDistanceRef.current
+      pos = origin.add(direction.multiplyScalar(dist))
+    }
+    // clamp to pond box
+    pos.x = THREE.MathUtils.clamp(pos.x, -9, 9)
+    pos.y = THREE.MathUtils.clamp(pos.y, -2.8, 2)
+    pos.z = THREE.MathUtils.clamp(pos.z, -9, 9)
+    return pos
+  }
+
   // Enhanced swimming animation
   const updatePrawnAnimation = (prawnGroup: THREE.Group, deltaTime: number) => {
     const state = animationStateRef.current
     state.time += deltaTime * 0.001
+
+    // If following a drawn path
+    if (curveRef.current && followRef.current.active) {
+      const { t, speed } = followRef.current
+      const nextT = Math.min(1, t + speed * (deltaTime / 1000))
+      const pos = curveRef.current.getPointAt(nextT)
+      const tangent = curveRef.current.getTangentAt(Math.max(0, nextT - 0.001))
+      prawnGroup.position.copy(pos)
+      // Orient along tangent
+      const targetY = Math.atan2(tangent.x, tangent.z)
+      const targetX = Math.atan2(tangent.y, Math.sqrt(tangent.x ** 2 + tangent.z ** 2))
+      prawnGroup.rotation.y = THREE.MathUtils.lerp(prawnGroup.rotation.y, targetY, 0.2)
+      prawnGroup.rotation.x = THREE.MathUtils.lerp(prawnGroup.rotation.x, targetX, 0.2)
+      followRef.current.t = nextT
+    }
 
     // Update swim pattern
     const pattern = state.swimPattern
@@ -456,7 +701,7 @@ export function PrawnVisualization({
         targetY = state.targetPosition.y
         targetZ = state.targetPosition.z
         break
-      case 'patrol':
+      case 'patrol': {
         const patrolPoints = [
           { x: -4, y: 0, z: -4 },
           { x: 4, y: 0, z: -4 },
@@ -471,27 +716,33 @@ export function PrawnVisualization({
         targetY = THREE.MathUtils.lerp(patrolPoints[currentPoint].y, patrolPoints[nextPoint].y, t)
         targetZ = THREE.MathUtils.lerp(patrolPoints[currentPoint].z, patrolPoints[nextPoint].z, t)
         break
+      }
     }
 
     // Smooth movement with physics-like behavior
     const force = 0.05
     const damping = 0.95
     
-    state.velocity.x += (targetX - prawnGroup.position.x) * force
-    state.velocity.y += (targetY - prawnGroup.position.y) * force
-    state.velocity.z += (targetZ - prawnGroup.position.z) * force
+    // Only idle physics when not on a path
+    if (!(curveRef.current && followRef.current.active)) {
+      state.velocity.x += (targetX - prawnGroup.position.x) * force
+      state.velocity.y += (targetY - prawnGroup.position.y) * force
+      state.velocity.z += (targetZ - prawnGroup.position.z) * force
+    }
     
     state.velocity.x *= damping
     state.velocity.y *= damping
     state.velocity.z *= damping
     
-    prawnGroup.position.x += state.velocity.x
-    prawnGroup.position.y += state.velocity.y
-    prawnGroup.position.z += state.velocity.z
+    if (!(curveRef.current && followRef.current.active)) {
+      prawnGroup.position.x += state.velocity.x
+      prawnGroup.position.y += state.velocity.y
+      prawnGroup.position.z += state.velocity.z
+    }
 
     // Realistic rotation based on movement direction
     const speed = Math.sqrt(state.velocity.x ** 2 + state.velocity.y ** 2 + state.velocity.z ** 2)
-    if (speed > 0.001) {
+  if (speed > 0.001 && !(curveRef.current && followRef.current.active)) {
       const targetRotationY = Math.atan2(state.velocity.x, state.velocity.z)
       const targetRotationX = Math.atan2(state.velocity.y, Math.sqrt(state.velocity.x ** 2 + state.velocity.z ** 2))
       
@@ -499,7 +750,7 @@ export function PrawnVisualization({
       prawnGroup.rotation.x = THREE.MathUtils.lerp(prawnGroup.rotation.x, targetRotationX, 0.1)
     }
 
-    // Animate body parts
+  // Animate body parts
     state.tailAnimation += deltaTime * 0.008
     state.antennaeAnimation += deltaTime * 0.012
     state.legAnimation += deltaTime * 0.015
@@ -511,15 +762,56 @@ export function PrawnVisualization({
         const legIndex = child.userData.index
         const phase = state.legAnimation + legIndex * 0.5
         child.rotation.z += Math.sin(phase) * 0.1 * speed * 5
+      } else if (child.userData.type === 'pleopod') {
+        // Shrimp swimming legs flap rhythmically
+        const legIndex = child.userData.index ?? 0
+        const phase = state.legAnimation * 1.4 + legIndex * 0.6
+        child.rotation.z = Math.PI / 2 + Math.sin(phase) * 0.35
+      } else if (child.userData.type === 'legUpper' || child.userData.type === 'legLower') {
+        // Crayfish walking gait
+        const idx = child.userData.index ?? 0
+        const side = child.userData.side ?? 0
+        const step = Math.sin(state.time * 8 + idx * 0.8 + (side === 0 ? 0 : Math.PI))
+        if (child.userData.type === 'legUpper') {
+          child.rotation.z = (side === 0 ? 1 : -1) * (0.4 + 0.25 * step)
+        } else {
+          child.rotation.z = (side === 0 ? 1 : -1) * (0.8 + 0.35 * step)
+        }
       } else if (child.userData.type === 'claw') {
-        const clawIndex = child.userData.index
+        const clawIndex = child.userData.index ?? child.userData.side ?? 0
         child.rotation.z = Math.sin(state.time * 2 + clawIndex * Math.PI) * 0.2
+      } else if (child.userData.type === 'antenna') {
+        // Sway antenna segments subtly
+        child.children.forEach((seg, j) => {
+          seg.rotation.y = Math.sin(state.time * 2 + j * 0.3) * 0.2
+          seg.position.y = Math.sin(state.time * 1.5 + j * 0.4) * 0.03
+        })
       }
     })
 
     // Body undulation (swimming motion)
     prawnGroup.rotation.z = Math.sin(state.time * 3) * 0.1
-    prawnGroup.children[0].rotation.y = Math.sin(state.time * 4) * 0.05 // Body twist
+    // Abdomen per-segment sway
+    const segments = (prawnGroup.userData.abdomenSegments as THREE.Mesh[]) || []
+    segments.forEach((seg, i) => {
+      const phase = state.time * 4 + i * 0.5
+      seg.rotation.y = Math.sin(phase) * 0.12
+      seg.rotation.x = Math.cos(phase) * 0.06
+    })
+    // Head subtle twist if exists after segments
+    const headMesh = prawnGroup.children.find((c) => c instanceof THREE.Mesh && (c as THREE.Mesh).geometry.type === 'SphereGeometry') as THREE.Mesh | undefined
+    if (headMesh) headMesh.rotation.y = Math.sin(state.time * 4) * 0.05
+
+    // Subtle caustic shimmer on materials
+    prawnGroup.traverse((obj) => {
+      const mesh = obj as THREE.Mesh
+      if ((mesh as any)?.isMesh && (mesh as any).material) {
+        const mat = mesh.material as any
+        if (mat.emissiveIntensity !== undefined) {
+          mat.emissiveIntensity = 0.7 + 0.3 * Math.sin(state.time * 3 + (mesh.id % 10))
+        }
+      }
+    })
   }
 
   // Animate environment
@@ -575,6 +867,29 @@ export function PrawnVisualization({
         }
       })
     })
+
+    // Float collectibles slightly
+    if (collectiblesRef.current) {
+      collectiblesRef.current.children.forEach((m, i) => {
+        m.position.y += Math.sin(Date.now() * 0.001 + i) * 0.0008
+        m.rotation.y += 0.002
+      })
+    }
+
+    // Water gentle waves
+    if (waterMeshRef.current) {
+      const geom = waterMeshRef.current.geometry as THREE.PlaneGeometry
+      const attr = geom.attributes.position as THREE.BufferAttribute
+      for (let i = 0; i < attr.count; i++) {
+        const x = attr.getX(i)
+        const y = attr.getY(i)
+        const t = performance.now() * 0.001
+        const wave = Math.sin(x * 0.5 + t) * Math.cos(y * 0.5 + t * 1.2) * 0.05
+        attr.setZ(i, wave)
+      }
+      attr.needsUpdate = true
+      geom.computeVertexNormals()
+    }
   }
 
   // Three.js setup
@@ -587,7 +902,7 @@ export function PrawnVisualization({
       scene.background = new THREE.Color(0x001a2e)
       scene.fog = new THREE.Fog(0x001a2e, 10, 30)
 
-      // Create camera
+  // Create camera
       const camera = new THREE.PerspectiveCamera(
         60,
         window.innerWidth / window.innerHeight,
@@ -596,6 +911,7 @@ export function PrawnVisualization({
       )
       camera.position.set(5, 3, 5)
       camera.lookAt(0, 0, 0)
+  cameraRef.current = camera
 
       // Create renderer with enhanced settings
       const renderer = new THREE.WebGLRenderer({
@@ -613,6 +929,38 @@ export function PrawnVisualization({
       renderer.toneMappingExposure = 1.2
 
       mountRef.current.appendChild(renderer.domElement)
+
+  // Controls
+  const controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+  controls.maxPolarAngle = Math.PI * 0.49
+  controls.minDistance = 2
+  controls.maxDistance = 25
+  controls.enabled = false
+  controlsRef.current = controls
+
+  // Postprocessing
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+  const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.4, 0.85)
+  composer.addPass(bloom)
+  composerRef.current = composer
+
+  // Nav (invisible) plane for drawing at mid-depth
+  const navGeom = new THREE.PlaneGeometry(30, 30)
+  const navMat = new THREE.MeshBasicMaterial({ visible: false })
+  const navPlane = new THREE.Mesh(navGeom, navMat)
+  navPlane.rotation.x = -Math.PI / 2
+  navPlane.position.y = -2.2
+  scene.add(navPlane)
+  navPlaneRef.current = navPlane
+
+  // 3D draw marker (small sphere)
+  const markerGeom = new THREE.SphereGeometry(0.07, 12, 10)
+  const markerMat = new THREE.MeshBasicMaterial({ color: 0x00d1ff })
+  const marker = new THREE.Mesh(markerGeom, markerMat)
+  scene.add(marker)
+  drawMarkerRef.current = marker
 
       // Enhanced lighting
       const ambientLight = new THREE.AmbientLight(0x404080, 0.3)
@@ -640,8 +988,8 @@ export function PrawnVisualization({
       causticLight.distance = 15
       scene.add(causticLight)
 
-      // Create realistic prawn
-      const prawnGroup = createRealisticPrawn()
+  // Create creature based on selected species
+  const prawnGroup = createCreature(species)
       scene.add(prawnGroup)
       prawnGroupRef.current = prawnGroup
 
@@ -665,17 +1013,45 @@ export function PrawnVisualization({
         
         updateEnvironment(deltaTime)
 
-        // Camera follows prawn gently
-        if (prawnGroupRef.current) {
+        // Collision check with collectibles
+      if (prawnGroupRef.current && collectiblesRef.current) {
           const prawnPos = prawnGroupRef.current.position
-          camera.position.lerp(
-            new THREE.Vector3(prawnPos.x + 5, prawnPos.y + 3, prawnPos.z + 5),
-            0.02
-          )
+          const toRemove: THREE.Object3D[] = []
+          collectiblesRef.current.children.forEach((obj) => {
+            if (!('itemType' in obj.userData)) return
+        const radius = prawnGroupRef.current?.userData?.pickupRadius ?? 0.3
+        if (prawnPos.distanceTo(obj.position) < radius) {
+              toRemove.push(obj)
+              const type = obj.userData.itemType as any
+              setInventory((prev) => ({ ...prev, [type]: (prev[type] + 1) as number }))
+              playBubbleSound({ volume: 0.5 })
+              // Stable toast IDs per item type to avoid stacking
+              const id = `pickup-${type}`
+              toast.success(`Зібрано інгредієнт: ${type}`, { id })
+            }
+          })
+          toRemove.forEach((obj) => {
+            collectiblesRef.current!.remove(obj)
+            if ((obj as any).geometry) (obj as any).geometry.dispose?.()
+            const mat = (obj as any).material as THREE.Material | undefined
+            mat?.dispose?.()
+          })
+        }
+
+  // Camera follows prawn gently (unless freeCam)
+  if (prawnGroupRef.current && !freeCam) {
+          const prawnPos = prawnGroupRef.current.position
+          const offset: THREE.Vector3 = prawnGroupRef.current.userData.cameraOffset ?? new THREE.Vector3(3, 1.8, 3)
+          camera.position.lerp(new THREE.Vector3(prawnPos.x + offset.x, prawnPos.y + offset.y, prawnPos.z + offset.z), 0.02)
           camera.lookAt(prawnPos)
         }
 
-        renderer.render(scene, camera)
+        controls.update()
+        if (postFX && composerRef.current) {
+          composerRef.current.render()
+        } else {
+          renderer.render(scene, camera)
+        }
         frameRef.current = requestAnimationFrame(animate)
       }
 
@@ -687,12 +1063,86 @@ export function PrawnVisualization({
         camera.aspect = window.innerWidth / window.innerHeight
         camera.updateProjectionMatrix()
         renderer.setSize(window.innerWidth, window.innerHeight)
+  composer.setSize(window.innerWidth, window.innerHeight)
       }
 
       window.addEventListener('resize', handleResize)
 
+      // Pointer handlers for drawing
+  const getNDC = (event: PointerEvent) => {
+        const canvas = renderer.domElement
+        const rect = canvas.getBoundingClientRect()
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+        return { x, y }
+      }
+      const onDown = (e: PointerEvent) => {
+        isDrawingRef.current = true
+        draftPointsRef.current = []
+        // Clear old line
+        if (pathLineRef.current) {
+          scene.remove(pathLineRef.current)
+          ;(pathLineRef.current.geometry as THREE.BufferGeometry).dispose()
+          ;(pathLineRef.current.material as THREE.Material).dispose()
+          pathLineRef.current = null
+        }
+        if (pathTubeRef.current) {
+          scene.remove(pathTubeRef.current)
+          pathTubeRef.current.geometry.dispose()
+          ;(pathTubeRef.current.material as THREE.Material).dispose()
+          pathTubeRef.current = null
+        }
+        curveRef.current = null
+        followRef.current.active = false
+        onMove(e)
+      }
+      const onMove = (e: PointerEvent) => {
+        if (!isDrawingRef.current) return
+        if (!cameraRef.current) return
+        const ndc = getNDC(e)
+        lastNDCRef.current = ndc
+        const p = pointFromNDC(ndc)
+        if (!p) return
+        const pts = draftPointsRef.current
+        if (pts.length === 0 || pts[pts.length - 1].distanceToSquared(p) > 0.02) {
+          pts.push(p.clone())
+          updateDraftLine()
+        }
+        if (drawMarkerRef.current) drawMarkerRef.current.position.copy(p)
+      }
+      const onUp = () => {
+        if (!isDrawingRef.current) return
+        isDrawingRef.current = false
+        finalizePath()
+        playSwooshSound({ volume: 0.4 })
+      }
+      const onHover = (e: PointerEvent) => {
+        if (!cameraRef.current) return
+        const ndc = getNDC(e)
+        lastNDCRef.current = ndc
+        const p = pointFromNDC(ndc)
+        if (p && drawMarkerRef.current) drawMarkerRef.current.position.copy(p)
+      }
+      const onWheel = (e: WheelEvent) => {
+        // Adjust drawing depth
+        drawDistanceRef.current = THREE.MathUtils.clamp(drawDistanceRef.current + (e.deltaY > 0 ? 0.5 : -0.5), 2, 12)
+        const ndc = lastNDCRef.current
+        const p = pointFromNDC(ndc)
+        if (p && drawMarkerRef.current) drawMarkerRef.current.position.copy(p)
+      }
+      renderer.domElement.addEventListener('pointerdown', onDown)
+      renderer.domElement.addEventListener('pointermove', onMove)
+      renderer.domElement.addEventListener('pointermove', onHover)
+      renderer.domElement.addEventListener('wheel', onWheel, { passive: true })
+      window.addEventListener('pointerup', onUp)
+
       // Cleanup
       return () => {
+  renderer.domElement.removeEventListener('pointerdown', onDown)
+  renderer.domElement.removeEventListener('pointermove', onMove)
+  renderer.domElement.removeEventListener('pointermove', onHover)
+  renderer.domElement.removeEventListener('wheel', onWheel)
+        window.removeEventListener('pointerup', onUp)
         window.removeEventListener('resize', handleResize)
         if (frameRef.current) {
           cancelAnimationFrame(frameRef.current)
@@ -732,7 +1182,7 @@ export function PrawnVisualization({
       experience: prev.experience + 5
     }))
     
-    toast.success(`Swimming pattern: ${nextPattern}`)
+  toast.success(`Патерн плавання: ${nextPattern}`, { id: 'swim-pattern' })
   }
 
   return (
@@ -788,7 +1238,224 @@ export function PrawnVisualization({
               </div>
             </div>
             <div className="text-xs text-gray-600">Level: {gameState.level} | XP: {gameState.experience}</div>
+            <div className="flex gap-2 pt-2">
+              <Button
+                size="sm"
+                variant={freeCam ? 'default' : 'outline'}
+                onClick={() => {
+                  setFreeCam((prev) => {
+                    const next = !prev
+                    if (controlsRef.current) controlsRef.current.enabled = next
+                    return next
+                  })
+                }}
+              >
+                🎥 Free Cam
+              </Button>
+              <Button
+                size="sm"
+                variant={postFX ? 'default' : 'outline'}
+                onClick={() => setPostFX((s) => !s)}
+              >
+                ✨ Bloom
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const next = species === 'shrimp' ? 'crayfish' : 'shrimp'
+                  setSpecies(next)
+                  // Rebuild creature
+                  const scene = sceneRef.current
+                  if (!scene) return
+                  const current = prawnGroupRef.current
+                  const newCreature = createCreature(next)
+                  if (current) {
+                    newCreature.position.copy(current.position)
+                    scene.remove(current)
+                  }
+                  scene.add(newCreature)
+                  prawnGroupRef.current = newCreature
+                }}
+              >
+                🔁 {species === 'shrimp' ? 'Рак' : 'Креветка'}
+              </Button>
+            </div>
           </div>
+        </div>
+
+  {/* Drawing controls */}
+  <div className="pointer-events-auto absolute bottom-6 left-6 flex gap-3 flex-wrap items-center">
+          <Button
+            variant="default"
+            onClick={() => {
+              if (!curveRef.current && !isDrawingRef.current) {
+                toast.message('Режим малювання: утримуйте ліву кнопку миші')
+              }
+            }}
+          >
+            ✏️ Намалювати траєкторію
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Start following if path exists
+              if (curveRef.current) {
+                followRef.current.t = 0
+                followRef.current.active = true
+                playSwooshSound({ volume: 0.4 })
+              } else {
+                toast.error('Немає траєкторії')
+              }
+            }}
+          >
+            ▶️ Старт руху
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              // Clear path
+              const scene = sceneRef.current
+              if (!scene) return
+              if (pathLineRef.current) {
+                scene.remove(pathLineRef.current)
+                ;(pathLineRef.current.geometry as THREE.BufferGeometry).dispose()
+                ;(pathLineRef.current.material as THREE.Material).dispose()
+                pathLineRef.current = null
+              }
+              if (pathTubeRef.current) {
+                scene.remove(pathTubeRef.current)
+                pathTubeRef.current.geometry.dispose()
+                ;(pathTubeRef.current.material as THREE.Material).dispose()
+                pathTubeRef.current = null
+              }
+              curveRef.current = null
+              draftPointsRef.current = []
+              followRef.current.active = false
+            }}
+          >
+            🧹 Очистити
+          </Button>
+          {/* Drawing tweak controls */}
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-md shadow">
+            <label className="text-xs text-gray-700">Глибина</label>
+            <input
+              type="range"
+              min={2}
+              max={12}
+              step={0.5}
+              value={drawDepth}
+              onChange={(e) => {
+                const v = Number(e.target.value)
+                setDrawDepth(v)
+                drawDistanceRef.current = v
+              }}
+            />
+            <span className="text-xs w-8 text-right">{drawDepth.toFixed(1)}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-md shadow">
+            <label className="text-xs text-gray-700">Плавність</label>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={smoothness}
+              onChange={(e) => {
+                const v = Number(e.target.value)
+                setSmoothness(v)
+                // Rebuild tube if curve exists
+                if (curveRef.current && draftPointsRef.current.length > 1) {
+                  curveRef.current = new THREE.CatmullRomCurve3(draftPointsRef.current, false, 'catmullrom', v)
+                  if (pathTubeRef.current && sceneRef.current) {
+                    const scene = sceneRef.current
+                    scene.remove(pathTubeRef.current)
+                    pathTubeRef.current.geometry.dispose()
+                    ;(pathTubeRef.current.material as THREE.Material).dispose()
+                    pathTubeRef.current = null
+                    // regenerate tube
+                    const tubularSegments = Math.max(20, draftPointsRef.current.length * 6)
+                    const tubeGeom = new THREE.TubeGeometry(curveRef.current, tubularSegments, 0.02, 8, false)
+                    const tubeMat = new THREE.MeshStandardMaterial({ color: 0x00c2ff, emissive: 0x002233, metalness: 0.2, roughness: 0.4, transparent: true, opacity: 0.85 })
+                    const tube = new THREE.Mesh(tubeGeom, tubeMat)
+                    tube.renderOrder = 1
+                    scene.add(tube)
+                    pathTubeRef.current = tube
+                  }
+                }
+              }}
+            />
+            <span className="text-xs w-8 text-right">{smoothness.toFixed(2)}</span>
+          </div>
+          <label className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-md shadow text-xs">
+            <input
+              type="checkbox"
+              checked={snapToFloor}
+              onChange={(e) => {
+                setSnapToFloor(e.target.checked)
+                snapToFloorRef.current = e.target.checked
+              }}
+            />
+            Прив'язка до дна
+          </label>
+          <Button
+            variant={canCook ? 'default' : 'outline'}
+            disabled={!canCook || !petkaPassed}
+            onClick={() => {
+              if (!petkaPassed) {
+                setPetkaOpen(true)
+                toast.message('Петька: пройдіть невеликий квіз, щоб відкрити рецепт', { id: 'petka-hint' })
+                return
+              }
+              setShowRecipe((s) => !s)
+            }}
+          >
+            {petkaPassed ? '🍳 Рецепт' : '🤖 Петька: Квіз'}
+          </Button>
+        </div>
+
+        {/* Inventory & Recipe Panel */}
+        <div className="pointer-events-auto absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg min-w-64">
+          <p className="font-semibold mb-2">Інвентар</p>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div>🧄 Часник: {inventory.garlic}</div>
+            <div>🌿 Зелень: {inventory.herb}</div>
+            <div>🍋 Лимон: {inventory.lemon}</div>
+            <div>🧈 Верш. масло: {inventory.butter}</div>
+            <div>🧂 Сіль: {inventory.salt}</div>
+            <div>🌶️ Перець: {inventory.pepper}</div>
+          </div>
+          {showRecipe && petkaPassed && (
+            <div className="mt-3 text-sm">
+              <p className="font-medium mb-1">Рецепт: Смажені креветки з часником та лимоном</p>
+              <ul className="list-disc list-inside text-gray-700 space-y-1">
+                <li>Промийте креветку та обсушіть.</li>
+                <li>Розтопіть 🧈 масло на сковороді.</li>
+                <li>Додайте 🧄 часник та 🌿 зелень, обсмажте 30 сек.</li>
+                <li>Покладіть креветку, посоліть 🧂 та поперчіть 🌶️.</li>
+                <li>Додайте сік 🍋 лимона, готуйте до рожевого кольору.</li>
+              </ul>
+              <Button
+                className="mt-3"
+                disabled={!canCook}
+                onClick={() => {
+                  if (!canCook) return
+                  toast.success('Страва готова! Смачного 🦐')
+                  // consume items
+                  setInventory((prev) => {
+                    const next = { ...prev }
+                    ;(Object.keys(recipeRequirements) as any).forEach((k: keyof typeof recipeRequirements) => {
+                      next[k] = Math.max(0, next[k] - recipeRequirements[k])
+                    })
+                    return next
+                  })
+                  setShowRecipe(false)
+                }}
+              >
+                ✅ Приготувати
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Interaction hints */}
@@ -798,7 +1465,7 @@ export function PrawnVisualization({
             animate={{ opacity: 1, y: 0 }}
             className="pointer-events-auto absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-6 py-3 rounded-full backdrop-blur-sm"
           >
-            🖱️ Click the prawn to interact and enable audio
+            🖱️ Клікніть, щоб активувати звук. Утримуйте ЛКМ для малювання шляху.
           </motion.div>
         )}
 
@@ -808,12 +1475,24 @@ export function PrawnVisualization({
             animate={{ opacity: 1 }}
             className="absolute bottom-8 right-8 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
           >
-            <p className="text-sm font-medium">🦐 Realistic Prawn Simulation</p>
-            <p className="text-xs text-gray-600">Swimming pattern: {animationStateRef.current.swimPattern}</p>
-            <p className="text-xs text-gray-600">Click to change behavior</p>
+            <p className="text-sm font-medium">🦐 Реалістична симуляція креветки</p>
+            <p className="text-xs text-gray-600">Порада: намалюйте траєкторію по дну, а потім запустіть рух ▶️</p>
+            <p className="text-xs text-gray-600">Збирайте інгредієнти для рецепту 🍳</p>
           </motion.div>
         )}
       </div>
+      {/* Petka Quiz Modal */}
+      <PetkaQuiz
+        isOpen={petkaOpen}
+        onClose={() => setPetkaOpen(false)}
+        onPassed={() => {
+          setPetkaPassed(true)
+          sessionStorage.setItem('petkaPassed', '1')
+          toast.success('Петька: доступ до рецепту відкрито!', { id: 'petka-pass' })
+          setShowRecipe(true)
+        }}
+        requiredCorrect={3}
+      />
     </div>
   )
 }

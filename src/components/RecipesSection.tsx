@@ -240,7 +240,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
     { key: 'main', label_uk: 'Основні страви', label_en: 'Main Courses' },
     { key: 'soup', label_uk: 'Супи', label_en: 'Soups' },
     { key: 'salad', label_uk: 'Салати', label_en: 'Salads' },
-    { key: 'ai-generated', label_uk: '🤖 ШІ-рецепти', label_en: '🤖 AI Recipes' },
+  { key: 'ai-generated', label_uk: '🤖 Рецепти Петьки', label_en: '🤖 Petka Recipes' },
   ]
 
   const filteredRecipes =
@@ -439,7 +439,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
               <div className="flex items-center gap-3 mb-6">
                 <Robot size={32} className="text-primary" />
                 <h3 className="text-2xl font-bold text-gradient-primary">
-                  {language === 'uk' ? 'Рецепти створені ШІ-кухарем' : 'AI Chef Created Recipes'}
+                  {language === 'uk' ? 'Рецепти від Петьки' : 'Petka-created Recipes'}
                 </h3>
                 <Badge className="bg-primary/10 text-primary border-primary/20">
                   {filteredAIRecipes.length} {language === 'uk' ? 'рецептів' : 'recipes'}
@@ -460,7 +460,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                     {/* AI Badge */}
                     <div className="absolute top-4 right-4 z-10">
                       <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                        🤖 ШІ
+                        🤖 Петька
                       </Badge>
                     </div>
 
@@ -537,18 +537,18 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
             <Card className="p-12 border-dashed border-2">
               <Robot size={64} className="text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2 text-muted-foreground">
-                {language === 'uk' ? 'Поки що немає ШІ-рецептів' : 'No AI recipes yet'}
+                {language === 'uk' ? 'Поки що немає рецептів від Петьки' : 'No Petka recipes yet'}
               </h3>
               <p className="text-muted-foreground mb-6">
                 {language === 'uk'
-                  ? 'Поверніться до 3D креветки та зіграйте в кулінарну гру, щоб створити перший рецепт!'
-                  : 'Return to the 3D prawn and play the cooking game to create your first recipe!'}
+                  ? 'Поверніться до 3D креветки та пройдіть квіз Петьки, щоб створити перший рецепт!'
+                  : 'Return to the 3D prawn and pass Petka quiz to create your first recipe!'}
               </p>
               <Button
                 onClick={() => onNavigate?.('hero')}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
               >
-                🤖 {language === 'uk' ? 'Грати з ШІ-кухарем' : 'Play with AI Chef'}
+                🤖 {language === 'uk' ? 'Квіз Петьки' : 'Petka Quiz'}
               </Button>
             </Card>
           </motion.div>

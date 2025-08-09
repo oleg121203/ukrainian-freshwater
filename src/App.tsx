@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { PrawnVisualization } from '@/components/PrawnVisualization'
+import { PetkaGame } from '@/components/PetkaGame'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'
@@ -10,7 +11,7 @@ import { GallerySection } from '@/components/GallerySection'
 import { RecipesSection } from '@/components/RecipesSection'
 import { ReviewsSection } from '@/components/ReviewsSection'
 import { ContactSection } from '@/components/ContactSection'
-import { AdminDashboard } from '@/components/AdminDashboard'
+import { AdminGate } from '@/components/AdminGate'
 import { EcoFarmingSection } from '@/components/EcoFarmingSection'
 import { TechnologySection } from '@/components/TechnologySection'
 import { DeliverySection } from '@/components/DeliverySection'
@@ -27,7 +28,7 @@ import { Button } from '@/components/ui/button'
 function App() {
   const [currentSection, setCurrentSection] = useState<string>('hero')
   const [menuVisible, setMenuVisible] = useState(false)
-  const [show3D, setShow3D] = useState(true)
+  const [show3D, setShow3D] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
   const [showCart, setShowCart] = useState(false)
   const { playSwooshSound } = useAudio()
@@ -83,6 +84,17 @@ function App() {
 
   const renderCurrentSection = () => {
     switch (currentSection) {
+      case 'hero':
+        return (
+          <PetkaGame
+            onNavigate={handleNavigate}
+            onOpen3D={() => {
+              setCurrentSection('hero')
+              setShow3D(true)
+              setMenuVisible(false)
+            }}
+          />
+        )
       case 'about':
         return <AboutSection onNavigate={handleNavigate} />
       case 'products':
@@ -96,7 +108,7 @@ function App() {
       case 'contact':
         return <ContactSection onNavigate={handleNavigate} />
       case 'admin':
-        return <AdminDashboard onNavigate={handleNavigate} />
+        return <AdminGate onNavigate={handleNavigate} />
       case 'eco-farming':
         return <EcoFarmingSection onNavigate={handleNavigate} />
       case 'technology':
@@ -126,7 +138,7 @@ function App() {
       case 'payment-admin':
         return <PaymentAdmin onNavigate={handleNavigate} />
       default:
-        return <HeroSection onNavigate={handleNavigate} />
+  return <PetkaGame onNavigate={handleNavigate} onOpen3D={() => { setCurrentSection('hero'); setShow3D(true) }} />
     }
   }
 
@@ -202,7 +214,7 @@ function App() {
         {/* 3D Visualization or Content */}
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">
-                        <PrawnVisualization
+            <PrawnVisualization
               onMenuToggle={() => setMenuVisible(!menuVisible)}
               menuVisible={menuVisible}
               onNavigateToSite={() => setCurrentSection('hero')}
@@ -245,11 +257,15 @@ function App() {
         {/* Toast Notifications */}
         <Toaster
           position="bottom-right"
+          richColors
+          closeButton
           toastOptions={{
+            duration: 2800,
             style: {
               background: 'var(--background)',
               color: 'var(--foreground)',
               border: '1px solid var(--border)',
+              marginTop: 6,
             },
           }}
         />

@@ -25,17 +25,18 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
   const { language, setLanguage, t } = useLanguage()
   const { playClickSound, playBubbleSound } = useAudio()
 
-  const menuItems = [
-    { key: 'hero', icon: Fish, label: t('nav.home') },
-    { key: 'about', icon: BookOpen, label: t('nav.about') },
-    { key: 'products', icon: ShoppingCart, label: t('nav.products') },
+  const primary = [
+    { key: 'about', icon: BookOpen, label: language === 'uk' ? 'Про нас' : 'About' },
+    { key: 'products', icon: ShoppingCart, label: language === 'uk' ? 'Магазин' : 'Shop' },
+    { key: 'recipes', icon: BookOpen, label: language === 'uk' ? 'Рецепти' : 'Recipes' },
+    { key: 'contact', icon: Phone, label: language === 'uk' ? 'Контакти' : 'Contact' },
+  ]
+  const secondary = [
+    { key: 'gallery', icon: Images, label: language === 'uk' ? 'Галерея' : 'Gallery' },
+    { key: 'reviews', icon: Star, label: language === 'uk' ? 'Відгуки' : 'Reviews' },
     { key: 'orders', icon: Package, label: language === 'uk' ? 'Замовлення' : 'Orders' },
     { key: 'feeding', icon: CookingPot, label: language === 'uk' ? 'Годування' : 'Feeding' },
-    { key: 'gallery', icon: Images, label: t('nav.gallery') },
-    { key: 'recipes', icon: BookOpen, label: t('nav.recipes') },
-    { key: 'reviews', icon: Star, label: t('nav.reviews') },
-    { key: 'contact', icon: Phone, label: t('nav.contact') },
-    { key: 'admin', icon: GearSix, label: 'Адмін' },
+    { key: 'admin', icon: GearSix, label: language === 'uk' ? 'Адмін' : 'Admin' },
   ]
 
   const containerVariants = {
@@ -127,51 +128,51 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                 </div>
               </motion.div>
 
-              {/* Circular menu items */}
-              <div className="relative w-96 h-96">
-                {menuItems.map((item, index) => {
-                  const angle = (index * 360) / menuItems.length
-                  const radian = (angle * Math.PI) / 180
-                  const radius = 150
-                  const x = Math.cos(radian) * radius
-                  const y = Math.sin(radian) * radius
-
-                  return (
-                    <motion.div
-                      key={item.key}
-                      className="absolute top-1/2 left-1/2"
-                      style={{
-                        transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                      }}
-                      variants={itemVariants}
-                      whileHover={{
-                        scale: 1.1,
-                        transition: { duration: 0.2 },
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                    >
+              {/* Clear actions grid */}
+              <div className="relative w-[28rem]">
+                <div className="grid grid-cols-2 gap-4">
+                  {primary.map((item) => (
+                    <motion.div key={item.key} variants={itemVariants}>
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="lg"
-                        className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-lg hover:shadow-xl"
-                        onMouseEnter={() =>
-                          playBubbleSound({ volume: 0.15, playbackRate: 1.3 + Math.random() * 0.4 })
-                        }
+                        className="w-full h-20 rounded-xl bg-primary text-primary-foreground hover:opacity-90 shadow-lg"
+                        onMouseEnter={() => playBubbleSound({ volume: 0.15, playbackRate: 1.3 })}
                         onClick={() => {
-                          console.log('Menu item clicked:', item.key)
                           playClickSound({ volume: 0.4, playbackRate: 1.1 })
                           onNavigate(item.key)
                           onClose()
                         }}
                       >
-                        <div className="flex flex-col items-center gap-1">
-                          <item.icon size={24} />
-                          <span className="text-xs font-medium">{item.label}</span>
+                        <div className="flex items-center gap-2 text-base">
+                          <item.icon size={22} />
+                          <span className="font-semibold">{item.label}</span>
                         </div>
                       </Button>
                     </motion.div>
-                  )
-                })}
+                  ))}
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  {secondary.map((item) => (
+                    <motion.div key={item.key} variants={itemVariants}>
+                      <Button
+                        variant="outline"
+                        size="default"
+                        className="w-full h-12 rounded-lg bg-white/90 hover:bg-primary hover:text-primary-foreground"
+                        onClick={() => {
+                          playClickSound({ volume: 0.4, playbackRate: 1.05 })
+                          onNavigate(item.key)
+                          onClose()
+                        }}
+                      >
+                        <div className="flex items-center gap-2 text-sm">
+                          <item.icon size={18} />
+                          <span>{item.label}</span>
+                        </div>
+                      </Button>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
               {/* Language switcher */}
