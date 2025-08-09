@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe, GearSix, Bowl, Package } from '@phosphor-icons/react'
+import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe, GearSix, CookingPot, Package } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
     { key: 'about', icon: BookOpen, label: t('nav.about') },
     { key: 'products', icon: ShoppingCart, label: t('nav.products') },
     { key: 'orders', icon: Package, label: language === 'uk' ? 'Замовлення' : 'Orders' },
-    { key: 'feeding', icon: Bowl, label: language === 'uk' ? 'Годування' : 'Feeding' },
+    { key: 'feeding', icon: CookingPot, label: language === 'uk' ? 'Годування' : 'Feeding' },
     { key: 'gallery', icon: Images, label: t('nav.gallery') },
     { key: 'recipes', icon: BookOpen, label: t('nav.recipes') },
     { key: 'reviews', icon: Star, label: t('nav.reviews') },

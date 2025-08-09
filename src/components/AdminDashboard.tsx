@@ -10,17 +10,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/useKV'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { 
   Plus, 
-  Edit, 
-  Trash2, 
+  PencilSimple, 
+  Trash, 
   Package, 
   ShoppingCart, 
   Users, 
-  TrendingUp, 
-  DollarSign,
+  TrendUp, 
+  CurrencyDollar,
   Eye,
   CheckCircle,
   Clock,
@@ -457,7 +457,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Очікує' },
       processing: { color: 'bg-blue-100 text-blue-800', icon: Package, label: 'Обробляється' },
-      shipped: { color: 'bg-purple-100 text-purple-800', icon: TrendingUp, label: 'Відправлено' },
+      shipped: { color: 'bg-purple-100 text-purple-800', icon: TrendUp, label: 'Відправлено' },
       delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Доставлено' },
       cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Скасовано' }
     }
@@ -501,7 +501,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Загальний дохід</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <CurrencyDollar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">₴{totalRevenue.toLocaleString()}</div>
@@ -623,7 +623,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                       toast.info(`Сьогодні: ${todayOrders.length} замовлень на ₴${todayOrders.reduce((sum, o) => sum + o.total, 0)}`)
                     }}
                   >
-                    <TrendingUp className="mr-2 h-4 w-4" />
+                    <TrendUp className="mr-2 h-4 w-4" />
                     Статистика дня
                   </Button>
                 </CardContent>
@@ -818,14 +818,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                               size="sm"
                               onClick={() => handleEditProduct(product)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <PencilSimple className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeleteProduct(product.id)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -1127,7 +1127,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                       toast.info('Функція буде доступна незабаром')
                     }}
                   >
-                    <TrendingUp className="w-4 h-4 mr-2" />
+                    <TrendUp className="w-4 h-4 mr-2" />
                     Звіти по платежах
                   </Button>
                   <Button 
@@ -1147,7 +1147,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                       toast.info('Функція буде доступна незабаром')
                     }}
                   >
-                    <DollarSign className="w-4 h-4 mr-2" />
+                    <CurrencyDollar className="w-4 h-4 mr-2" />
                     Налаштування комісій
                   </Button>
                 </div>

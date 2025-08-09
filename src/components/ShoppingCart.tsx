@@ -10,7 +10,7 @@ import {
   MapPin, 
   Phone,
   User,
-  Mail,
+  Envelope,
   Package,
   CheckCircle,
   CopySimple
@@ -24,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/useKV'
 import { toast } from 'sonner'
 import { useShoppingCart, CartItem, Order } from '@/hooks/useShoppingCart'
 import { PaymentForm } from '@/components/PaymentForm'
@@ -422,7 +422,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                       </div>
                       <div>
                         <Label htmlFor="email">
-                          <Mail size={16} className="inline mr-1" />
+                          <Envelope size={16} className="inline mr-1" />
                           {language === 'uk' ? 'Електронна пошта' : 'Email'} *
                         </Label>
                         <Input

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Leaf, Award, Users, Heart, ShoppingCart, Images, BookOpen, ArrowRight, Bowl } from '@phosphor-icons/react'
+import { Leaf, Medal, Users, Heart, ShoppingCart, Images, BookOpen, ArrowRight, CookingPot } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
 
   const stats = [
     {
-      icon: Award,
+      icon: Medal,
       number: '5+',
       label_uk: 'років досвіду',
       label_en: 'years experience'
@@ -188,7 +188,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
 
           <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('feeding')}>
             <CardContent className="p-6 text-center">
-              <Bowl size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <CookingPot size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
               <h3 className="text-lg font-semibold mb-2">
                 {language === 'uk' ? 'Симулятор годування' : 'Feeding Simulator'}
               </h3>

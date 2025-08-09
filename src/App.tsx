@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { PrawnVisualization } from '@/components/PrawnVisualization'
+import { PrawnVisualization } from '@/components/PrawnVisualizationFixed'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'

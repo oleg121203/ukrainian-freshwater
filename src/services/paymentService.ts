@@ -1,4 +1,4 @@
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/useKV'
 
 export interface PaymentData {
   method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'oschadbank' | 'ukrgasbank' | 'ibox' | 'paypal' | 'skrill' | 'webmoney' | 'qiwi' | 'crypto' | 'bank_transfer'
