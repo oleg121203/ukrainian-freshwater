@@ -11,15 +11,19 @@ export function useKV<T>(key: string, defaultValue: T): [T, (value: T | ((prev: 
     }
   })
 
-  const setStoredValue = useCallback((newValue: T | ((prev: T) => T)) => {
-    try {
-      const valueToStore = typeof newValue === 'function' ? (newValue as (prev: T) => T)(value) : newValue
-      setValue(valueToStore)
-      localStorage.setItem(key, JSON.stringify(valueToStore))
-    } catch (error) {
-      console.error('Error saving to localStorage:', error)
-    }
-  }, [key, value])
+  const setStoredValue = useCallback(
+    (newValue: T | ((prev: T) => T)) => {
+      try {
+        const valueToStore =
+          typeof newValue === 'function' ? (newValue as (prev: T) => T)(value) : newValue
+        setValue(valueToStore)
+        localStorage.setItem(key, JSON.stringify(valueToStore))
+      } catch (error) {
+        console.error('Error saving to localStorage:', error)
+      }
+    },
+    [key, value]
+  )
 
   return [value, setStoredValue]
 }

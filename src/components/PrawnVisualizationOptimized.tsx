@@ -256,17 +256,17 @@ export function PrawnVisualization({
     }, 2000)
 
     if (menuVisible) {
-      playSwooshSound({ 
-        volume: AUDIO_CONFIG.volumes.swoosh, 
-        playbackRate: AUDIO_CONFIG.playbackRates.swoosh 
+      playSwooshSound({
+        volume: AUDIO_CONFIG.volumes.swoosh,
+        playbackRate: AUDIO_CONFIG.playbackRates.swoosh,
       })
       onNavigateToSite?.()
       return
     }
 
-    playClickSound({ 
-      volume: AUDIO_CONFIG.volumes.click, 
-      playbackRate: AUDIO_CONFIG.playbackRates.click 
+    playClickSound({
+      volume: AUDIO_CONFIG.volumes.click,
+      playbackRate: AUDIO_CONFIG.playbackRates.click,
     })
     onMenuToggle(true)
   }
@@ -279,9 +279,9 @@ export function PrawnVisualization({
       isSwimming: !prev.isSwimming,
     }))
 
-    playBubbleSound({ 
-      volume: AUDIO_CONFIG.volumes.bubble, 
-      playbackRate: AUDIO_CONFIG.playbackRates.bubble 
+    playBubbleSound({
+      volume: AUDIO_CONFIG.volumes.bubble,
+      playbackRate: AUDIO_CONFIG.playbackRates.bubble,
     })
 
     setTimeout(() => {
@@ -360,9 +360,9 @@ export function PrawnVisualization({
 
       gameLogic.setGeneratedRecipe(newRecipe)
       gameLogic.setGameState(prev => ({ ...prev, prawnMood: 'excited', gamePhase: 'completed' }))
-      playBubbleSound({ 
-        volume: AUDIO_CONFIG.volumes.success, 
-        playbackRate: AUDIO_CONFIG.playbackRates.success 
+      playBubbleSound({
+        volume: AUDIO_CONFIG.volumes.success,
+        playbackRate: AUDIO_CONFIG.playbackRates.success,
       })
       toast.success('🍽️ ChefBot-2000 створив унікальний рецепт!')
     } catch (error) {
@@ -437,7 +437,11 @@ export function PrawnVisualization({
       <div
         ref={mountRef}
         className="w-full h-full cursor-pointer"
-        onMouseMove={handleMouseMove}
+        onMouseMove={e => {
+          handleMouseMove(e)
+          const rect = e.currentTarget.getBoundingClientRect()
+          gameLogic.continueDrawing(e.clientX - rect.left, e.clientY - rect.top)
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
@@ -445,10 +449,6 @@ export function PrawnVisualization({
         onMouseDown={e => {
           const rect = e.currentTarget.getBoundingClientRect()
           gameLogic.startDrawing(e.clientX - rect.left, e.clientY - rect.top)
-        }}
-        onMouseMove={e => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          gameLogic.continueDrawing(e.clientX - rect.left, e.clientY - rect.top)
         }}
         onMouseUp={gameLogic.finishDrawing}
       />

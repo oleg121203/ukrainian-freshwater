@@ -158,7 +158,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     }
 
     // Basic phone validation
-    if (!/^\+?[\d\s\-\(\)]+$/.test(phone)) {
+    if (!/^\+?[\d\s\-()]+$/.test(phone)) {
       toast.error(
         language === 'uk' ? 'Введіть коректний номер телефону' : 'Please enter a valid phone number'
       )

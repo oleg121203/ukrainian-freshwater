@@ -262,7 +262,7 @@ export function PaymentForm({
   }
 
   const validateBankPayment = () => {
-    if (!bankPhone || !/^\+?[\d\s\-\(\)]+$/.test(bankPhone)) {
+    if (!bankPhone || !/^\+?[\d\s\-()]+$/.test(bankPhone)) {
       toast.error(
         language === 'uk' ? 'Введіть коректний номер телефону' : 'Enter a valid phone number'
       )
@@ -285,7 +285,7 @@ export function PaymentForm({
         return false
       }
     } else if (paymentMethod === 'qiwi') {
-      if (!walletPhone || !/^\+?[\d\s\-\(\)]+$/.test(walletPhone)) {
+      if (!walletPhone || !/^\+?[\d\s\-()]+$/.test(walletPhone)) {
         toast.error(language === 'uk' ? 'Введіть номер телефону QIWI' : 'Enter QIWI phone number')
         return false
       }

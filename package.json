@@ -8,6 +8,9 @@
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
+        "fix": "npm run format && npm run lint:fix",
         "optimize": "vite optimize",
         "preview": "vite preview"
     },

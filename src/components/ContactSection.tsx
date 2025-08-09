@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Phone,
-  Mail,
+  Envelope,
   MapPin,
   Clock,
-  Send,
+  PaperPlaneTilt,
   ShoppingCart,
   Star,
   ArrowRight,
@@ -41,7 +41,7 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
       link: 'tel:+380671234567',
     },
     {
-      icon: Mail,
+      icon: Envelope,
       title_uk: 'Електронна пошта',
       title_en: 'Email',
       value: 'info@aquafarm.ua',
@@ -301,7 +301,7 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Send size={18} />
+                        <PaperPlaneTilt size={18} />
                         {language === 'uk' ? 'Надіслати повідомлення' : 'Send Message'}
                       </div>
                     )}
