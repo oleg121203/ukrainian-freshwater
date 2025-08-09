@@ -3,10 +3,14 @@ import * as THREE from 'three'
 import { motion } from 'framer-motion'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
-import { PrawnVisualizationProps } from './prawn/types'
-import { useGameLogic } from './prawn/useGameLogic'
-import GameUI from './prawn/GameUI'
 import { toast } from 'sonner'
+
+// Локальні типи та логіка
+interface PrawnVisualizationProps {
+  onMenuToggle?: () => void
+  menuVisible?: boolean
+  onNavigateToSite?: (section: string) => void
+}
 
 export function PrawnVisualization({
   onMenuToggle,
@@ -39,9 +43,15 @@ export function PrawnVisualization({
   const [isLoaded, setIsLoaded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
+  const [gameState, setGameState] = useState({
+    health: 100,
+    happiness: 80,
+    hunger: 50,
+    level: 1,
+    experience: 0
+  })
 
   const { playClickSound, playSwooshSound, playBubbleSound, resumeAudioContext } = useAudio()
-  const gameLogic = useGameLogic()
 
   // Create realistic prawn geometry
   const createRealisticPrawn = () => {
@@ -418,8 +428,8 @@ export function PrawnVisualization({
     state.time += deltaTime * 0.001
 
     // Update swim pattern
-    const pattern = gameLogic.gameState.currentSwimPattern
-    const patternSpeed = gameLogic.gameState.isSwimming ? 1.5 : 0.5
+    const pattern = state.swimPattern
+    const patternSpeed = 1.5
     
     let targetX = 0, targetY = 0, targetZ = 0
 
@@ -508,10 +518,8 @@ export function PrawnVisualization({
     })
 
     // Body undulation (swimming motion)
-    if (gameLogic.gameState.isSwimming) {
-      prawnGroup.rotation.z = Math.sin(state.time * 3) * 0.1
-      prawnGroup.children[0].rotation.y = Math.sin(state.time * 4) * 0.05 // Body twist
-    }
+    prawnGroup.rotation.z = Math.sin(state.time * 3) * 0.1
+    prawnGroup.children[0].rotation.y = Math.sin(state.time * 4) * 0.05 // Body twist
   }
 
   // Animate environment
@@ -561,7 +569,8 @@ export function PrawnVisualization({
     plantsRef.current.forEach((plant, index) => {
       plant.rotation.z = Math.sin(Date.now() * 0.001 + index) * 0.1
       plant.children.forEach((child, childIndex) => {
-        if (child.geometry && child.geometry.type === 'PlaneGeometry') {
+        // Type-safe check for mesh with geometry
+        if (child instanceof THREE.Mesh && child.geometry.type === 'PlaneGeometry') {
           child.rotation.y = Math.sin(Date.now() * 0.002 + index + childIndex) * 0.3
         }
       })
@@ -708,17 +717,19 @@ export function PrawnVisualization({
     }
     
     playClickSound({ volume: 0.6, playbackRate: 1.0 })
-    gameLogic.handlePrawnClick()
     
     // Change swim pattern on click
     const patterns = ['circular', 'figure8', 'random', 'patrol'] as const
-    const currentIndex = patterns.indexOf(gameLogic.gameState.currentSwimPattern)
+    const currentIndex = patterns.indexOf(animationStateRef.current.swimPattern)
     const nextPattern = patterns[(currentIndex + 1) % patterns.length]
     
-    gameLogic.setGameState(prev => ({
+    animationStateRef.current.swimPattern = nextPattern
+    
+    // Update game state
+    setGameState(prev => ({
       ...prev,
-      currentSwimPattern: nextPattern,
-      isSwimming: !prev.isSwimming,
+      happiness: Math.min(100, prev.happiness + 10),
+      experience: prev.experience + 5
     }))
     
     toast.success(`Swimming pattern: ${nextPattern}`)
@@ -744,7 +755,7 @@ export function PrawnVisualization({
           className="pointer-events-auto absolute top-4 right-4 bg-white/90 backdrop-blur-sm border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all duration-300"
           onClick={() => {
             playClickSound({ volume: 0.4 })
-            onMenuToggle(!menuVisible)
+            if (onMenuToggle) onMenuToggle()
           }}
         >
           <motion.div
@@ -755,8 +766,30 @@ export function PrawnVisualization({
           </motion.div>
         </Button>
 
-        {/* Game UI */}
-        <GameUI gameLogic={gameLogic} />
+        {/* Simple game stats */}
+        <div className="pointer-events-auto absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">❤️ Health:</span>
+              <div className="w-20 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-red-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${gameState.health}%` }}
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">😊 Happiness:</span>
+              <div className="w-20 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${gameState.happiness}%` }}
+                />
+              </div>
+            </div>
+            <div className="text-xs text-gray-600">Level: {gameState.level} | XP: {gameState.experience}</div>
+          </div>
+        </div>
 
         {/* Interaction hints */}
         {!audioEnabled && (
@@ -776,7 +809,7 @@ export function PrawnVisualization({
             className="absolute bottom-8 right-8 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
           >
             <p className="text-sm font-medium">🦐 Realistic Prawn Simulation</p>
-            <p className="text-xs text-gray-600">Swimming pattern: {gameLogic.gameState.currentSwimPattern}</p>
+            <p className="text-xs text-gray-600">Swimming pattern: {animationStateRef.current.swimPattern}</p>
             <p className="text-xs text-gray-600">Click to change behavior</p>
           </motion.div>
         )}

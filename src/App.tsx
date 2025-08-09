@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import PrawnVisualization from '@/components/PrawnVisualization'
+import { PrawnVisualization } from '@/components/PrawnVisualization'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'
@@ -203,7 +203,7 @@ function App() {
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">
                         <PrawnVisualization
-              onMenuToggle={setMenuVisible}
+              onMenuToggle={() => setMenuVisible(!menuVisible)}
               menuVisible={menuVisible}
               onNavigateToSite={() => setCurrentSection('hero')}
             />
