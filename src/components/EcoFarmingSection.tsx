@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Leaf, Water, Recycle, Shield, ArrowLeft, CheckCircle, Globe } from '@phosphor-icons/react'
+import { Leaf, Drop, Recycle, Shield, ArrowLeft, CheckCircle, Globe } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
 
   const ecoMethods = [
     {
-      icon: Water,
+      icon: Drop,
       title_uk: 'Природна фільтрація води',
       title_en: 'Natural Water Filtration',
       description_uk:

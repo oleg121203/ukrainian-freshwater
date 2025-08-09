@@ -1,4 +1,4 @@
-import { CookingQuestion } from './types'
+import { CookingQuestion, GameState } from './types'
 
 export const COOKING_QUESTIONS: CookingQuestion[] = [
   {
@@ -28,13 +28,13 @@ export const COOKING_QUESTIONS: CookingQuestion[] = [
   },
 ]
 
-export const INITIAL_GAME_STATE = {
-  prawnMood: 'calm' as const,
+export const INITIAL_GAME_STATE: GameState = {
+  prawnMood: 'calm',
   interactionCount: 0,
   isFeeding: false,
   isSwimming: false,
-  currentSwimPattern: 'circular' as const,
-  gamePhase: 'exploring' as const,
+  currentSwimPattern: 'circular',
+  gamePhase: 'exploring',
   score: 0,
   correctAnswers: 0,
   isRobotMode: false,

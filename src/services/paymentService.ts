@@ -80,9 +80,8 @@ class PaymentService {
   private async loadSettings() {
     try {
       // This could be loaded from admin panel settings
-      const settings = await window.spark.kv.get<{ apiKey: string; testMode: boolean }>(
-        'payment-settings'
-      )
+      const settingsStr = localStorage.getItem('payment-settings')
+      const settings = settingsStr ? JSON.parse(settingsStr) : null
       if (settings) {
         this.apiKey = settings.apiKey
         this.testMode = settings.testMode
@@ -562,8 +561,7 @@ class PaymentService {
   }
 
   private async saveTransaction(transaction: PaymentTransaction): Promise<void> {
-    const transactions =
-      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
+    const transactions = JSON.parse(localStorage.getItem('payment-transactions') || '[]') || []
     const existingIndex = transactions.findIndex(t => t.id === transaction.id)
 
     if (existingIndex >= 0) {
@@ -572,23 +570,21 @@ class PaymentService {
       transactions.push(transaction)
     }
 
-    await window.spark.kv.set('payment-transactions', transactions)
+    localStorage.setItem('payment-transactions', JSON.stringify(transactions))
   }
 
   async getTransaction(transactionId: string): Promise<PaymentTransaction | undefined> {
-    const transactions =
-      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
+    const transactions = JSON.parse(localStorage.getItem('payment-transactions') || '[]') || []
     return transactions.find(t => t.id === transactionId)
   }
 
   async getTransactionsByOrder(orderId: string): Promise<PaymentTransaction[]> {
-    const transactions =
-      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
+    const transactions = JSON.parse(localStorage.getItem('payment-transactions') || '[]') || []
     return transactions.filter(t => t.orderId === orderId)
   }
 
   async getAllTransactions(): Promise<PaymentTransaction[]> {
-    return (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
+    return JSON.parse(localStorage.getItem('payment-transactions') || '[]') || []
   }
 
   private generateTransactionId(): string {
@@ -601,13 +597,13 @@ class PaymentService {
 
   // Admin methods for payment settings
   async updateSettings(apiKey: string, testMode: boolean): Promise<void> {
-    await window.spark.kv.set('payment-settings', { apiKey, testMode })
+    localStorage.setItem('payment-settings', JSON.stringify({ apiKey, testMode }))
     this.apiKey = apiKey
     this.testMode = testMode
   }
 
   async getSettings(): Promise<{ apiKey: string; testMode: boolean }> {
-    return (await window.spark.kv.get('payment-settings')) || { apiKey: '', testMode: true }
+    return JSON.parse(localStorage.getItem('payment-settings') || '{"apiKey":"","testMode":true}')
   }
 }
 

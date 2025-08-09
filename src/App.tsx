@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { PrawnVisualization } from '@/components/PrawnVisualizationOptimized'
+import PrawnVisualizationRealistic from '@/components/PrawnVisualizationRealistic'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'
@@ -53,6 +53,9 @@ function App() {
   ]
 
   const handleNavigate = (section: string) => {
+    console.log('Navigating to section:', section)
+    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
+    
     if (section === 'hero') {
       // If going back to hero, show 3D
       setCurrentSection('hero')
@@ -199,10 +202,10 @@ function App() {
         {/* 3D Visualization or Content */}
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">
-            <PrawnVisualization
+                        <PrawnVisualizationRealistic
               onMenuToggle={setMenuVisible}
               menuVisible={menuVisible}
-              onNavigateToSite={handleNavigateToSite}
+              onNavigateToSite={() => setCurrentSection('hero')}
             />
           </div>
         ) : (

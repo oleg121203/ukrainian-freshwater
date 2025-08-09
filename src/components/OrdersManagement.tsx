@@ -7,7 +7,7 @@ import {
   Truck,
   MapPin,
   Phone,
-  Mail,
+  Envelope,
   Eye,
   ArrowLeft,
 } from '@phosphor-icons/react'
@@ -253,7 +253,7 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                       {selectedOrder.customerInfo.phone}
                     </p>
                     <p className="flex items-center gap-2 text-muted-foreground">
-                      <Mail size={14} />
+                      <Envelope size={14} />
                       {selectedOrder.customerInfo.email}
                     </p>
                   </CardContent>

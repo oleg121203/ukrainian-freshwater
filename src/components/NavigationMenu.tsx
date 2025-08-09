@@ -65,18 +65,14 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
   }
 
   const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20,
-      scale: 0.8,
-    },
+    hidden: { opacity: 0, y: 20, scale: 0.8 },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
       transition: {
         duration: 0.4,
-        ease: 'easeOut',
+        ease: [0.6, -0.05, 0.01, 0.99] as [number, number, number, number],
       },
     },
   }
@@ -87,7 +83,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
       scale: 1,
       opacity: 1,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 200,
         damping: 15,
       },
@@ -162,6 +158,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                           playBubbleSound({ volume: 0.15, playbackRate: 1.3 + Math.random() * 0.4 })
                         }
                         onClick={() => {
+                          console.log('Menu item clicked:', item.key)
                           playClickSound({ volume: 0.4, playbackRate: 1.1 })
                           onNavigate(item.key)
                           onClose()

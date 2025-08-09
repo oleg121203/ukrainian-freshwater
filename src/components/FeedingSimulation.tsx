@@ -191,7 +191,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
   const [showDailyBonus, setShowDailyBonus] = useState(false)
   const [newAchievement, setNewAchievement] = useState<string | null>(null)
 
-  const feedingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const feedingIntervalRef = useRef<number | null>(null)
 
   // Achievement definitions
   const achievementList = [
@@ -275,7 +275,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
     setShowDailyBonus(false)
 
     playSuccessSound({ volume: 0.4, playbackRate: 1.1 })
-    toast.success(t('dailyBonusClaimed', `Daily bonus claimed! +${bonusCoins} coins 🎁`))
+    toast.success(t('dailyBonusClaimed'))
   }
 
   // Auto-decay stats over time
@@ -319,7 +319,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
         experience: current.experience - current.level * 100,
       }))
       playSuccessSound({ volume: 0.3, playbackRate: 1.2 })
-      toast.success(t('levelUp', `Level Up! Now level ${prawnStats.level + 1}`))
+      toast.success(t('levelUp'))
     }
   }, [prawnStats.experience, prawnStats.level, setPrawnStats, playSuccessSound, t])
 
@@ -332,7 +332,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
     if (isFeeding || coins < food.cost) {
       if (coins < food.cost) {
         playWarnSound({ volume: 0.2 })
-        toast.error(t('notEnoughCoins', 'Not enough coins!'))
+        toast.error(t('notEnoughCoins'))
       }
       return
     }
@@ -393,7 +393,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
       })
 
       playSuccessSound({ volume: 0.2, playbackRate: 0.9 })
-      toast.success(t('prawnFed', `Fed prawn with ${food.name[language]}!`))
+      toast.success(t('prawnFed'))
 
       // Clear animation
       setTimeout(() => {
@@ -443,14 +443,9 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gradient-primary mb-2">
-            {t('feedingSimulation', 'Virtual Prawn Feeding Simulation')}
+            {t('feedingSimulation')}
           </h1>
-          <p className="text-muted-foreground mb-4">
-            {t(
-              'feedingDescription',
-              'Take care of your virtual Macrobrachium rosenbergii by feeding it the right food!'
-            )}
-          </p>
+          <p className="text-muted-foreground mb-4">{t('feedingDescription')}</p>
 
           {/* Quick Instructions */}
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 max-w-2xl mx-auto">
@@ -482,7 +477,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                🦐 {t('prawnStats', 'Prawn Stats')}
+                🦐 {t('prawnStats')}
                 <Badge variant="secondary">Level {prawnStats.level}</Badge>
               </CardTitle>
             </CardHeader>
@@ -491,7 +486,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{t('hunger', 'Hunger')}</span>
+                    <span>{t('hunger')}</span>
                     <span className={getStatColor(prawnStats.hunger)}>{prawnStats.hunger}%</span>
                   </div>
                   <Progress value={prawnStats.hunger} className="h-2" />
@@ -499,7 +494,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{t('health', 'Health')}</span>
+                    <span>{t('health')}</span>
                     <span className={getStatColor(prawnStats.health)}>{prawnStats.health}%</span>
                   </div>
                   <Progress value={prawnStats.health} className="h-2" />
@@ -507,7 +502,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{t('growth', 'Growth')}</span>
+                    <span>{t('growth')}</span>
                     <span className={getStatColor(prawnStats.growth)}>{prawnStats.growth}%</span>
                   </div>
                   <Progress value={prawnStats.growth} className="h-2" />
@@ -515,7 +510,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{t('mood', 'Mood')}</span>
+                    <span>{t('mood')}</span>
                     <span className={getStatColor(prawnStats.mood)}>{prawnStats.mood}%</span>
                   </div>
                   <Progress value={prawnStats.mood} className="h-2" />
@@ -523,7 +518,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{t('colorIntensity', 'Color Intensity')}</span>
+                    <span>{t('colorIntensity')}</span>
                     <span className={getStatColor(prawnStats.colorIntensity)}>
                       {prawnStats.colorIntensity}%
                     </span>
@@ -535,7 +530,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
               {/* Experience and Coins */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{t('experience', 'Experience')}</span>
+                  <span>{t('experience')}</span>
                   <span>
                     {prawnStats.experience}/{prawnStats.level * 100}
                   </span>
@@ -546,12 +541,12 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
                 />
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">💰 {t('coins', 'Coins')}</span>
+                  <span className="text-sm">💰 {t('coins')}</span>
                   <Badge variant="outline">{coins}</Badge>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">🔥 {t('streak', 'Feeding Streak')}</span>
+                  <span className="text-sm">🔥 {t('streak')}</span>
                   <Badge variant="outline">{feedingStreak}</Badge>
                 </div>
 
@@ -595,7 +590,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
           {/* Food Selection */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>🍽️ {t('chooseFood', 'Choose Food')}</CardTitle>
+              <CardTitle>🍽️ {t('chooseFood')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -741,9 +736,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
                 className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border text-center"
               >
                 <div className="text-6xl mb-2">🦐</div>
-                <h3 className="text-xl font-bold text-primary mb-1">
-                  {t('feeding', 'Feeding...')}
-                </h3>
+                <h3 className="text-xl font-bold text-primary mb-1">{t('feeding')}</h3>
                 <p className="text-muted-foreground">{selectedFood?.name[language]}</p>
               </motion.div>
             </div>
@@ -755,7 +748,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
           {feedingSessions.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>📈 {t('recentFeedings', 'Recent Feeding Sessions')}</CardTitle>
+                <CardTitle>📈 {t('recentFeedings')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -772,7 +765,7 @@ export function FeedingSimulation({ onPrawnFeed, onStatsUpdate }: FeedingSimulat
                           </span>
                           <div>
                             <p className="text-sm font-medium">
-                              {foodItem?.name[language] || t('unknownFood', 'Unknown Food')}
+                              {foodItem?.name[language] || t('unknownFood')}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(session.timestamp).toLocaleString()}

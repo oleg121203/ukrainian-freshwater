@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Settings,
-  Save,
+  Gear,
+  FloppyDisk,
   Key,
   TestTube,
   CreditCard,
   Eye,
   EyeSlash,
   CheckCircle,
-  AlertTriangle,
+  Warning,
   Building,
-  Smartphone,
+  DeviceMobile,
   Shield,
   ArrowLeft,
 } from '@phosphor-icons/react'
@@ -189,7 +189,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">Apple Pay</span>
                         </div>
                         <Badge variant="secondary">
@@ -198,7 +198,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">Google Pay</span>
                         </div>
                         <Badge variant="secondary">
@@ -252,7 +252,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">iBox Bank</span>
                         </div>
                         <Badge variant="secondary">
@@ -279,7 +279,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">Skrill</span>
                         </div>
                         <Badge variant="secondary">
@@ -288,7 +288,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">WebMoney</span>
                         </div>
                         <Badge variant="secondary">
@@ -297,7 +297,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       </div>
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
-                          <Smartphone size={16} />
+                          <DeviceMobile size={16} />
                           <span className="text-sm">QIWI</span>
                         </div>
                         <Badge variant="secondary">
@@ -344,7 +344,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Settings size={20} />
+                  <Gear size={20} />
                   {language === 'uk' ? 'Основні налаштування' : 'Basic Settings'}
                 </CardTitle>
               </CardHeader>
@@ -411,7 +411,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
                     />
                   ) : (
-                    <Save size={16} className="mr-2" />
+                    <FloppyDisk size={16} className="mr-2" />
                   )}
                   {isSaving
                     ? language === 'uk'

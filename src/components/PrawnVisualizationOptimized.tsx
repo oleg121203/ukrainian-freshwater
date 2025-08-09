@@ -23,7 +23,7 @@ export function PrawnVisualization({
   const ambientSoundRef = useRef<{ stop: () => void } | null>(null)
   const animationStateRef = useRef({
     time: 0,
-    swimPattern: 'circular' as const,
+    swimPattern: 'circular' as 'circular' | 'figure8' | 'random' | 'patrol',
     patternProgress: 0,
     basePosition: { x: 0, y: 0, z: 0 },
   })

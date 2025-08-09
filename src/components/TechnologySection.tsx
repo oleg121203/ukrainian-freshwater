@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import {
   Gear,
   Thermometer,
-  DropletHalf,
+  DropHalf,
   ChartLineUp,
   ArrowLeft,
   Cpu,
@@ -41,7 +41,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       },
     },
     {
-      icon: DropletHalf,
+      icon: DropHalf,
       title_uk: 'Якість води',
       title_en: 'Water Quality',
       description_uk:
@@ -133,7 +133,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       description_en: 'Growth acceleration through optimal conditions',
     },
     {
-      icon: DropletHalf,
+      icon: DropHalf,
       title_uk: 'Економія води',
       title_en: 'Water Savings',
       value: '60%',

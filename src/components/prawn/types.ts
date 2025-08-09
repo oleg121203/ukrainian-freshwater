@@ -8,12 +8,13 @@ export interface GameState {
   prawnMood:
     | 'calm'
     | 'excited'
-    | 'swimming'
-    | 'feeding'
-    | 'cooking'
-    | 'thinking'
+    | 'happy'
     | 'performing'
     | 'dead'
+    | 'feeding'
+    | 'swimming'
+    | 'cooking'
+    | 'thinking'
   interactionCount: number
   isFeeding: boolean
   isSwimming: boolean
