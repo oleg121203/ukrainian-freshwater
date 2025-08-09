@@ -110,10 +110,9 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              {language === 'uk' 
+              {language === 'uk'
                 ? '🎉 Система підтримує 16 різних способів оплати для максимальної зручності клієнтів!'
-                : '🎉 System supports 16 different payment methods for maximum customer convenience!'
-              }
+                : '🎉 System supports 16 different payment methods for maximum customer convenience!'}
             </p>
           </CardContent>
         </Card>
@@ -130,15 +129,11 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
             <CardContent>
               <div className="space-y-2">
                 <p>
-                  <span className="font-medium">
-                    {language === 'uk' ? 'Товарів:' : 'Items:'}
-                  </span>{' '}
+                  <span className="font-medium">{language === 'uk' ? 'Товарів:' : 'Items:'}</span>{' '}
                   {getTotalItems()}
                 </p>
                 <p>
-                  <span className="font-medium">
-                    {language === 'uk' ? 'Сума:' : 'Total:'}
-                  </span>{' '}
+                  <span className="font-medium">{language === 'uk' ? 'Сума:' : 'Total:'}</span>{' '}
                   {getTotalPrice()} UAH
                 </p>
                 <div className="pt-2 space-y-2">
@@ -146,9 +141,9 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
                     <Plus size={16} className="mr-2" />
                     {language === 'uk' ? 'Додати товар' : 'Add Item'}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowCart(true)} 
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCart(true)}
                     className="w-full"
                     disabled={cart.length === 0}
                   >
@@ -176,19 +171,14 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
                   {orders.length}
                 </p>
                 <p>
-                  <span className="font-medium">
-                    {language === 'uk' ? 'Останнє:' : 'Latest:'}
-                  </span>{' '}
-                  {orders.length > 0 
+                  <span className="font-medium">{language === 'uk' ? 'Останнє:' : 'Latest:'}</span>{' '}
+                  {orders.length > 0
                     ? new Date(orders[orders.length - 1].createdAt).toLocaleDateString()
-                    : language === 'uk' ? 'Немає' : 'None'
-                  }
+                    : language === 'uk'
+                      ? 'Немає'
+                      : 'None'}
                 </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowOrders(true)} 
-                  className="w-full"
-                >
+                <Button variant="outline" onClick={() => setShowOrders(true)} className="w-full">
                   {language === 'uk' ? 'Переглянути замовлення' : 'View Orders'}
                 </Button>
               </div>
@@ -198,20 +188,20 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
           {/* Sample Products */}
           <Card>
             <CardHeader>
-              <CardTitle>
-                {language === 'uk' ? 'Тестові товари' : 'Sample Products'}
-              </CardTitle>
+              <CardTitle>{language === 'uk' ? 'Тестові товари' : 'Sample Products'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {language === 'uk' 
+                  {language === 'uk'
                     ? 'У системі доступно товарів:'
-                    : 'Available products in system:'
-                  }
+                    : 'Available products in system:'}
                 </p>
                 {SAMPLE_PRODUCTS.map(product => (
-                  <div key={product.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-2 bg-muted rounded"
+                  >
                     <span className="text-sm">
                       {product.image} {language === 'uk' ? product.name_uk : product.name_en}
                     </span>
@@ -227,14 +217,15 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
         {cart.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>
-                {language === 'uk' ? 'Товари в кошику' : 'Items in Cart'}
-              </CardTitle>
+              <CardTitle>{language === 'uk' ? 'Товари в кошику' : 'Items in Cart'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {cart.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded">
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-muted rounded"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{item.image}</span>
                       <div>
@@ -246,9 +237,7 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
                         </p>
                       </div>
                     </div>
-                    <Badge variant="secondary">
-                      {item.quantity * item.price} UAH
-                    </Badge>
+                    <Badge variant="secondary">{item.quantity * item.price} UAH</Badge>
                   </div>
                 ))}
               </div>
@@ -257,10 +246,7 @@ export function ShoppingTest({ onNavigate }: ShoppingTestProps) {
         )}
 
         {/* Shopping Cart Modal */}
-        <ShoppingCartComponent 
-          isVisible={showCart}
-          onClose={() => setShowCart(false)}
-        />
+        <ShoppingCartComponent isVisible={showCart} onClose={() => setShowCart(false)} />
       </div>
     </section>
   )

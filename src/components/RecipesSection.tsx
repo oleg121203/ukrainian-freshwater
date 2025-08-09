@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Users, ChefHat, Heart, ShoppingCart, Images, ArrowRight, Robot } from '@phosphor-icons/react'
+import {
+  Clock,
+  Users,
+  ChefHat,
+  Heart,
+  ShoppingCart,
+  Images,
+  ArrowRight,
+  Robot,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -62,7 +71,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '2 ст.л. оливкової олії',
         'Сіль та перець за смаком',
         'Свіжий розмарин',
-        'Лимон для подачі'
+        'Лимон для подачі',
       ],
       ingredients_en: [
         '500g fresh prawns',
@@ -70,7 +79,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '2 tbsp olive oil',
         'Salt and pepper to taste',
         'Fresh rosemary',
-        'Lemon for serving'
+        'Lemon for serving',
       ],
       instructions_uk: [
         'Очистити креветки, залишивши хвостики',
@@ -78,7 +87,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Замаринувати креветки 10 хвилин',
         'Розігріти гриль',
         'Смажити креветки 2-3 хвилини з кожного боку',
-        'Подавати з лимоном та зеленню'
+        'Подавати з лимоном та зеленню',
       ],
       instructions_en: [
         'Clean prawns, leaving tails on',
@@ -86,10 +95,10 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Marinate prawns for 10 minutes',
         'Heat the grill',
         'Grill prawns 2-3 minutes each side',
-        'Serve with lemon and herbs'
+        'Serve with lemon and herbs',
       ],
       category: 'main',
-      image: '🍤'
+      image: '🍤',
     },
     {
       id: 'prawn-salad',
@@ -106,7 +115,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '100г мікс-салату',
         '1 огірок',
         'Помідори черрі',
-        'Лимонний дресинг'
+        'Лимонний дресинг',
       ],
       ingredients_en: [
         '300g cooked prawns',
@@ -114,24 +123,24 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '100g mixed salad',
         '1 cucumber',
         'Cherry tomatoes',
-        'Lemon dressing'
+        'Lemon dressing',
       ],
       instructions_uk: [
         'Нарізати авокадо та огірок',
         'Розділити помідори навпіл',
         'Змішати з салатом та креветками',
         'Заправити лимонним дресингом',
-        'Подавати охолодженим'
+        'Подавати охолодженим',
       ],
       instructions_en: [
         'Dice avocado and cucumber',
         'Halve cherry tomatoes',
         'Mix with salad and prawns',
         'Dress with lemon dressing',
-        'Serve chilled'
+        'Serve chilled',
       ],
       category: 'salad',
-      image: '🥗'
+      image: '🥗',
     },
     {
       id: 'prawn-soup',
@@ -149,7 +158,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '2 моркви',
         'Селера',
         'Томатна паста',
-        'Білий бульйон'
+        'Білий бульйон',
       ],
       ingredients_en: [
         '600g prawns with shells',
@@ -158,7 +167,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '2 carrots',
         'Celery',
         'Tomato paste',
-        'White stock'
+        'White stock',
       ],
       instructions_uk: [
         'Очистити креветки, панцирі залишити',
@@ -166,7 +175,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Додати панцирі та томатну пасту',
         'Залити бульйоном, варити 30 хвилин',
         'Протерти через сито',
-        'Додати вершки та креветки'
+        'Додати вершки та креветки',
       ],
       instructions_en: [
         'Clean prawns, keep shells',
@@ -174,10 +183,10 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Add shells and tomato paste',
         'Add stock, simmer 30 minutes',
         'Strain through sieve',
-        'Add cream and prawns'
+        'Add cream and prawns',
       ],
       category: 'soup',
-      image: '🍲'
+      image: '🍲',
     },
     {
       id: 'prawn-tempura',
@@ -194,7 +203,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '200мл холодної води',
         '1 яйце',
         'Олія для фритюру',
-        'Соєвий соус для подачі'
+        'Соєвий соус для подачі',
       ],
       ingredients_en: [
         '400g large prawns',
@@ -202,7 +211,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         '200ml cold water',
         '1 egg',
         'Oil for deep frying',
-        'Soy sauce for serving'
+        'Soy sauce for serving',
       ],
       instructions_uk: [
         'Очистити креветки',
@@ -210,7 +219,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Розігріти олію до 180°C',
         'Занурити креветки в тісто',
         'Смажити 2-3 хвилини до золотистого кольору',
-        'Подавати з соусом'
+        'Подавати з соусом',
       ],
       instructions_en: [
         'Clean prawns',
@@ -218,11 +227,11 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
         'Heat oil to 180°C',
         'Dip prawns in batter',
         'Fry 2-3 minutes until golden',
-        'Serve with sauce'
+        'Serve with sauce',
       ],
       category: 'appetizer',
-      image: '🍤'
-    }
+      image: '🍤',
+    },
   ]
 
   const categories = [
@@ -231,21 +240,21 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
     { key: 'main', label_uk: 'Основні страви', label_en: 'Main Courses' },
     { key: 'soup', label_uk: 'Супи', label_en: 'Soups' },
     { key: 'salad', label_uk: 'Салати', label_en: 'Salads' },
-    { key: 'ai-generated', label_uk: '🤖 ШІ-рецепти', label_en: '🤖 AI Recipes' }
+    { key: 'ai-generated', label_uk: '🤖 ШІ-рецепти', label_en: '🤖 AI Recipes' },
   ]
 
-  const filteredRecipes = selectedCategory === 'all' 
-    ? recipes 
-    : selectedCategory === 'ai-generated'
-      ? []  // AI recipes will be shown separately
-      : recipes.filter(recipe => recipe.category === selectedCategory)
+  const filteredRecipes =
+    selectedCategory === 'all'
+      ? recipes
+      : selectedCategory === 'ai-generated'
+        ? [] // AI recipes will be shown separately
+        : recipes.filter(recipe => recipe.category === selectedCategory)
 
-  const filteredAIRecipes = selectedCategory === 'all' || selectedCategory === 'ai-generated'
-    ? aiRecipes
-    : []
+  const filteredAIRecipes =
+    selectedCategory === 'all' || selectedCategory === 'ai-generated' ? aiRecipes : []
 
   const toggleFavorite = (recipeId: string) => {
-    setFavoriteRecipes((current) => {
+    setFavoriteRecipes(current => {
       if (current.includes(recipeId)) {
         return current.filter(id => id !== recipeId)
       } else {
@@ -256,10 +265,14 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-500'
-      case 'medium': return 'bg-yellow-500'
-      case 'hard': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'easy':
+        return 'bg-green-500'
+      case 'medium':
+        return 'bg-yellow-500'
+      case 'hard':
+        return 'bg-red-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
@@ -267,9 +280,11 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
     const labels = {
       easy: { uk: 'Легко', en: 'Easy' },
       medium: { uk: 'Середньо', en: 'Medium' },
-      hard: { uk: 'Складно', en: 'Hard' }
+      hard: { uk: 'Складно', en: 'Hard' },
     }
-    return language === 'uk' ? labels[difficulty as keyof typeof labels].uk : labels[difficulty as keyof typeof labels].en
+    return language === 'uk'
+      ? labels[difficulty as keyof typeof labels].uk
+      : labels[difficulty as keyof typeof labels].en
   }
 
   return (
@@ -286,10 +301,9 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
             {language === 'uk' ? 'Рецепти з креветками' : 'Prawn Recipes'}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Відкрийте для себе смачні способи приготування наших креветок'
-              : 'Discover delicious ways to cook our prawns'
-            }
+              : 'Discover delicious ways to cook our prawns'}
           </p>
         </motion.div>
 
@@ -301,7 +315,7 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          {categories.map((category) => (
+          {categories.map(category => (
             <Button
               key={category.key}
               variant={selectedCategory === category.key ? 'default' : 'outline'}
@@ -333,18 +347,20 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                       className="absolute top-0 right-0 p-2"
                       onClick={() => toggleFavorite(recipe.id)}
                     >
-                      <Heart 
-                        size={20} 
+                      <Heart
+                        size={20}
                         weight={favoriteRecipes.includes(recipe.id) ? 'fill' : 'regular'}
-                        className={favoriteRecipes.includes(recipe.id) ? 'text-red-500' : 'text-gray-400'}
+                        className={
+                          favoriteRecipes.includes(recipe.id) ? 'text-red-500' : 'text-gray-400'
+                        }
                       />
                     </Button>
                   </div>
-                  
+
                   <CardTitle className="text-xl leading-tight">
                     {language === 'uk' ? recipe.title_uk : recipe.title_en}
                   </CardTitle>
-                  
+
                   <p className="text-sm text-muted-foreground">
                     {language === 'uk' ? recipe.description_uk : recipe.description_en}
                   </p>
@@ -353,13 +369,19 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock size={16} />
-                      <span>{recipe.cookTime} {language === 'uk' ? 'хв' : 'min'}</span>
+                      <span>
+                        {recipe.cookTime} {language === 'uk' ? 'хв' : 'min'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users size={16} />
-                      <span>{recipe.servings} {language === 'uk' ? 'порц' : 'serv'}</span>
+                      <span>
+                        {recipe.servings} {language === 'uk' ? 'порц' : 'serv'}
+                      </span>
                     </div>
-                    <Badge className={`${getDifficultyColor(recipe.difficulty)} text-white text-xs`}>
+                    <Badge
+                      className={`${getDifficultyColor(recipe.difficulty)} text-white text-xs`}
+                    >
                       {getDifficultyLabel(recipe.difficulty)}
                     </Badge>
                   </div>
@@ -376,17 +398,26 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                       {(language === 'uk' ? recipe.ingredients_uk : recipe.ingredients_en)
                         .slice(0, 3)
                         .map((ingredient, i) => (
-                        <li key={i} className="text-xs">• {ingredient}</li>
-                      ))}
-                      {(language === 'uk' ? recipe.ingredients_uk : recipe.ingredients_en).length > 3 && (
+                          <li key={i} className="text-xs">
+                            • {ingredient}
+                          </li>
+                        ))}
+                      {(language === 'uk' ? recipe.ingredients_uk : recipe.ingredients_en).length >
+                        3 && (
                         <li className="text-xs text-primary">
-                          +{(language === 'uk' ? recipe.ingredients_uk : recipe.ingredients_en).length - 3} {language === 'uk' ? 'більше' : 'more'}
+                          +
+                          {(language === 'uk' ? recipe.ingredients_uk : recipe.ingredients_en)
+                            .length - 3}{' '}
+                          {language === 'uk' ? 'більше' : 'more'}
                         </li>
                       )}
                     </ul>
                   </div>
 
-                  <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Button
+                    variant="outline"
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  >
                     {language === 'uk' ? 'Переглянути рецепт' : 'View Recipe'}
                   </Button>
                 </CardContent>
@@ -467,7 +498,8 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                             ))}
                             {recipe.ingredients.length > 3 && (
                               <li className="text-xs text-primary">
-                                +{recipe.ingredients.length - 3} {language === 'uk' ? 'більше' : 'more'}
+                                +{recipe.ingredients.length - 3}{' '}
+                                {language === 'uk' ? 'більше' : 'more'}
                               </li>
                             )}
                           </ul>
@@ -477,7 +509,10 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                           <p className="text-xs text-muted-foreground mb-2">
                             {language === 'uk' ? 'Автор:' : 'Author:'} {recipe.authorName}
                           </p>
-                          <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Button
+                            variant="outline"
+                            className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                          >
                             {language === 'uk' ? 'Переглянути рецепт' : 'View Recipe'}
                           </Button>
                         </div>
@@ -505,12 +540,11 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
                 {language === 'uk' ? 'Поки що немає ШІ-рецептів' : 'No AI recipes yet'}
               </h3>
               <p className="text-muted-foreground mb-6">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Поверніться до 3D креветки та зіграйте в кулінарну гру, щоб створити перший рецепт!'
-                  : 'Return to the 3D prawn and play the cooking game to create your first recipe!'
-                }
+                  : 'Return to the 3D prawn and play the cooking game to create your first recipe!'}
               </p>
-              <Button 
+              <Button
                 onClick={() => onNavigate?.('hero')}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
               >
@@ -528,38 +562,56 @@ export function RecipesSection({ onNavigate }: RecipesSectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('products')}
+          >
             <CardContent className="p-8 text-center">
-              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <ShoppingCart
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Купити креветки' : 'Buy Prawns'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Замовте свіжі креветки для приготування цих страв'
-                  : 'Order fresh prawns to cook these dishes'
-                }
+                  : 'Order fresh prawns to cook these dishes'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'До магазину' : 'Go to Shop'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'До магазину' : 'Go to Shop'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('gallery')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('gallery')}
+          >
             <CardContent className="p-8 text-center">
-              <Images size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <Images
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Галерея страв' : 'Dish Gallery'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Подивіться фото готових страв з наших креветок'
-                  : 'See photos of dishes made with our prawns'
-                }
+                  : 'See photos of dishes made with our prawns'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Переглянути' : 'View Gallery'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Переглянути' : 'View Gallery'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>

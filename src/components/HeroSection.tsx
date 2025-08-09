@@ -94,7 +94,11 @@ export function HeroSection({ onNavigate }: HeroSectionProps) {
           {[
             { icon: '🌿', title: 'Eco-Friendly', description: 'Екологічно чисте вирощування' },
             { icon: '🔬', title: 'Quality Control', description: 'Сучасні технології контролю' },
-            { icon: '🚚', title: 'Fresh Delivery', description: 'Швидка доставка свіжої продукції' },
+            {
+              icon: '🚚',
+              title: 'Fresh Delivery',
+              description: 'Швидка доставка свіжої продукції',
+            },
           ].map((item, index) => (
             <motion.div
               key={index}

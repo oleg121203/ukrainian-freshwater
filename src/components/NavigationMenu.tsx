@@ -1,5 +1,16 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, Fish, Images, BookOpen, Star, Phone, Globe, GearSix, CookingPot, Package } from '@phosphor-icons/react'
+import {
+  ShoppingCart,
+  Fish,
+  Images,
+  BookOpen,
+  Star,
+  Phone,
+  Globe,
+  GearSix,
+  CookingPot,
+  Package,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
@@ -28,59 +39,59 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
   ]
 
   const containerVariants = {
-    hidden: { 
+    hidden: {
       opacity: 0,
       scale: 0.8,
-      y: -50
+      y: -50,
     },
-    visible: { 
+    visible: {
       opacity: 1,
       scale: 1,
       y: 0,
       transition: {
         duration: 0.5,
         staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
+        delayChildren: 0.2,
+      },
     },
     exit: {
       opacity: 0,
       scale: 0.8,
       y: -50,
       transition: {
-        duration: 0.3
-      }
-    }
+        duration: 0.3,
+      },
+    },
   }
 
   const itemVariants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       y: 20,
-      scale: 0.8
+      scale: 0.8,
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       scale: 1,
       transition: {
         duration: 0.4,
-        ease: "easeOut"
-      }
-    }
+        ease: 'easeOut',
+      },
+    },
   }
 
   const bubbleVariants = {
     hidden: { scale: 0, opacity: 0 },
-    visible: { 
-      scale: 1, 
+    visible: {
+      scale: 1,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 200,
-        damping: 15
-      }
-    }
+        damping: 15,
+      },
+    },
   }
 
   return (
@@ -137,9 +148,9 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                         transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
                       }}
                       variants={itemVariants}
-                      whileHover={{ 
+                      whileHover={{
                         scale: 1.1,
-                        transition: { duration: 0.2 }
+                        transition: { duration: 0.2 },
                       }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -147,7 +158,9 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                         variant="outline"
                         size="lg"
                         className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-lg hover:shadow-xl"
-                        onMouseEnter={() => playBubbleSound({ volume: 0.15, playbackRate: 1.3 + Math.random() * 0.4 })}
+                        onMouseEnter={() =>
+                          playBubbleSound({ volume: 0.15, playbackRate: 1.3 + Math.random() * 0.4 })
+                        }
                         onClick={() => {
                           playClickSound({ volume: 0.4, playbackRate: 1.1 })
                           onNavigate(item.key)
@@ -202,7 +215,9 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                 variants={itemVariants}
               >
                 <p className="text-white text-sm bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1">
-                  {language === 'uk' ? 'Натисніть поза меню для закриття' : 'Click outside to close'}
+                  {language === 'uk'
+                    ? 'Натисніть поза меню для закриття'
+                    : 'Click outside to close'}
                 </p>
               </motion.div>
             </div>

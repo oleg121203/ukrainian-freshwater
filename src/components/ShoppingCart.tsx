@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ShoppingCart, 
-  X, 
-  Plus, 
-  Minus, 
-  Trash, 
-  CreditCard, 
-  MapPin, 
+import {
+  ShoppingCart as ShoppingCartIcon,
+  X,
+  Plus,
+  Minus,
+  Trash,
+  CreditCard,
+  MapPin,
   Phone,
   User,
   Envelope,
   Package,
   CheckCircle,
-  CopySimple
+  CopySimple,
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,7 +21,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useKV } from '@/hooks/useKV'
@@ -51,40 +57,45 @@ interface ShoppingCartProps {
 
 export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
   const { language, t } = useLanguage()
-  const { 
-    cart, 
-    updateQuantity, 
-    removeFromCart, 
-    clearCart, 
-    getTotalPrice, 
+  const {
+    cart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    getTotalPrice,
     getTotalItems,
-    createOrder 
+    createOrder,
   } = useShoppingCart()
   const { processPayment } = usePaymentService()
-  const [step, setStep] = useState<'cart' | 'checkout' | 'payment' | 'processing' | 'success' | 'error'>('cart')
-  
+  const [step, setStep] = useState<
+    'cart' | 'checkout' | 'payment' | 'processing' | 'success' | 'error'
+  >('cart')
+
   // Customer and delivery form state
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: '',
     lastName: '',
     phone: '',
-    email: ''
+    email: '',
   })
-  
+
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     city: '',
     address: '',
     notes: '',
-    deliveryTime: 'morning'
+    deliveryTime: 'morning',
   })
-  
+
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null)
   const [currentOrderId, setCurrentOrderId] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Customer info persistence
   const [savedCustomerInfo, setSavedCustomerInfo] = useKV<CustomerInfo>('customer-info', {
-    firstName: '', lastName: '', phone: '', email: ''
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
   })
 
   useEffect(() => {
@@ -102,23 +113,35 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
 
   const handleRemoveFromCart = (itemId: string) => {
     removeFromCart(itemId)
-    toast.success(
-      language === 'uk' ? 'Товар видалено з кошика' : 'Item removed from cart'
-    )
+    toast.success(language === 'uk' ? 'Товар видалено з кошика' : 'Item removed from cart')
   }
 
   const handleClearCart = () => {
     clearCart()
-    toast.success(
-      language === 'uk' ? 'Кошик очищено' : 'Cart cleared'
-    )
+    toast.success(language === 'uk' ? 'Кошик очищено' : 'Cart cleared')
   }
 
   const cities = [
-    'Київ', 'Харків', 'Одеса', 'Дніпро', 'Львів', 'Запоріжжя', 
-    'Кривий Ріг', 'Миколаїв', 'Маріуполь', 'Луганськ', 'Вінниця',
-    'Макіївка', 'Сімферополь', 'Херсон', 'Полтава', 'Чернігів',
-    'Черкаси', 'Житомир', 'Суми', 'Хмельницький'
+    'Київ',
+    'Харків',
+    'Одеса',
+    'Дніпро',
+    'Львів',
+    'Запоріжжя',
+    'Кривий Ріг',
+    'Миколаїв',
+    'Маріуполь',
+    'Луганськ',
+    'Вінниця',
+    'Макіївка',
+    'Сімферополь',
+    'Херсон',
+    'Полтава',
+    'Чернігів',
+    'Черкаси',
+    'Житомир',
+    'Суми',
+    'Хмельницький',
   ]
 
   const validateForm = () => {
@@ -127,8 +150,8 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
 
     if (!firstName || !lastName || !phone || !email || !city || !address) {
       toast.error(
-        language === 'uk' 
-          ? 'Будь ласка, заповніть всі обов\'язкові поля'
+        language === 'uk'
+          ? "Будь ласка, заповніть всі обов'язкові поля"
           : 'Please fill in all required fields'
       )
       return false
@@ -137,9 +160,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     // Basic phone validation
     if (!/^\+?[\d\s\-\(\)]+$/.test(phone)) {
       toast.error(
-        language === 'uk' 
-          ? 'Введіть коректний номер телефону'
-          : 'Please enter a valid phone number'
+        language === 'uk' ? 'Введіть коректний номер телефону' : 'Please enter a valid phone number'
       )
       return false
     }
@@ -147,7 +168,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     // Basic email validation
     if (!/\S+@\S+\.\S+/.test(email)) {
       toast.error(
-        language === 'uk' 
+        language === 'uk'
           ? 'Введіть коректну електронну адресу'
           : 'Please enter a valid email address'
       )
@@ -169,16 +190,11 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
       // Create order using the hook
       const orderId = Date.now().toString()
       setCurrentOrderId(orderId)
-      
+
       // Move to payment step
       setStep('payment')
-      
     } catch (error) {
-      toast.error(
-        language === 'uk' 
-          ? 'Помилка при оформленні замовлення'
-          : 'Error creating order'
-      )
+      toast.error(language === 'uk' ? 'Помилка при оформленні замовлення' : 'Error creating order')
     } finally {
       setIsSubmitting(false)
     }
@@ -192,7 +208,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
       const customerData = {
         name: `${customerInfo.firstName} ${customerInfo.lastName}`,
         email: customerInfo.email,
-        phone: customerInfo.phone
+        phone: customerInfo.phone,
       }
 
       const result = await processPayment(
@@ -208,9 +224,9 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
         // Create the actual order
         createOrder(customerInfo, deliveryInfo, paymentData.method)
         setStep('success')
-        
+
         toast.success(
-          language === 'uk' 
+          language === 'uk'
             ? 'Оплата успішна! Замовлення оформлено.'
             : 'Payment successful! Order placed.'
         )
@@ -218,19 +234,14 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
         setStep('error')
         toast.error(result.message)
       }
-
     } catch (error) {
       setStep('error')
       setPaymentResult({
         success: false,
         transactionId: '',
-        message: error instanceof Error ? error.message : 'Payment failed'
+        message: error instanceof Error ? error.message : 'Payment failed',
       })
-      toast.error(
-        language === 'uk' 
-          ? 'Помилка оплати'
-          : 'Payment error'
-      )
+      toast.error(language === 'uk' ? 'Помилка оплати' : 'Payment error')
     } finally {
       setIsSubmitting(false)
     }
@@ -265,19 +276,21 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
               <div className="flex items-center gap-3">
-                <ShoppingCart size={24} className="text-primary" />
+                <ShoppingCartIcon size={24} className="text-primary" />
                 <div>
                   <h2 className="text-xl font-semibold">
                     {step === 'cart' && (language === 'uk' ? 'Кошик' : 'Shopping Cart')}
-                    {step === 'checkout' && (language === 'uk' ? 'Оформлення замовлення' : 'Checkout')}
+                    {step === 'checkout' &&
+                      (language === 'uk' ? 'Оформлення замовлення' : 'Checkout')}
                     {step === 'payment' && (language === 'uk' ? 'Оплата' : 'Payment')}
-                    {step === 'processing' && (language === 'uk' ? 'Обробка оплати' : 'Processing Payment')}
+                    {step === 'processing' &&
+                      (language === 'uk' ? 'Обробка оплати' : 'Processing Payment')}
                     {step === 'success' && (language === 'uk' ? 'Успішно!' : 'Success!')}
                     {step === 'error' && (language === 'uk' ? 'Помилка' : 'Error')}
                   </h2>
@@ -304,14 +317,14 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                 <div className="p-6">
                   {cart.length === 0 ? (
                     <div className="text-center py-12">
-                      <ShoppingCart size={64} className="text-muted-foreground mx-auto mb-4" />
+                      <ShoppingCartIcon size={64} className="text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">
                         {language === 'uk' ? 'Кошик порожній' : 'Cart is empty'}
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {cart.map((item) => (
+                      {cart.map(item => (
                         <Card key={item.id} className="p-4">
                           <div className="flex gap-4">
                             <div className="text-3xl">{item.image}</div>
@@ -319,9 +332,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                               <h3 className="font-medium leading-tight">
                                 {language === 'uk' ? item.name_uk : item.name_en}
                               </h3>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {item.weight}
-                              </p>
+                              <p className="text-sm text-muted-foreground mb-2">{item.weight}</p>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Button
@@ -332,9 +343,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                                   >
                                     <Minus size={14} />
                                   </Button>
-                                  <span className="w-8 text-center text-sm">
-                                    {item.quantity}
-                                  </span>
+                                  <span className="w-8 text-center text-sm">{item.quantity}</span>
                                   <Button
                                     size="sm"
                                     variant="outline"
@@ -345,9 +354,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                                   </Button>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-semibold">
-                                    {item.price * item.quantity} UAH
-                                  </p>
+                                  <p className="font-semibold">{item.price * item.quantity} UAH</p>
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -381,15 +388,18 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="firstName">
-                            {language === 'uk' ? 'Ім\'я' : 'First Name'} *
+                            {language === 'uk' ? "Ім'я" : 'First Name'} *
                           </Label>
                           <Input
                             id="firstName"
                             value={customerInfo.firstName}
-                            onChange={(e) => setCustomerInfo(prev => ({
-                              ...prev, firstName: e.target.value
-                            }))}
-                            placeholder={language === 'uk' ? 'Ваше ім\'я' : 'Your first name'}
+                            onChange={e =>
+                              setCustomerInfo(prev => ({
+                                ...prev,
+                                firstName: e.target.value,
+                              }))
+                            }
+                            placeholder={language === 'uk' ? "Ваше ім'я" : 'Your first name'}
                           />
                         </div>
                         <div>
@@ -399,9 +409,12 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                           <Input
                             id="lastName"
                             value={customerInfo.lastName}
-                            onChange={(e) => setCustomerInfo(prev => ({
-                              ...prev, lastName: e.target.value
-                            }))}
+                            onChange={e =>
+                              setCustomerInfo(prev => ({
+                                ...prev,
+                                lastName: e.target.value,
+                              }))
+                            }
                             placeholder={language === 'uk' ? 'Ваше прізвище' : 'Your last name'}
                           />
                         </div>
@@ -414,9 +427,12 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                         <Input
                           id="phone"
                           value={customerInfo.phone}
-                          onChange={(e) => setCustomerInfo(prev => ({
-                            ...prev, phone: e.target.value
-                          }))}
+                          onChange={e =>
+                            setCustomerInfo(prev => ({
+                              ...prev,
+                              phone: e.target.value,
+                            }))
+                          }
                           placeholder="+380 XX XXX XX XX"
                         />
                       </div>
@@ -429,9 +445,12 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                           id="email"
                           type="email"
                           value={customerInfo.email}
-                          onChange={(e) => setCustomerInfo(prev => ({
-                            ...prev, email: e.target.value
-                          }))}
+                          onChange={e =>
+                            setCustomerInfo(prev => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
                           placeholder="your@email.com"
                         />
                       </div>
@@ -448,23 +467,26 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label htmlFor="city">
-                          {language === 'uk' ? 'Місто' : 'City'} *
-                        </Label>
+                        <Label htmlFor="city">{language === 'uk' ? 'Місто' : 'City'} *</Label>
                         <Select
                           value={deliveryInfo.city}
-                          onValueChange={(value) => setDeliveryInfo(prev => ({
-                            ...prev, city: value
-                          }))}
+                          onValueChange={value =>
+                            setDeliveryInfo(prev => ({
+                              ...prev,
+                              city: value,
+                            }))
+                          }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={
-                              language === 'uk' ? 'Оберіть місто' : 'Select city'
-                            } />
+                            <SelectValue
+                              placeholder={language === 'uk' ? 'Оберіть місто' : 'Select city'}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {cities.map(city => (
-                              <SelectItem key={city} value={city}>{city}</SelectItem>
+                              <SelectItem key={city} value={city}>
+                                {city}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -476,11 +498,14 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                         <Input
                           id="address"
                           value={deliveryInfo.address}
-                          onChange={(e) => setDeliveryInfo(prev => ({
-                            ...prev, address: e.target.value
-                          }))}
+                          onChange={e =>
+                            setDeliveryInfo(prev => ({
+                              ...prev,
+                              address: e.target.value,
+                            }))
+                          }
                           placeholder={
-                            language === 'uk' 
+                            language === 'uk'
                               ? 'Вулиця, будинок, квартира'
                               : 'Street, house, apartment'
                           }
@@ -492,7 +517,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                         </Label>
                         <Select
                           value={deliveryInfo.deliveryTime}
-                          onValueChange={(value: 'morning' | 'afternoon' | 'evening') => 
+                          onValueChange={(value: 'morning' | 'afternoon' | 'evening') =>
                             setDeliveryInfo(prev => ({ ...prev, deliveryTime: value }))
                           }
                         >
@@ -501,30 +526,37 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="morning">
-                              {language === 'uk' ? 'Ранок (9:00 - 12:00)' : 'Morning (9:00 - 12:00)'}
+                              {language === 'uk'
+                                ? 'Ранок (9:00 - 12:00)'
+                                : 'Morning (9:00 - 12:00)'}
                             </SelectItem>
                             <SelectItem value="afternoon">
-                              {language === 'uk' ? 'День (12:00 - 17:00)' : 'Afternoon (12:00 - 17:00)'}
+                              {language === 'uk'
+                                ? 'День (12:00 - 17:00)'
+                                : 'Afternoon (12:00 - 17:00)'}
                             </SelectItem>
                             <SelectItem value="evening">
-                              {language === 'uk' ? 'Вечір (17:00 - 20:00)' : 'Evening (17:00 - 20:00)'}
+                              {language === 'uk'
+                                ? 'Вечір (17:00 - 20:00)'
+                                : 'Evening (17:00 - 20:00)'}
                             </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="notes">
-                          {language === 'uk' ? 'Примітки' : 'Notes'}
-                        </Label>
+                        <Label htmlFor="notes">{language === 'uk' ? 'Примітки' : 'Notes'}</Label>
                         <Textarea
                           id="notes"
                           value={deliveryInfo.notes}
-                          onChange={(e) => setDeliveryInfo(prev => ({
-                            ...prev, notes: e.target.value
-                          }))}
+                          onChange={e =>
+                            setDeliveryInfo(prev => ({
+                              ...prev,
+                              notes: e.target.value,
+                            }))
+                          }
                           placeholder={
                             language === 'uk'
-                              ? 'Додаткова інформація для кур\'єра'
+                              ? "Додаткова інформація для кур'єра"
                               : 'Additional information for courier'
                           }
                           rows={3}
@@ -543,10 +575,9 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground">
-                        {language === 'uk' 
+                        {language === 'uk'
                           ? 'На наступному кроці ви зможете обрати зручний спосіб оплати: банківська картка, Apple Pay, Google Pay, Приват24, Monobank, PayPal або криптовалюта.'
-                          : 'On the next step you can choose a convenient payment method: bank card, Apple Pay, Google Pay, Privat24, Monobank, PayPal or cryptocurrency.'
-                        }
+                          : 'On the next step you can choose a convenient payment method: bank card, Apple Pay, Google Pay, Privat24, Monobank, PayPal or cryptocurrency.'}
                       </p>
                     </CardContent>
                   </Card>
@@ -560,7 +591,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {cart.map((item) => (
+                      {cart.map(item => (
                         <div key={item.id} className="flex justify-between text-sm">
                           <span>
                             {item.quantity}x {language === 'uk' ? item.name_uk : item.name_en}
@@ -594,7 +625,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   <div className="flex justify-center mb-6">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                       className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full"
                     />
                   </div>
@@ -602,10 +633,9 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     {language === 'uk' ? 'Обробка оплати...' : 'Processing payment...'}
                   </h3>
                   <p className="text-muted-foreground">
-                    {language === 'uk' 
+                    {language === 'uk'
                       ? 'Будь ласка, не закривайте це вікно'
-                      : 'Please do not close this window'
-                    }
+                      : 'Please do not close this window'}
                   </p>
                 </div>
               )}
@@ -617,12 +647,11 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     {language === 'uk' ? 'Оплата успішна!' : 'Payment Successful!'}
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    {language === 'uk' 
+                    {language === 'uk'
                       ? 'Ваше замовлення прийнято і буде доставлено протягом 24 годин.'
-                      : 'Your order has been received and will be delivered within 24 hours.'
-                    }
+                      : 'Your order has been received and will be delivered within 24 hours.'}
                   </p>
-                  
+
                   <Card className="text-left mb-6">
                     <CardHeader>
                       <CardTitle className="text-sm">
@@ -665,10 +694,12 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-center">
-                        <img src={paymentResult.qrCode} alt="Payment QR Code" className="mx-auto mb-2" />
-                        <p className="text-xs text-muted-foreground">
-                          {paymentResult.message}
-                        </p>
+                        <img
+                          src={paymentResult.qrCode}
+                          alt="Payment QR Code"
+                          className="mx-auto mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">{paymentResult.message}</p>
                       </CardContent>
                     </Card>
                   )}
@@ -676,7 +707,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   {paymentResult.redirectUrl && (
                     <Card className="mb-6">
                       <CardContent className="pt-6">
-                        <Button 
+                        <Button
                           className="w-full"
                           onClick={() => window.open(paymentResult.redirectUrl, '_blank')}
                         >
@@ -694,10 +725,8 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   <h3 className="text-2xl font-bold mb-4 text-destructive">
                     {language === 'uk' ? 'Помилка оплати' : 'Payment Failed'}
                   </h3>
-                  <p className="text-muted-foreground mb-6">
-                    {paymentResult.message}
-                  </p>
-                  
+                  <p className="text-muted-foreground mb-6">{paymentResult.message}</p>
+
                   <Card className="text-left mb-6">
                     <CardHeader>
                       <CardTitle className="text-sm">
@@ -705,10 +734,27 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                      <p>• {language === 'uk' ? 'Перевірте дані картки' : 'Check your card details'}</p>
-                      <p>• {language === 'uk' ? 'Переконайтесь, що на рахунку достатньо коштів' : 'Ensure you have sufficient funds'}</p>
-                      <p>• {language === 'uk' ? 'Спробуйте інший спосіб оплати' : 'Try a different payment method'}</p>
-                      <p>• {language === 'uk' ? 'Зв\'яжіться з нами за допомогою' : 'Contact us for assistance'}</p>
+                      <p>
+                        • {language === 'uk' ? 'Перевірте дані картки' : 'Check your card details'}
+                      </p>
+                      <p>
+                        •{' '}
+                        {language === 'uk'
+                          ? 'Переконайтесь, що на рахунку достатньо коштів'
+                          : 'Ensure you have sufficient funds'}
+                      </p>
+                      <p>
+                        •{' '}
+                        {language === 'uk'
+                          ? 'Спробуйте інший спосіб оплати'
+                          : 'Try a different payment method'}
+                      </p>
+                      <p>
+                        •{' '}
+                        {language === 'uk'
+                          ? "Зв'яжіться з нами за допомогою"
+                          : 'Contact us for assistance'}
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
@@ -723,9 +769,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     <span className="font-semibold">
                       {language === 'uk' ? 'Всього:' : 'Total:'}
                     </span>
-                    <span className="text-xl font-bold text-primary">
-                      {totalPrice} UAH
-                    </span>
+                    <span className="text-xl font-bold text-primary">{totalPrice} UAH</span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <Button variant="outline" onClick={handleClearCart}>
@@ -744,10 +788,13 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     {language === 'uk' ? 'Назад' : 'Back'}
                   </Button>
                   <Button onClick={submitOrder} disabled={isSubmitting}>
-                    {isSubmitting 
-                      ? (language === 'uk' ? 'Оформлення...' : 'Creating...')
-                      : (language === 'uk' ? 'Перейти до оплати' : 'Proceed to Payment')
-                    }
+                    {isSubmitting
+                      ? language === 'uk'
+                        ? 'Оформлення...'
+                        : 'Creating...'
+                      : language === 'uk'
+                        ? 'Перейти до оплати'
+                        : 'Proceed to Payment'}
                   </Button>
                 </div>
               )}
@@ -755,11 +802,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
               {(step === 'success' || step === 'error') && (
                 <div className="space-y-3">
                   {step === 'error' && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setStep('payment')}
-                    >
+                    <Button variant="outline" className="w-full" onClick={() => setStep('payment')}>
                       {language === 'uk' ? 'Спробувати знову' : 'Try Again'}
                     </Button>
                   )}

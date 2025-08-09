@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingCart, Plus, Minus, Phone, BookOpen, ArrowRight, Package } from '@phosphor-icons/react'
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  Phone,
+  BookOpen,
+  ArrowRight,
+  Package,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,12 +30,12 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
 
   const products = SAMPLE_PRODUCTS
 
-  const handleAddToCart = (product: typeof products[0]) => {
+  const handleAddToCart = (product: (typeof products)[0]) => {
     const quantity = quantities[product.id] || 1
     addToCart(product, quantity)
 
     toast.success(
-      language === 'uk' 
+      language === 'uk'
         ? `Додано ${quantity} x ${product.name_uk} до кошика`
         : `Added ${quantity} x ${product.name_en} to cart`
     )
@@ -43,10 +51,14 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
 
   const getCategoryBadgeColor = (category: string) => {
     switch (category) {
-      case 'fresh': return 'bg-green-500'
-      case 'frozen': return 'bg-blue-500'
-      case 'live': return 'bg-purple-500'
-      default: return 'bg-gray-500'
+      case 'fresh':
+        return 'bg-green-500'
+      case 'frozen':
+        return 'bg-blue-500'
+      case 'live':
+        return 'bg-purple-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
@@ -64,10 +76,9 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
             {t('products.title')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Оберіть найкращі креветки для ваших потреб'
-              : 'Choose the best prawns for your needs'
-            }
+              : 'Choose the best prawns for your needs'}
           </p>
         </motion.div>
 
@@ -84,7 +95,7 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
                 <CardHeader className="pb-4">
                   <div className="relative">
                     <div className="text-6xl text-center mb-4">{product.image}</div>
-                    <Badge 
+                    <Badge
                       className={`absolute top-0 right-0 text-white ${getCategoryBadgeColor(product.category)}`}
                     >
                       {t(`products.${product.category}`)}
@@ -123,7 +134,9 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
                           size="sm"
                           variant="outline"
                           className="w-8 h-8 p-0"
-                          onClick={() => updateQuantity(product.id, (quantities[product.id] || 1) - 1)}
+                          onClick={() =>
+                            updateQuantity(product.id, (quantities[product.id] || 1) - 1)
+                          }
                         >
                           <Minus size={16} />
                         </Button>
@@ -134,7 +147,9 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
                           size="sm"
                           variant="outline"
                           className="w-8 h-8 p-0"
-                          onClick={() => updateQuantity(product.id, (quantities[product.id] || 1) + 1)}
+                          onClick={() =>
+                            updateQuantity(product.id, (quantities[product.id] || 1) + 1)
+                          }
                         >
                           <Plus size={16} />
                         </Button>
@@ -166,38 +181,56 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('contact')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('contact')}
+          >
             <CardContent className="p-8 text-center">
-              <Phone size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <Phone
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Індивідуальні замовлення' : 'Custom Orders'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
-                  ? 'Потрібні особливі розміри або великі обсяги? Зв\'яжіться з нами для індивідуального пропозиції.'
-                  : 'Need special sizes or large volumes? Contact us for a custom offer.'
-                }
+                {language === 'uk'
+                  ? "Потрібні особливі розміри або великі обсяги? Зв'яжіться з нами для індивідуального пропозиції."
+                  : 'Need special sizes or large volumes? Contact us for a custom offer.'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Зв\'язатися' : 'Contact'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? "Зв'язатися" : 'Contact'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('recipes')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('recipes')}
+          >
             <CardContent className="p-8 text-center">
-              <BookOpen size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <BookOpen
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Рецепти приготування' : 'Cooking Recipes'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Дізнайтеся секрети приготування найсмачніших страв з наших креветок.'
-                  : 'Learn the secrets of cooking the most delicious dishes with our prawns.'
-                }
+                  : 'Learn the secrets of cooking the most delicious dishes with our prawns.'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
@@ -211,7 +244,7 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <Card 
+            <Card
               className="bg-primary text-primary-foreground shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
               onClick={() => setShowCart(true)}
             >
@@ -222,9 +255,7 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
                     <p className="font-semibold">
                       {getTotalItems()} {language === 'uk' ? 'товарів' : 'items'}
                     </p>
-                    <p className="text-sm opacity-90">
-                      {getTotalPrice()} UAH
-                    </p>
+                    <p className="text-sm opacity-90">{getTotalPrice()} UAH</p>
                   </div>
                 </div>
               </CardContent>
@@ -240,8 +271,8 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             variant="outline"
             onClick={() => setShowCart(true)}
             className="flex items-center gap-3"
@@ -254,9 +285,9 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
               </Badge>
             )}
           </Button>
-          
-          <Button 
-            size="lg" 
+
+          <Button
+            size="lg"
             onClick={() => onNavigate?.('orders')}
             className="flex items-center gap-3"
           >
@@ -266,10 +297,7 @@ export function ProductsSection({ onNavigate }: ProductsSectionProps) {
         </motion.div>
 
         {/* Shopping Cart Modal */}
-        <ShoppingCartComponent 
-          isVisible={showCart}
-          onClose={() => setShowCart(false)}
-        />
+        <ShoppingCartComponent isVisible={showCart} onClose={() => setShowCart(false)} />
       </div>
     </section>
   )

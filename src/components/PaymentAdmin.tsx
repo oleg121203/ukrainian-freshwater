@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Settings, 
-  Save, 
-  Key, 
+import {
+  Settings,
+  Save,
+  Key,
   TestTube,
   CreditCard,
   Eye,
@@ -13,7 +13,7 @@ import {
   Building,
   Smartphone,
   Shield,
-  ArrowLeft
+  ArrowLeft,
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,7 +34,7 @@ interface PaymentAdminProps {
 export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
   const { language } = useLanguage()
   const { updateSettings, getSettings, getAllTransactions } = usePaymentService()
-  
+
   const [apiKey, setApiKey] = useState('')
   const [testMode, setTestMode] = useState(true)
   const [showApiKey, setShowApiKey] = useState(false)
@@ -72,17 +72,9 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
     setIsSaving(true)
     try {
       await updateSettings(apiKey, testMode)
-      toast.success(
-        language === 'uk' 
-          ? 'Налаштування збережено'
-          : 'Settings saved successfully'
-      )
+      toast.success(language === 'uk' ? 'Налаштування збережено' : 'Settings saved successfully')
     } catch (error) {
-      toast.error(
-        language === 'uk' 
-          ? 'Помилка збереження налаштувань'
-          : 'Failed to save settings'
-      )
+      toast.error(language === 'uk' ? 'Помилка збереження налаштувань' : 'Failed to save settings')
     } finally {
       setIsSaving(false)
     }
@@ -90,19 +82,23 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'processing': return 'bg-blue-100 text-blue-800'
-      case 'failed': return 'bg-red-100 text-red-800'
-      case 'cancelled': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'completed':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'processing':
+        return 'bg-blue-100 text-blue-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString(
-      language === 'uk' ? 'uk-UA' : 'en-US'
-    )
+    return new Date(dateString).toLocaleString(language === 'uk' ? 'uk-UA' : 'en-US')
   }
 
   if (isLoading) {
@@ -110,7 +106,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
         />
       </div>
@@ -128,10 +124,9 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
               {language === 'uk' ? 'Налаштування платежів' : 'Payment Settings'}
             </h1>
             <p className="text-muted-foreground mt-2">
-              {language === 'uk' 
+              {language === 'uk'
                 ? 'Налаштуйте платіжні системи та переглядайте транзакції'
-                : 'Configure payment systems and view transactions'
-              }
+                : 'Configure payment systems and view transactions'}
             </p>
           </div>
           {onNavigate && (
@@ -153,12 +148,13 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
           <Alert className="border-yellow-200 bg-yellow-50">
             <TestTube className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
-              <strong>{language === 'uk' ? 'Тестовий режим активний' : 'Test mode is active'}</strong>
+              <strong>
+                {language === 'uk' ? 'Тестовий режим активний' : 'Test mode is active'}
+              </strong>
               <br />
-              {language === 'uk' 
+              {language === 'uk'
                 ? 'Всі платежі будуть симуляцією. Реальні кошти не будуть знятіі.'
-                : 'All payments will be simulated. No real money will be charged.'
-              }
+                : 'All payments will be simulated. No real money will be charged.'}
             </AlertDescription>
           </Alert>
         )}
@@ -320,7 +316,9 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
                           <Building size={16} />
-                          <span className="text-sm">{language === 'uk' ? 'Банківський переказ' : 'Bank Transfer'}</span>
+                          <span className="text-sm">
+                            {language === 'uk' ? 'Банківський переказ' : 'Bank Transfer'}
+                          </span>
                         </div>
                         <Badge variant="secondary">
                           {language === 'uk' ? 'Активно' : 'Active'}
@@ -329,7 +327,9 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       <div className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
                           <Shield size={16} />
-                          <span className="text-sm">{language === 'uk' ? 'Криптовалюта' : 'Cryptocurrency'}</span>
+                          <span className="text-sm">
+                            {language === 'uk' ? 'Криптовалюта' : 'Cryptocurrency'}
+                          </span>
                         </div>
                         <Badge variant="secondary">
                           {language === 'uk' ? 'Активно' : 'Active'}
@@ -356,16 +356,12 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                       {language === 'uk' ? 'Тестовий режим' : 'Test Mode'}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      {language === 'uk' 
+                      {language === 'uk'
                         ? 'Увімкніть для тестування без реальних платежів'
-                        : 'Enable for testing without real payments'
-                      }
+                        : 'Enable for testing without real payments'}
                     </p>
                   </div>
-                  <Switch
-                    checked={testMode}
-                    onCheckedChange={setTestMode}
-                  />
+                  <Switch checked={testMode} onCheckedChange={setTestMode} />
                 </div>
 
                 <Separator />
@@ -379,11 +375,11 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                   <div className="relative">
                     <Input
                       id="apiKey"
-                      type={showApiKey ? "text" : "password"}
+                      type={showApiKey ? 'text' : 'password'}
                       value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      onChange={e => setApiKey(e.target.value)}
                       placeholder={
-                        language === 'uk' 
+                        language === 'uk'
                           ? 'Введіть API ключ платіжної системи'
                           : 'Enter payment system API key'
                       }
@@ -400,32 +396,30 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {language === 'uk' 
+                    {language === 'uk'
                       ? 'API ключ для інтеграції з платіжними системами (LiqPay, Fondy, Stripe тощо)'
-                      : 'API key for payment system integration (LiqPay, Fondy, Stripe, etc.)'
-                    }
+                      : 'API key for payment system integration (LiqPay, Fondy, Stripe, etc.)'}
                   </p>
                 </div>
 
                 {/* Save Button */}
-                <Button 
-                  onClick={handleSaveSettings} 
-                  disabled={isSaving}
-                  className="w-full"
-                >
+                <Button onClick={handleSaveSettings} disabled={isSaving} className="w-full">
                   {isSaving ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
                     />
                   ) : (
                     <Save size={16} className="mr-2" />
                   )}
-                  {isSaving 
-                    ? (language === 'uk' ? 'Збереження...' : 'Saving...')
-                    : (language === 'uk' ? 'Зберегти налаштування' : 'Save Settings')
-                  }
+                  {isSaving
+                    ? language === 'uk'
+                      ? 'Збереження...'
+                      : 'Saving...'
+                    : language === 'uk'
+                      ? 'Зберегти налаштування'
+                      : 'Save Settings'}
                 </Button>
               </CardContent>
             </Card>
@@ -447,19 +441,25 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                     { name: 'Monobank', status: 'active' },
                     { name: 'PayPal', status: 'active' },
                     { name: 'Bitcoin', status: 'active' },
-                    { name: 'USDT', status: 'active' }
-                  ].map((method) => (
-                    <div key={method.name} className="flex items-center justify-between p-3 border rounded-lg">
+                    { name: 'USDT', status: 'active' },
+                  ].map(method => (
+                    <div
+                      key={method.name}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <span className="text-sm font-medium">{method.name}</span>
-                      <Badge 
-                        variant="secondary" 
+                      <Badge
+                        variant="secondary"
                         className={method.status === 'active' ? 'bg-green-100 text-green-800' : ''}
                       >
                         <CheckCircle size={12} className="mr-1" />
-                        {method.status === 'active' 
-                          ? (language === 'uk' ? 'Активний' : 'Active')
-                          : (language === 'uk' ? 'Неактивний' : 'Inactive')
-                        }
+                        {method.status === 'active'
+                          ? language === 'uk'
+                            ? 'Активний'
+                            : 'Active'
+                          : language === 'uk'
+                            ? 'Неактивний'
+                            : 'Inactive'}
                       </Badge>
                     </div>
                   ))}
@@ -483,23 +483,19 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {transactions.map((transaction) => (
+                    {transactions.map(transaction => (
                       <div key={transaction.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <Badge className={getStatusColor(transaction.status)}>
                             {transaction.status}
                           </Badge>
-                          <span className="text-sm font-semibold">
-                            {transaction.amount} UAH
-                          </span>
+                          <span className="text-sm font-semibold">{transaction.amount} UAH</span>
                         </div>
                         <div className="text-xs text-muted-foreground space-y-1">
                           <p>ID: {transaction.id.slice(0, 12)}...</p>
                           <p>{transaction.method.toUpperCase()}</p>
                           <p>{formatDate(transaction.createdAt)}</p>
-                          {transaction.customerData.name && (
-                            <p>{transaction.customerData.name}</p>
-                          )}
+                          {transaction.customerData.name && <p>{transaction.customerData.name}</p>}
                         </div>
                       </div>
                     ))}
@@ -511,9 +507,7 @@ export function PaymentAdmin({ onNavigate }: PaymentAdminProps) {
             {/* Transaction Stats */}
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {language === 'uk' ? 'Статистика' : 'Statistics'}
-                </CardTitle>
+                <CardTitle>{language === 'uk' ? 'Статистика' : 'Statistics'}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">

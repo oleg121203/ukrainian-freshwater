@@ -17,30 +17,38 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
       icon: Water,
       title_uk: 'Природна фільтрація води',
       title_en: 'Natural Water Filtration',
-      description_uk: 'Використовуємо біологічні фільтри з водними рослинами для очищення води в басейнах. Це створює природний екосистемний баланс.',
-      description_en: 'We use biological filters with aquatic plants to purify pool water. This creates a natural ecosystem balance.'
+      description_uk:
+        'Використовуємо біологічні фільтри з водними рослинами для очищення води в басейнах. Це створює природний екосистемний баланс.',
+      description_en:
+        'We use biological filters with aquatic plants to purify pool water. This creates a natural ecosystem balance.',
     },
     {
       icon: Leaf,
       title_uk: 'Органічне харчування',
       title_en: 'Organic Feeding',
-      description_uk: 'Наші креветки отримують виключно органічні корми з водоростей, планктону та природних білків без штучних добавок.',
-      description_en: 'Our prawns receive exclusively organic feed from algae, plankton and natural proteins without artificial additives.'
+      description_uk:
+        'Наші креветки отримують виключно органічні корми з водоростей, планктону та природних білків без штучних добавок.',
+      description_en:
+        'Our prawns receive exclusively organic feed from algae, plankton and natural proteins without artificial additives.',
     },
     {
       icon: Recycle,
       title_uk: 'Замкнутий цикл виробництва',
       title_en: 'Closed Production Cycle',
-      description_uk: 'Відходи від креветок стають добривом для рослин, а рослини очищують воду. Повна екологічна циркуляція.',
-      description_en: 'Prawn waste becomes fertilizer for plants, and plants purify the water. Complete ecological circulation.'
+      description_uk:
+        'Відходи від креветок стають добривом для рослин, а рослини очищують воду. Повна екологічна циркуляція.',
+      description_en:
+        'Prawn waste becomes fertilizer for plants, and plants purify the water. Complete ecological circulation.',
     },
     {
       icon: Shield,
       title_uk: 'Без антибіотиків та хімії',
       title_en: 'No Antibiotics or Chemicals',
-      description_uk: 'Ми ніколи не використовуємо антибіотики, гормони росту або штучні стимулятори. Лише природні методи підтримки здоров\'я.',
-      description_en: 'We never use antibiotics, growth hormones or artificial stimulants. Only natural health support methods.'
-    }
+      description_uk:
+        "Ми ніколи не використовуємо антибіотики, гормони росту або штучні стимулятори. Лише природні методи підтримки здоров'я.",
+      description_en:
+        'We never use antibiotics, growth hormones or artificial stimulants. Only natural health support methods.',
+    },
   ]
 
   const certifications = [
@@ -49,22 +57,22 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
       name_en: 'Organic Production',
       code: 'EU-ORG-2024',
       description_uk: 'Сертифікат органічного виробництва ЄС',
-      description_en: 'EU Organic Production Certificate'
+      description_en: 'EU Organic Production Certificate',
     },
     {
       name_uk: 'Екологічний стандарт',
       name_en: 'Environmental Standard',
       code: 'ECO-FARM-UA',
       description_uk: 'Українські екологічні стандарти аквакультури',
-      description_en: 'Ukrainian Environmental Aquaculture Standards'
+      description_en: 'Ukrainian Environmental Aquaculture Standards',
     },
     {
       name_uk: 'Біобезпека',
       name_en: 'Biosafety',
       code: 'BIO-SAFE-2024',
       description_uk: 'Міжнародний стандарт біологічної безпеки',
-      description_en: 'International Biological Safety Standard'
-    }
+      description_en: 'International Biological Safety Standard',
+    },
   ]
 
   const benefits = [
@@ -72,26 +80,26 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
       title_uk: 'Вищий вміст Omega-3',
       title_en: 'Higher Omega-3 Content',
       description_uk: 'На 40% більше корисних жирних кислот завдяки природному харчуванню',
-      description_en: '40% more beneficial fatty acids due to natural nutrition'
+      description_en: '40% more beneficial fatty acids due to natural nutrition',
     },
     {
       title_uk: 'Чистіший смак',
       title_en: 'Cleaner Taste',
-      description_uk: 'Відсутність медикаментозного присмаку, природна солодкість м\'яса',
-      description_en: 'No medicinal aftertaste, natural sweetness of meat'
+      description_uk: "Відсутність медикаментозного присмаку, природна солодкість м'яса",
+      description_en: 'No medicinal aftertaste, natural sweetness of meat',
     },
     {
       title_uk: 'Довший термін зберігання',
       title_en: 'Longer Shelf Life',
       description_uk: 'Природні антиоксиданти подовжують свіжість продукту',
-      description_en: 'Natural antioxidants extend product freshness'
+      description_en: 'Natural antioxidants extend product freshness',
     },
     {
-      title_uk: 'Безпека для здоров\'я',
+      title_uk: "Безпека для здоров'я",
       title_en: 'Health Safety',
       description_uk: 'Нульовий ризик алергічних реакцій на антибіотики',
-      description_en: 'Zero risk of allergic reactions to antibiotics'
-    }
+      description_en: 'Zero risk of allergic reactions to antibiotics',
+    },
   ]
 
   return (
@@ -121,16 +129,15 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
             <Leaf size={16} />
             {language === 'uk' ? 'Екологічне виробництво' : 'Ecological Production'}
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-bold text-foreground heading-font mb-6">
             🌿 {language === 'uk' ? 'Екологічне вирощування' : 'Eco-Friendly Growing'}
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-8">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Ми використовуємо виключно природні методи вирощування креветок, створюючи ідеальну екосистему без шкоди для навколишнього середовища. Наш підхід забезпечує найвищу якість продукції та збереження природних ресурсів.'
-              : 'We use exclusively natural prawn farming methods, creating a perfect ecosystem without harming the environment. Our approach ensures the highest product quality and preservation of natural resources.'
-            }
+              : 'We use exclusively natural prawn farming methods, creating a perfect ecosystem without harming the environment. Our approach ensures the highest product quality and preservation of natural resources.'}
           </p>
 
           {/* Key Stats */}
@@ -172,7 +179,7 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Наші екологічні методи' : 'Our Ecological Methods'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {ecoMethods.map((method, index) => (
               <motion.div
@@ -215,10 +222,13 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Сертифікати та стандарти' : 'Certificates and Standards'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {certifications.map((cert, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
+              <Card
+                key={index}
+                className="text-center hover:shadow-lg transition-shadow duration-300"
+              >
                 <CardContent className="p-6">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Shield size={32} className="text-green-600" />
@@ -226,7 +236,9 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
                   <h3 className="font-semibold text-lg mb-2">
                     {language === 'uk' ? cert.name_uk : cert.name_en}
                   </h3>
-                  <Badge variant="outline" className="mb-3">{cert.code}</Badge>
+                  <Badge variant="outline" className="mb-3">
+                    {cert.code}
+                  </Badge>
                   <p className="text-sm text-muted-foreground">
                     {language === 'uk' ? cert.description_uk : cert.description_en}
                   </p>
@@ -245,9 +257,9 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
           viewport={{ once: true }}
         >
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
-            {language === 'uk' ? 'Переваги для здоров\'я' : 'Health Benefits'}
+            {language === 'uk' ? "Переваги для здоров'я" : 'Health Benefits'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-4 p-6 bg-white rounded-lg border">
@@ -280,10 +292,9 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
           <p className="text-xl leading-relaxed mb-8 opacity-90 max-w-3xl mx-auto">
             {language === 'uk'
               ? 'За 5 років роботи ми заощадили понад 2 мільйони літрів води завдяки системі рециркуляції, зменшили викиди CO₂ на 60% порівняно з традиційними фермами та створили робочі місця для 15 місцевих сімей.'
-              : 'Over 5 years of operation, we have saved over 2 million liters of water through our recirculation system, reduced CO₂ emissions by 60% compared to traditional farms, and created jobs for 15 local families.'
-            }
+              : 'Over 5 years of operation, we have saved over 2 million liters of water through our recirculation system, reduced CO₂ emissions by 60% compared to traditional farms, and created jobs for 15 local families.'}
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"

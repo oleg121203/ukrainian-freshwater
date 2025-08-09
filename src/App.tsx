@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { PrawnVisualization } from '@/components/PrawnVisualizationFixed'
+import { PrawnVisualization } from '@/components/PrawnVisualizationOptimized'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'
@@ -33,7 +33,24 @@ function App() {
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
-  const allSections = ['hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 'admin', 'eco-farming', 'technology', 'delivery', 'professional', 'feeding', 'orders', 'shop-test', 'payment-admin']
+  const allSections = [
+    'hero',
+    'about',
+    'products',
+    'gallery',
+    'recipes',
+    'reviews',
+    'contact',
+    'admin',
+    'eco-farming',
+    'technology',
+    'delivery',
+    'professional',
+    'feeding',
+    'orders',
+    'shop-test',
+    'payment-admin',
+  ]
 
   const handleNavigate = (section: string) => {
     if (section === 'hero') {
@@ -86,17 +103,19 @@ function App() {
       case 'professional':
         return <ProfessionalSection onNavigate={handleNavigate} />
       case 'feeding':
-        return <FeedingSimulation 
-          onPrawnFeed={(foodType, intensity) => {
-            // This could trigger animations in the 3D prawn when integrated
-            console.log('Prawn fed with:', foodType, 'intensity:', intensity)
-            playSwooshSound({ volume: 0.3, playbackRate: 1.2 })
-          }} 
-          onStatsUpdate={(stats) => {
-            // Update global prawn state if needed
-            console.log('Prawn stats updated:', stats)
-          }}
-        />
+        return (
+          <FeedingSimulation
+            onPrawnFeed={(foodType, intensity) => {
+              // This could trigger animations in the 3D prawn when integrated
+              console.log('Prawn fed with:', foodType, 'intensity:', intensity)
+              playSwooshSound({ volume: 0.3, playbackRate: 1.2 })
+            }}
+            onStatsUpdate={stats => {
+              // Update global prawn state if needed
+              console.log('Prawn stats updated:', stats)
+            }}
+          />
+        )
       case 'orders':
         return <OrdersManagement onNavigate={handleNavigate} />
       case 'shop-test':
@@ -121,24 +140,33 @@ function App() {
             <div className="grid grid-cols-2 gap-1">
               {allSections.map(section => {
                 const getSectionLabel = (sectionName: string) => {
-                  switch(sectionName) {
-                    case 'eco-farming': return 'Eco'
-                    case 'technology': return 'Tech'
-                    case 'delivery': return 'Ship'
-                    case 'professional': return 'Pro'
-                    case 'feeding': return 'Feed'
-                    case 'orders': return 'Orders'
-                    case 'shop-test': return 'Test'
-                    case 'payment-admin': return 'Pay'
-                    default: return sectionName
+                  switch (sectionName) {
+                    case 'eco-farming':
+                      return 'Eco'
+                    case 'technology':
+                      return 'Tech'
+                    case 'delivery':
+                      return 'Ship'
+                    case 'professional':
+                      return 'Pro'
+                    case 'feeding':
+                      return 'Feed'
+                    case 'orders':
+                      return 'Orders'
+                    case 'shop-test':
+                      return 'Test'
+                    case 'payment-admin':
+                      return 'Pay'
+                    default:
+                      return sectionName
                   }
                 }
-                
+
                 return (
                   <Button
                     key={section}
                     size="sm"
-                    variant={currentSection === section ? "default" : "outline"}
+                    variant={currentSection === section ? 'default' : 'outline'}
                     className="text-xs h-6"
                     onClick={() => handleNavigate(section)}
                   >
@@ -171,7 +199,7 @@ function App() {
         {/* 3D Visualization or Content */}
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">
-            <PrawnVisualization 
+            <PrawnVisualization
               onMenuToggle={setMenuVisible}
               menuVisible={menuVisible}
               onNavigateToSite={handleNavigateToSite}
@@ -190,7 +218,7 @@ function App() {
                 </button>
               </div>
             )}
-            
+
             {/* Current Section Content */}
             {renderCurrentSection()}
           </main>
@@ -209,13 +237,10 @@ function App() {
         )}
 
         {/* Shopping Cart Modal */}
-        <ShoppingCart 
-          isVisible={showCart}
-          onClose={() => setShowCart(false)}
-        />
+        <ShoppingCart isVisible={showCart} onClose={() => setShowCart(false)} />
 
         {/* Toast Notifications */}
-        <Toaster 
+        <Toaster
           position="bottom-right"
           toastOptions={{
             style: {

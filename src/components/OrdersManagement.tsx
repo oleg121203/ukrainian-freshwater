@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Package, 
-  Clock, 
-  CheckCircle, 
-  Truck, 
-  MapPin, 
-  Phone, 
+import {
+  Package,
+  Clock,
+  CheckCircle,
+  Truck,
+  MapPin,
+  Phone,
   Mail,
   Eye,
-  ArrowLeft
+  ArrowLeft,
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,66 +31,102 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-500'
-      case 'confirmed': return 'bg-blue-500'
-      case 'preparing': return 'bg-purple-500'
-      case 'shipped': return 'bg-orange-500'
-      case 'delivered': return 'bg-green-500'
-      case 'cancelled': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'pending':
+        return 'bg-yellow-500'
+      case 'confirmed':
+        return 'bg-blue-500'
+      case 'preparing':
+        return 'bg-purple-500'
+      case 'shipped':
+        return 'bg-orange-500'
+      case 'delivered':
+        return 'bg-green-500'
+      case 'cancelled':
+        return 'bg-red-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
   const getStatusText = (status: string) => {
     if (language === 'uk') {
       switch (status) {
-        case 'pending': return 'Очікує підтвердження'
-        case 'confirmed': return 'Підтверджено'
-        case 'preparing': return 'Готується'
-        case 'shipped': return 'Відправлено'
-        case 'delivered': return 'Доставлено'
-        case 'cancelled': return 'Скасовано'
-        default: return 'Невідомо'
+        case 'pending':
+          return 'Очікує підтвердження'
+        case 'confirmed':
+          return 'Підтверджено'
+        case 'preparing':
+          return 'Готується'
+        case 'shipped':
+          return 'Відправлено'
+        case 'delivered':
+          return 'Доставлено'
+        case 'cancelled':
+          return 'Скасовано'
+        default:
+          return 'Невідомо'
       }
     } else {
       switch (status) {
-        case 'pending': return 'Pending Confirmation'
-        case 'confirmed': return 'Confirmed'
-        case 'preparing': return 'Preparing'
-        case 'shipped': return 'Shipped'
-        case 'delivered': return 'Delivered'
-        case 'cancelled': return 'Cancelled'
-        default: return 'Unknown'
+        case 'pending':
+          return 'Pending Confirmation'
+        case 'confirmed':
+          return 'Confirmed'
+        case 'preparing':
+          return 'Preparing'
+        case 'shipped':
+          return 'Shipped'
+        case 'delivered':
+          return 'Delivered'
+        case 'cancelled':
+          return 'Cancelled'
+        default:
+          return 'Unknown'
       }
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock size={16} />
-      case 'confirmed': return <CheckCircle size={16} />
-      case 'preparing': return <Package size={16} />
-      case 'shipped': return <Truck size={16} />
-      case 'delivered': return <CheckCircle size={16} />
-      case 'cancelled': return <ArrowLeft size={16} />
-      default: return <Package size={16} />
+      case 'pending':
+        return <Clock size={16} />
+      case 'confirmed':
+        return <CheckCircle size={16} />
+      case 'preparing':
+        return <Package size={16} />
+      case 'shipped':
+        return <Truck size={16} />
+      case 'delivered':
+        return <CheckCircle size={16} />
+      case 'cancelled':
+        return <ArrowLeft size={16} />
+      default:
+        return <Package size={16} />
     }
   }
 
   const getDeliveryTimeText = (time: string) => {
     if (language === 'uk') {
       switch (time) {
-        case 'morning': return 'Ранок (9:00 - 12:00)'
-        case 'afternoon': return 'День (12:00 - 17:00)'
-        case 'evening': return 'Вечір (17:00 - 20:00)'
-        default: return time
+        case 'morning':
+          return 'Ранок (9:00 - 12:00)'
+        case 'afternoon':
+          return 'День (12:00 - 17:00)'
+        case 'evening':
+          return 'Вечір (17:00 - 20:00)'
+        default:
+          return time
       }
     } else {
       switch (time) {
-        case 'morning': return 'Morning (9:00 - 12:00)'
-        case 'afternoon': return 'Afternoon (12:00 - 17:00)'
-        case 'evening': return 'Evening (17:00 - 20:00)'
-        default: return time
+        case 'morning':
+          return 'Morning (9:00 - 12:00)'
+        case 'afternoon':
+          return 'Afternoon (12:00 - 17:00)'
+        case 'evening':
+          return 'Evening (17:00 - 20:00)'
+        default:
+          return time
       }
     }
   }
@@ -98,17 +134,25 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
   const getPaymentMethodText = (method: string) => {
     if (language === 'uk') {
       switch (method) {
-        case 'cash': return 'Готівка при отриманні'
-        case 'card': return 'Картою при отриманні'
-        case 'transfer': return 'Банківський переказ'
-        default: return method
+        case 'cash':
+          return 'Готівка при отриманні'
+        case 'card':
+          return 'Картою при отриманні'
+        case 'transfer':
+          return 'Банківський переказ'
+        default:
+          return method
       }
     } else {
       switch (method) {
-        case 'cash': return 'Cash on delivery'
-        case 'card': return 'Card on delivery'
-        case 'transfer': return 'Bank transfer'
-        default: return method
+        case 'cash':
+          return 'Cash on delivery'
+        case 'card':
+          return 'Card on delivery'
+        case 'transfer':
+          return 'Bank transfer'
+        default:
+          return method
       }
     }
   }
@@ -123,15 +167,11 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-8">
-              <Button 
-                variant="ghost" 
-                className="mb-4"
-                onClick={() => setSelectedOrder(null)}
-              >
+              <Button variant="ghost" className="mb-4" onClick={() => setSelectedOrder(null)}>
                 <ArrowLeft size={16} className="mr-2" />
                 {language === 'uk' ? 'Повернутися до списку' : 'Back to orders'}
               </Button>
-              
+
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-3xl font-bold heading-font">
                   {language === 'uk' ? 'Замовлення' : 'Order'} #{selectedOrder.id.split('-')[1]}
@@ -141,11 +181,11 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                   <span className="ml-1">{getStatusText(selectedOrder.status)}</span>
                 </Badge>
               </div>
-              
+
               <p className="text-muted-foreground">
-                {language === 'uk' ? 'Створено:' : 'Created:'} {' '}
+                {language === 'uk' ? 'Створено:' : 'Created:'}{' '}
                 {format(new Date(selectedOrder.createdAt), 'PPpp', {
-                  locale: language === 'uk' ? uk : enUS
+                  locale: language === 'uk' ? uk : enUS,
                 })}
               </p>
             </div>
@@ -169,7 +209,8 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                             {language === 'uk' ? item.name_uk : item.name_en}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {item.weight} • {language === 'uk' ? 'Кількість:' : 'Quantity:'} {item.quantity}
+                            {item.weight} • {language === 'uk' ? 'Кількість:' : 'Quantity:'}{' '}
+                            {item.quantity}
                           </p>
                         </div>
                         <div className="text-right">
@@ -182,9 +223,9 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                         </div>
                       </div>
                     ))}
-                    
+
                     <Separator />
-                    
+
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>{language === 'uk' ? 'Всього:' : 'Total:'}</span>
                       <span className="text-primary">{selectedOrder.total} UAH</span>
@@ -228,13 +269,9 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
                     <p className="font-medium">{selectedOrder.deliveryInfo.city}</p>
+                    <p className="text-muted-foreground">{selectedOrder.deliveryInfo.address}</p>
                     <p className="text-muted-foreground">
-                      {selectedOrder.deliveryInfo.address}
-                    </p>
-                    <p className="text-muted-foreground">
-                      <span className="font-medium">
-                        {language === 'uk' ? 'Час:' : 'Time:'}{' '}
-                      </span>
+                      <span className="font-medium">{language === 'uk' ? 'Час:' : 'Time:'} </span>
                       {getDeliveryTimeText(selectedOrder.deliveryInfo.deliveryTime)}
                     </p>
                     {selectedOrder.deliveryInfo.notes && (
@@ -250,7 +287,7 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                         {language === 'uk' ? 'Очікувана доставка:' : 'Expected delivery:'}{' '}
                       </span>
                       {format(new Date(selectedOrder.estimatedDelivery), 'PPP', {
-                        locale: language === 'uk' ? uk : enUS
+                        locale: language === 'uk' ? uk : enUS,
                       })}
                     </p>
                   </CardContent>
@@ -292,10 +329,9 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
             {language === 'uk' ? 'Мої замовлення' : 'My Orders'}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Переглядайте статус та історію ваших замовлень'
-              : 'View the status and history of your orders'
-            }
+              : 'View the status and history of your orders'}
           </p>
         </motion.div>
 
@@ -311,10 +347,9 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
               {language === 'uk' ? 'Поки що немає замовлень' : 'No orders yet'}
             </h3>
             <p className="text-muted-foreground mb-8">
-              {language === 'uk' 
+              {language === 'uk'
                 ? 'Зробіть ваше перше замовлення щоб побачити його тут'
-                : 'Make your first order to see it here'
-              }
+                : 'Make your first order to see it here'}
             </p>
             <Button onClick={() => onNavigate?.('products')}>
               {language === 'uk' ? 'Переглянути продукцію' : 'View Products'}
@@ -332,8 +367,10 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                        onClick={() => setSelectedOrder(order)}>
+                  <Card
+                    className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                    onClick={() => setSelectedOrder(order)}
+                  >
                     <CardContent className="p-6">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                         {/* Order Info */}
@@ -347,7 +384,7 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                               <span className="ml-1">{getStatusText(order.status)}</span>
                             </Badge>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                             <div>
                               <p className="mb-1">
@@ -355,7 +392,7 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                                   {language === 'uk' ? 'Дата:' : 'Date:'}
                                 </span>{' '}
                                 {format(new Date(order.createdAt), 'PPP', {
-                                  locale: language === 'uk' ? uk : enUS
+                                  locale: language === 'uk' ? uk : enUS,
                                 })}
                               </p>
                               <p>
@@ -385,16 +422,14 @@ export function OrdersManagement({ onNavigate }: OrdersManagementProps) {
                         {/* Order Total and Action */}
                         <div className="flex items-center justify-between lg:flex-col lg:items-end gap-4">
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">
-                              {order.total} UAH
-                            </p>
+                            <p className="text-2xl font-bold text-primary">{order.total} UAH</p>
                             <p className="text-sm text-muted-foreground">
                               {language === 'uk' ? 'Сума замовлення' : 'Order total'}
                             </p>
                           </div>
-                          
-                          <Button 
-                            variant="outline" 
+
+                          <Button
+                            variant="outline"
                             size="sm"
                             className="group-hover:border-primary group-hover:text-primary"
                           >

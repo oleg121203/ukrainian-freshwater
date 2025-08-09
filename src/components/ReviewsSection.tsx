@@ -36,7 +36,7 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
     level: 'Bronze',
     points: 0,
     pointsToNext: 100,
-    benefits: []
+    benefits: [],
   })
 
   const reviews: Review[] = [
@@ -44,49 +44,77 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
       id: '1',
       name: 'Андрій Коваленко',
       rating: 5,
-      comment_uk: 'Найкращі креветки, які я коли-небудь куштував! Свіжість неймовірна, а смак просто фантастичний. Обов\'язково замовлю ще.',
-      comment_en: 'The best prawns I have ever tasted! The freshness is incredible, and the taste is simply fantastic. Will definitely order again.',
+      comment_uk:
+        "Найкращі креветки, які я коли-небудь куштував! Свіжість неймовірна, а смак просто фантастичний. Обов'язково замовлю ще.",
+      comment_en:
+        'The best prawns I have ever tasted! The freshness is incredible, and the taste is simply fantastic. Will definitely order again.',
       date: '2024-01-15',
       verified: true,
-      location: 'Київ'
+      location: 'Київ',
     },
     {
       id: '2',
       name: 'Марія Петрова',
       rating: 5,
-      comment_uk: 'Замовляємо для нашого ресторану вже пів року. Якість завжди на висоті, доставка швидка. Клієнти в захваті!',
-      comment_en: 'We have been ordering for our restaurant for half a year. Quality is always top-notch, delivery is fast. Customers are delighted!',
+      comment_uk:
+        'Замовляємо для нашого ресторану вже пів року. Якість завжди на висоті, доставка швидка. Клієнти в захваті!',
+      comment_en:
+        'We have been ordering for our restaurant for half a year. Quality is always top-notch, delivery is fast. Customers are delighted!',
       date: '2024-01-10',
       verified: true,
-      location: 'Львів'
+      location: 'Львів',
     },
     {
       id: '3',
       name: 'Олексій Мельник',
       rating: 4,
-      comment_uk: 'Відмінна продукція, швидка доставка. Трохи дорого, але якість того варта. Система лояльності дуже приємна.',
-      comment_en: 'Excellent product, fast delivery. A bit pricey, but the quality is worth it. The loyalty system is very nice.',
+      comment_uk:
+        'Відмінна продукція, швидка доставка. Трохи дорого, але якість того варта. Система лояльності дуже приємна.',
+      comment_en:
+        'Excellent product, fast delivery. A bit pricey, but the quality is worth it. The loyalty system is very nice.',
       date: '2024-01-08',
       verified: true,
-      location: 'Одеса'
+      location: 'Одеса',
     },
     {
       id: '4',
       name: 'Тетяна Шевченко',
       rating: 5,
-      comment_uk: 'Креветки просто чудові! Готувала для сім\'ї на день народження - всі були в захваті. Дякую за якість!',
-      comment_en: 'The prawns are simply wonderful! Cooked for the family birthday - everyone was delighted. Thank you for the quality!',
+      comment_uk:
+        "Креветки просто чудові! Готувала для сім'ї на день народження - всі були в захваті. Дякую за якість!",
+      comment_en:
+        'The prawns are simply wonderful! Cooked for the family birthday - everyone was delighted. Thank you for the quality!',
       date: '2024-01-05',
       verified: true,
-      location: 'Харків'
-    }
+      location: 'Харків',
+    },
   ]
 
   const loyaltyLevels = {
-    Bronze: { min: 0, max: 100, color: 'bg-orange-500', benefits: ['5% знижка', '2 бали за 100 грн'] },
-    Silver: { min: 100, max: 300, color: 'bg-gray-400', benefits: ['10% знижка', '3 бали за 100 грн', 'Пріоритетна доставка'] },
-    Gold: { min: 300, max: 600, color: 'bg-yellow-500', benefits: ['15% знижка', '4 бали за 100 грн', 'Безкоштовна доставка'] },
-    Platinum: { min: 600, max: 1000, color: 'bg-purple-500', benefits: ['20% знижка', '5 балів за 100 грн', 'Ексклюзивні товари'] }
+    Bronze: {
+      min: 0,
+      max: 100,
+      color: 'bg-orange-500',
+      benefits: ['5% знижка', '2 бали за 100 грн'],
+    },
+    Silver: {
+      min: 100,
+      max: 300,
+      color: 'bg-gray-400',
+      benefits: ['10% знижка', '3 бали за 100 грн', 'Пріоритетна доставка'],
+    },
+    Gold: {
+      min: 300,
+      max: 600,
+      color: 'bg-yellow-500',
+      benefits: ['15% знижка', '4 бали за 100 грн', 'Безкоштовна доставка'],
+    },
+    Platinum: {
+      min: 600,
+      max: 1000,
+      color: 'bg-purple-500',
+      benefits: ['20% знижка', '5 балів за 100 грн', 'Ексклюзивні товари'],
+    },
   }
 
   const renderStars = (rating: number) => {
@@ -116,12 +144,8 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
             {language === 'uk' ? 'Відгуки клієнтів' : 'Customer Reviews'}
           </h2>
           <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="flex items-center gap-1">
-              {renderStars(Math.round(averageRating))}
-            </div>
-            <span className="text-2xl font-bold text-foreground">
-              {averageRating.toFixed(1)}
-            </span>
+            <div className="flex items-center gap-1">{renderStars(Math.round(averageRating))}</div>
+            <span className="text-2xl font-bold text-foreground">{averageRating.toFixed(1)}</span>
             <span className="text-muted-foreground">
               ({reviews.length} {language === 'uk' ? 'відгуків' : 'reviews'})
             </span>
@@ -156,9 +180,7 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          {renderStars(review.rating)}
-                        </div>
+                        <div className="flex items-center gap-1">{renderStars(review.rating)}</div>
                         <span className="text-sm text-muted-foreground">{review.date}</span>
                       </div>
                     </CardHeader>
@@ -190,7 +212,9 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
                         {language === 'uk' ? 'Програма лояльності' : 'Loyalty Program'}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {language === 'uk' ? 'Збирайте бали та отримуйте знижки' : 'Collect points and get discounts'}
+                        {language === 'uk'
+                          ? 'Збирайте бали та отримуйте знижки'
+                          : 'Collect points and get discounts'}
                       </p>
                     </div>
                   </div>
@@ -206,14 +230,18 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
                       </Badge>
                     </div>
                     <div className="mb-2">
-                      <Progress 
-                        value={(loyaltyData.points / (loyaltyData.points + loyaltyData.pointsToNext)) * 100} 
+                      <Progress
+                        value={
+                          (loyaltyData.points / (loyaltyData.points + loyaltyData.pointsToNext)) *
+                          100
+                        }
                         className="h-2"
                       />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {loyaltyData.points} {language === 'uk' ? 'балів' : 'points'} • 
-                      {loyaltyData.pointsToNext} {language === 'uk' ? 'до наступного рівня' : 'to next level'}
+                      {loyaltyData.points} {language === 'uk' ? 'балів' : 'points'} •
+                      {loyaltyData.pointsToNext}{' '}
+                      {language === 'uk' ? 'до наступного рівня' : 'to next level'}
                     </p>
                   </div>
                 </CardHeader>
@@ -243,7 +271,9 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
                       <div
                         key={level}
                         className={`p-3 rounded-lg border ${
-                          loyaltyData.level === level ? 'border-primary bg-primary/5' : 'border-border'
+                          loyaltyData.level === level
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -252,9 +282,7 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
                             {data.min}-{data.max} {language === 'uk' ? 'балів' : 'points'}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {data.benefits[0]}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{data.benefits[0]}</p>
                       </div>
                     ))}
                   </div>
@@ -277,38 +305,56 @@ export function ReviewsSection({ onNavigate }: ReviewsSectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('products')}
+          >
             <CardContent className="p-8 text-center">
-              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <ShoppingCart
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Спробуйте самі' : 'Try for Yourself'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Замовте креветки та переконайтеся в їх якості'
-                  : 'Order prawns and experience their quality'
-                }
+                  : 'Order prawns and experience their quality'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Зробити замовлення' : 'Place Order'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Зробити замовлення' : 'Place Order'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('contact')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('contact')}
+          >
             <CardContent className="p-8 text-center">
-              <Phone size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <Phone
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Залишити відгук' : 'Leave a Review'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Поділіться своїм досвідом з нашими креветками'
-                  : 'Share your experience with our prawns'
-                }
+                  : 'Share your experience with our prawns'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Зв\'язатися' : 'Contact Us'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? "Зв'язатися" : 'Contact Us'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>

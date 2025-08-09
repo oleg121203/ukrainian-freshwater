@@ -1,7 +1,21 @@
 import { useKV } from '@/hooks/useKV'
 
 export interface PaymentData {
-  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'oschadbank' | 'ukrgasbank' | 'ibox' | 'paypal' | 'skrill' | 'webmoney' | 'qiwi' | 'crypto' | 'bank_transfer'
+  method:
+    | 'card'
+    | 'apple_pay'
+    | 'google_pay'
+    | 'privat24'
+    | 'monobank'
+    | 'oschadbank'
+    | 'ukrgasbank'
+    | 'ibox'
+    | 'paypal'
+    | 'skrill'
+    | 'webmoney'
+    | 'qiwi'
+    | 'crypto'
+    | 'bank_transfer'
   cardData?: {
     number: string
     expiry: string
@@ -66,7 +80,9 @@ class PaymentService {
   private async loadSettings() {
     try {
       // This could be loaded from admin panel settings
-      const settings = await window.spark.kv.get<{ apiKey: string, testMode: boolean }>('payment-settings')
+      const settings = await window.spark.kv.get<{ apiKey: string; testMode: boolean }>(
+        'payment-settings'
+      )
       if (settings) {
         this.apiKey = settings.apiKey
         this.testMode = settings.testMode
@@ -77,14 +93,13 @@ class PaymentService {
   }
 
   async processPayment(
-    orderId: string, 
-    amount: number, 
+    orderId: string,
+    amount: number,
     paymentData: PaymentData,
-    customerData: { name: string, email: string, phone: string }
+    customerData: { name: string; email: string; phone: string }
   ): Promise<PaymentResult> {
-    
     const transactionId = this.generateTransactionId()
-    
+
     // Create payment transaction record
     const transaction: PaymentTransaction = {
       id: transactionId,
@@ -93,7 +108,7 @@ class PaymentService {
       method: paymentData.method,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      customerData
+      customerData,
     }
 
     try {
@@ -140,7 +155,11 @@ class PaymentService {
           result = await this.processQiwi(transactionId, amount, paymentData.walletData!)
           break
         case 'bank_transfer':
-          result = await this.processBankTransfer(transactionId, amount, paymentData.bankTransferData!)
+          result = await this.processBankTransfer(
+            transactionId,
+            amount,
+            paymentData.bankTransferData!
+          )
           break
         case 'crypto':
           result = await this.processCrypto(transactionId, amount, paymentData.cryptoData!)
@@ -156,11 +175,10 @@ class PaymentService {
       if (!result.success) {
         transaction.failureReason = result.message
       }
-      
+
       await this.saveTransaction(transaction)
 
       return result
-
     } catch (error) {
       // Update transaction as failed
       transaction.status = 'failed'
@@ -170,36 +188,40 @@ class PaymentService {
       return {
         success: false,
         transactionId,
-        message: error instanceof Error ? error.message : 'Payment processing failed'
+        message: error instanceof Error ? error.message : 'Payment processing failed',
       }
     }
   }
 
-  private async processCardPayment(transactionId: string, amount: number, cardData: PaymentData['cardData']): Promise<PaymentResult> {
+  private async processCardPayment(
+    transactionId: string,
+    amount: number,
+    cardData: PaymentData['cardData']
+  ): Promise<PaymentResult> {
     // Simulate card payment processing
     await this.delay(2000)
 
     if (this.testMode) {
       // Test mode - simulate different outcomes based on card number
       const cardNumber = cardData!.number.replace(/\s/g, '')
-      
+
       if (cardNumber.includes('4242')) {
         return {
           success: true,
           transactionId: `card_${transactionId}`,
-          message: 'Payment successful'
+          message: 'Payment successful',
         }
       } else if (cardNumber.includes('4000')) {
         return {
           success: false,
           transactionId: `card_${transactionId}`,
-          message: 'Insufficient funds'
+          message: 'Insufficient funds',
         }
       } else {
         return {
           success: true,
           transactionId: `card_${transactionId}`,
-          message: 'Payment successful'
+          message: 'Payment successful',
         }
       }
     }
@@ -214,18 +236,18 @@ class PaymentService {
     return {
       success: true,
       transactionId: `card_${transactionId}`,
-      message: 'Payment successful'
+      message: 'Payment successful',
     }
   }
 
   private async processApplePay(transactionId: string, amount: number): Promise<PaymentResult> {
     await this.delay(1500)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `apple_${transactionId}`,
-        message: 'Apple Pay payment successful'
+        message: 'Apple Pay payment successful',
       }
     }
 
@@ -233,18 +255,18 @@ class PaymentService {
     return {
       success: true,
       transactionId: `apple_${transactionId}`,
-      message: 'Apple Pay payment successful'
+      message: 'Apple Pay payment successful',
     }
   }
 
   private async processGooglePay(transactionId: string, amount: number): Promise<PaymentResult> {
     await this.delay(1500)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `google_${transactionId}`,
-        message: 'Google Pay payment successful'
+        message: 'Google Pay payment successful',
       }
     }
 
@@ -252,19 +274,23 @@ class PaymentService {
     return {
       success: true,
       transactionId: `google_${transactionId}`,
-      message: 'Google Pay payment successful'
+      message: 'Google Pay payment successful',
     }
   }
 
-  private async processPrivat24(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+  private async processPrivat24(
+    transactionId: string,
+    amount: number,
+    bankData: PaymentData['bankData']
+  ): Promise<PaymentResult> {
     await this.delay(2500)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `privat_${transactionId}`,
         message: 'PrivatBank payment initiated',
-        redirectUrl: `https://privat24.ua/payments?amount=${amount}&phone=${bankData!.phone}`
+        redirectUrl: `https://privat24.ua/payments?amount=${amount}&phone=${bankData!.phone}`,
       }
     }
 
@@ -272,19 +298,23 @@ class PaymentService {
     return {
       success: true,
       transactionId: `privat_${transactionId}`,
-      message: 'PrivatBank payment initiated'
+      message: 'PrivatBank payment initiated',
     }
   }
 
-  private async processMonobank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+  private async processMonobank(
+    transactionId: string,
+    amount: number,
+    bankData: PaymentData['bankData']
+  ): Promise<PaymentResult> {
     await this.delay(2000)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `mono_${transactionId}`,
         message: 'Monobank payment initiated',
-        redirectUrl: `https://send.monobank.ua/?amount=${amount}&phone=${bankData!.phone}`
+        redirectUrl: `https://send.monobank.ua/?amount=${amount}&phone=${bankData!.phone}`,
       }
     }
 
@@ -292,76 +322,92 @@ class PaymentService {
     return {
       success: true,
       transactionId: `mono_${transactionId}`,
-      message: 'Monobank payment initiated'
+      message: 'Monobank payment initiated',
     }
   }
 
-  private async processOschadbank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+  private async processOschadbank(
+    transactionId: string,
+    amount: number,
+    bankData: PaymentData['bankData']
+  ): Promise<PaymentResult> {
     await this.delay(2200)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `oschadbank_${transactionId}`,
         message: 'Oschadbank 24/7 payment initiated',
-        redirectUrl: `https://online.oschadbank.ua/payment?amount=${amount}&phone=${bankData!.phone}`
+        redirectUrl: `https://online.oschadbank.ua/payment?amount=${amount}&phone=${bankData!.phone}`,
       }
     }
 
     return {
       success: true,
       transactionId: `oschadbank_${transactionId}`,
-      message: 'Oschadbank payment initiated'
+      message: 'Oschadbank payment initiated',
     }
   }
 
-  private async processUkrGasBank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+  private async processUkrGasBank(
+    transactionId: string,
+    amount: number,
+    bankData: PaymentData['bankData']
+  ): Promise<PaymentResult> {
     await this.delay(2100)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `ukrgasbank_${transactionId}`,
         message: 'UkrGasBank mobile payment initiated',
-        redirectUrl: `https://my.ukrgasbank.com/payment?amount=${amount}&phone=${bankData!.phone}`
+        redirectUrl: `https://my.ukrgasbank.com/payment?amount=${amount}&phone=${bankData!.phone}`,
       }
     }
 
     return {
       success: true,
       transactionId: `ukrgasbank_${transactionId}`,
-      message: 'UkrGasBank payment initiated'
+      message: 'UkrGasBank payment initiated',
     }
   }
 
-  private async processIboxBank(transactionId: string, amount: number, bankData: PaymentData['bankData']): Promise<PaymentResult> {
+  private async processIboxBank(
+    transactionId: string,
+    amount: number,
+    bankData: PaymentData['bankData']
+  ): Promise<PaymentResult> {
     await this.delay(1800)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `ibox_${transactionId}`,
         message: 'iBox Bank mobile payment initiated',
-        redirectUrl: `https://ibox.ua/payment?amount=${amount}&phone=${bankData!.phone}`
+        redirectUrl: `https://ibox.ua/payment?amount=${amount}&phone=${bankData!.phone}`,
       }
     }
 
     return {
       success: true,
       transactionId: `ibox_${transactionId}`,
-      message: 'iBox Bank payment initiated'
+      message: 'iBox Bank payment initiated',
     }
   }
 
-  private async processPayPal(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+  private async processPayPal(
+    transactionId: string,
+    amount: number,
+    walletData: PaymentData['walletData']
+  ): Promise<PaymentResult> {
     await this.delay(3000)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `paypal_${transactionId}`,
         message: 'PayPal payment initiated',
-        redirectUrl: `https://www.paypal.com/checkoutnow?amount=${amount}`
+        redirectUrl: `https://www.paypal.com/checkoutnow?amount=${amount}`,
       }
     }
 
@@ -369,70 +415,86 @@ class PaymentService {
     return {
       success: true,
       transactionId: `paypal_${transactionId}`,
-      message: 'PayPal payment initiated'
+      message: 'PayPal payment initiated',
     }
   }
 
-  private async processSkrill(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+  private async processSkrill(
+    transactionId: string,
+    amount: number,
+    walletData: PaymentData['walletData']
+  ): Promise<PaymentResult> {
     await this.delay(2800)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `skrill_${transactionId}`,
         message: 'Skrill payment initiated',
-        redirectUrl: `https://www.skrill.com/pay?amount=${amount}&email=${walletData!.email}`
+        redirectUrl: `https://www.skrill.com/pay?amount=${amount}&email=${walletData!.email}`,
       }
     }
 
     return {
       success: true,
       transactionId: `skrill_${transactionId}`,
-      message: 'Skrill payment initiated'
+      message: 'Skrill payment initiated',
     }
   }
 
-  private async processWebMoney(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+  private async processWebMoney(
+    transactionId: string,
+    amount: number,
+    walletData: PaymentData['walletData']
+  ): Promise<PaymentResult> {
     await this.delay(2200)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `webmoney_${transactionId}`,
         message: 'WebMoney payment initiated',
-        redirectUrl: `https://merchant.webmoney.ru/conf/purse?amount=${amount}&wmid=${walletData!.walletId}`
+        redirectUrl: `https://merchant.webmoney.ru/conf/purse?amount=${amount}&wmid=${walletData!.walletId}`,
       }
     }
 
     return {
       success: true,
       transactionId: `webmoney_${transactionId}`,
-      message: 'WebMoney payment initiated'
+      message: 'WebMoney payment initiated',
     }
   }
 
-  private async processQiwi(transactionId: string, amount: number, walletData: PaymentData['walletData']): Promise<PaymentResult> {
+  private async processQiwi(
+    transactionId: string,
+    amount: number,
+    walletData: PaymentData['walletData']
+  ): Promise<PaymentResult> {
     await this.delay(2500)
-    
+
     if (this.testMode) {
       return {
         success: true,
         transactionId: `qiwi_${transactionId}`,
         message: 'QIWI payment initiated',
-        redirectUrl: `https://qiwi.com/payment/form/99?amount=${amount}&account=${walletData!.phone}`
+        redirectUrl: `https://qiwi.com/payment/form/99?amount=${amount}&account=${walletData!.phone}`,
       }
     }
 
     return {
       success: true,
       transactionId: `qiwi_${transactionId}`,
-      message: 'QIWI payment initiated'
+      message: 'QIWI payment initiated',
     }
   }
 
-  private async processBankTransfer(transactionId: string, amount: number, bankTransferData: PaymentData['bankTransferData']): Promise<PaymentResult> {
+  private async processBankTransfer(
+    transactionId: string,
+    amount: number,
+    bankTransferData: PaymentData['bankTransferData']
+  ): Promise<PaymentResult> {
     await this.delay(1000)
-    
+
     // Generate bank transfer instructions
     const instructions = {
       recipientBank: bankTransferData!.bankName,
@@ -442,29 +504,34 @@ class PaymentService {
       amount: amount,
       purpose: bankTransferData!.purpose,
       payerAccount: bankTransferData!.accountNumber,
-      payerName: bankTransferData!.recipientName
+      payerName: bankTransferData!.recipientName,
     }
 
     return {
       success: true,
       transactionId: `bank_transfer_${transactionId}`,
-      message: 'Bank transfer instructions generated. Please complete the transfer through your bank.',
-      redirectUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(instructions, null, 2))}`
+      message:
+        'Bank transfer instructions generated. Please complete the transfer through your bank.',
+      redirectUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(instructions, null, 2))}`,
     }
   }
 
-  private async processCrypto(transactionId: string, amount: number, cryptoData: PaymentData['cryptoData']): Promise<PaymentResult> {
+  private async processCrypto(
+    transactionId: string,
+    amount: number,
+    cryptoData: PaymentData['cryptoData']
+  ): Promise<PaymentResult> {
     await this.delay(1000)
-    
+
     // Generate a crypto payment address (in production, this would be from a crypto payment processor)
     const paymentAddresses = {
       btc: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
       eth: '0x742ED0b1C72e0F4Da9f732e5DEA8F1C3b3a6E6E2',
-      usdt: '0x742ED0b1C72e0F4Da9f732e5DEA8F1C3b3a6E6E2'
+      usdt: '0x742ED0b1C72e0F4Da9f732e5DEA8F1C3b3a6E6E2',
     }
 
     const paymentAddress = paymentAddresses[cryptoData!.currency]
-    
+
     // Calculate crypto amount (simplified conversion)
     const cryptoRates = { btc: 43000, eth: 2300, usdt: 1 } // USD rates
     const usdAmount = amount / 40 // Simplified UAH to USD conversion
@@ -475,14 +542,14 @@ class PaymentService {
         success: true,
         transactionId: `crypto_${transactionId}`,
         message: `Send ${cryptoAmount.toFixed(6)} ${cryptoData!.currency.toUpperCase()} to the address below`,
-        qrCode: `data:image/svg+xml;base64,${btoa(this.generateQRCode(paymentAddress))}`
+        qrCode: `data:image/svg+xml;base64,${btoa(this.generateQRCode(paymentAddress))}`,
       }
     }
 
     return {
       success: true,
       transactionId: `crypto_${transactionId}`,
-      message: `Send ${cryptoAmount.toFixed(6)} ${cryptoData!.currency.toUpperCase()} to payment address`
+      message: `Send ${cryptoAmount.toFixed(6)} ${cryptoData!.currency.toUpperCase()} to payment address`,
     }
   }
 
@@ -495,30 +562,33 @@ class PaymentService {
   }
 
   private async saveTransaction(transaction: PaymentTransaction): Promise<void> {
-    const transactions = await window.spark.kv.get<PaymentTransaction[]>('payment-transactions') || []
+    const transactions =
+      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
     const existingIndex = transactions.findIndex(t => t.id === transaction.id)
-    
+
     if (existingIndex >= 0) {
       transactions[existingIndex] = transaction
     } else {
       transactions.push(transaction)
     }
-    
+
     await window.spark.kv.set('payment-transactions', transactions)
   }
 
   async getTransaction(transactionId: string): Promise<PaymentTransaction | undefined> {
-    const transactions = await window.spark.kv.get<PaymentTransaction[]>('payment-transactions') || []
+    const transactions =
+      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
     return transactions.find(t => t.id === transactionId)
   }
 
   async getTransactionsByOrder(orderId: string): Promise<PaymentTransaction[]> {
-    const transactions = await window.spark.kv.get<PaymentTransaction[]>('payment-transactions') || []
+    const transactions =
+      (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
     return transactions.filter(t => t.orderId === orderId)
   }
 
   async getAllTransactions(): Promise<PaymentTransaction[]> {
-    return await window.spark.kv.get<PaymentTransaction[]>('payment-transactions') || []
+    return (await window.spark.kv.get<PaymentTransaction[]>('payment-transactions')) || []
   }
 
   private generateTransactionId(): string {
@@ -536,8 +606,8 @@ class PaymentService {
     this.testMode = testMode
   }
 
-  async getSettings(): Promise<{ apiKey: string, testMode: boolean }> {
-    return await window.spark.kv.get('payment-settings') || { apiKey: '', testMode: true }
+  async getSettings(): Promise<{ apiKey: string; testMode: boolean }> {
+    return (await window.spark.kv.get('payment-settings')) || { apiKey: '', testMode: true }
   }
 }
 
@@ -552,6 +622,6 @@ export function usePaymentService() {
     getTransactionsByOrder: paymentService.getTransactionsByOrder.bind(paymentService),
     getAllTransactions: paymentService.getAllTransactions.bind(paymentService),
     updateSettings: paymentService.updateSettings.bind(paymentService),
-    getSettings: paymentService.getSettings.bind(paymentService)
+    getSettings: paymentService.getSettings.bind(paymentService),
   }
 }

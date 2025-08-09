@@ -22,11 +22,11 @@ export function FloatingCart({ onClick, className = '' }: FloatingCartProps) {
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+          transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Card 
+          <Card
             className="bg-primary text-primary-foreground shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-primary-foreground/20"
             onClick={onClick}
           >
@@ -34,8 +34,8 @@ export function FloatingCart({ onClick, className = '' }: FloatingCartProps) {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <ShoppingCart size={24} />
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 text-xs flex items-center justify-center"
                   >
                     {getTotalItems()}
@@ -45,9 +45,7 @@ export function FloatingCart({ onClick, className = '' }: FloatingCartProps) {
                   <p className="font-semibold text-sm">
                     {getTotalItems()} {language === 'uk' ? 'товарів' : 'items'}
                   </p>
-                  <p className="text-xs opacity-90">
-                    {getTotalPrice()} UAH
-                  </p>
+                  <p className="text-xs opacity-90">{getTotalPrice()} UAH</p>
                 </div>
               </div>
             </CardContent>

@@ -1,5 +1,15 @@
 import { motion } from 'framer-motion'
-import { Leaf, Medal, Users, Heart, ShoppingCart, Images, BookOpen, ArrowRight, CookingPot } from '@phosphor-icons/react'
+import {
+  Leaf,
+  Medal,
+  Users,
+  Heart,
+  ShoppingCart,
+  Images,
+  BookOpen,
+  ArrowRight,
+  CookingPot,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,26 +26,26 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
       icon: Medal,
       number: '5+',
       label_uk: 'років досвіду',
-      label_en: 'years experience'
+      label_en: 'years experience',
     },
     {
       icon: Leaf,
       number: '100%',
       label_uk: 'екологічно чисто',
-      label_en: 'eco-friendly'
+      label_en: 'eco-friendly',
     },
     {
       icon: Users,
       number: '500+',
       label_uk: 'задоволених клієнтів',
-      label_en: 'happy customers'
+      label_en: 'happy customers',
     },
     {
       icon: Heart,
       number: '24/7',
       label_uk: 'турбота про якість',
-      label_en: 'quality care'
-    }
+      label_en: 'quality care',
+    },
   ]
 
   const features = [
@@ -44,29 +54,29 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
       title_uk: 'Екологічне вирощування',
       title_en: 'Eco-friendly Growing',
       description_uk: 'Використовуємо лише природні методи без хімікатів та антибіотиків',
-      description_en: 'Using only natural methods without chemicals and antibiotics'
+      description_en: 'Using only natural methods without chemicals and antibiotics',
     },
     {
       icon: '🔬',
       title_uk: 'Сучасні технології',
       title_en: 'Modern Technologies',
       description_uk: 'Автоматизовані системи контролю якості води та температури',
-      description_en: 'Automated water quality and temperature control systems'
+      description_en: 'Automated water quality and temperature control systems',
     },
     {
       icon: '🚚',
       title_uk: 'Швидка доставка',
       title_en: 'Fast Delivery',
       description_uk: 'Доставляємо свіжу продукцію протягом 24 годин після вилову',
-      description_en: 'Delivering fresh products within 24 hours of harvest'
+      description_en: 'Delivering fresh products within 24 hours of harvest',
     },
     {
       icon: '👨‍🍳',
       title_uk: 'Для професіоналів',
       title_en: 'For Professionals',
       description_uk: 'Співпрацюємо з ресторанами та готельними комплексами',
-      description_en: 'Working with restaurants and hotel complexes'
-    }
+      description_en: 'Working with restaurants and hotel complexes',
+    },
   ]
 
   return (
@@ -105,9 +115,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
               <Card className="p-6 border-2 hover:border-primary/30 transition-colors duration-300">
                 <CardContent className="p-0">
                   <stat.icon size={48} className="text-primary mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-foreground mb-2">
-                    {stat.number}
-                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-2">{stat.number}</div>
                   <p className="text-sm text-muted-foreground font-medium">
                     {language === 'uk' ? stat.label_uk : stat.label_en}
                   </p>
@@ -122,12 +130,17 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
           {features.map((feature, index) => {
             // Map feature to navigation sections
             const getFeatureNavigation = (featureIndex: number) => {
-              switch(featureIndex) {
-                case 0: return 'eco-farming'
-                case 1: return 'technology'
-                case 2: return 'delivery'
-                case 3: return 'professional'
-                default: return 'about'
+              switch (featureIndex) {
+                case 0:
+                  return 'eco-farming'
+                case 1:
+                  return 'technology'
+                case 2:
+                  return 'delivery'
+                case 3:
+                  return 'professional'
+                default:
+                  return 'about'
               }
             }
 
@@ -139,7 +152,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card 
+                <Card
                   className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary/50"
                   onClick={() => onNavigate?.(getFeatureNavigation(index))}
                 >
@@ -154,7 +167,8 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
                       {language === 'uk' ? feature.description_uk : feature.description_en}
                     </p>
                     <div className="flex items-center text-primary text-sm font-medium group-hover:text-primary-foreground group-hover:bg-primary px-3 py-1 rounded-full transition-all duration-300 w-fit">
-                      {language === 'uk' ? 'Дізнатися більше' : 'Learn more'} <ArrowRight size={16} className="ml-1" />
+                      {language === 'uk' ? 'Дізнатися більше' : 'Learn more'}{' '}
+                      <ArrowRight size={16} className="ml-1" />
                     </div>
                   </CardContent>
                 </Card>
@@ -171,61 +185,108 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('products')}
+          >
             <CardContent className="p-6 text-center">
-              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <ShoppingCart
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-lg font-semibold mb-2">
                 {language === 'uk' ? 'Наша продукція' : 'Our Products'}
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
-                {language === 'uk' ? 'Перегляньте каталог свіжих креветок' : 'Browse our fresh prawn catalog'}
+                {language === 'uk'
+                  ? 'Перегляньте каталог свіжих креветок'
+                  : 'Browse our fresh prawn catalog'}
               </p>
-              <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
                 {language === 'uk' ? 'Дивитися' : 'View'} <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('feeding')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('feeding')}
+          >
             <CardContent className="p-6 text-center">
-              <CookingPot size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <CookingPot
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-lg font-semibold mb-2">
                 {language === 'uk' ? 'Симулятор годування' : 'Feeding Simulator'}
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
-                {language === 'uk' ? 'Спробуйте віртуально годувати креветок' : 'Try feeding prawns virtually'}
+                {language === 'uk'
+                  ? 'Спробуйте віртуально годувати креветок'
+                  : 'Try feeding prawns virtually'}
               </p>
-              <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
                 {language === 'uk' ? 'Грати' : 'Play'} <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('gallery')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('gallery')}
+          >
             <CardContent className="p-6 text-center">
-              <Images size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <Images
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-lg font-semibold mb-2">
                 {language === 'uk' ? 'Галерея ферми' : 'Farm Gallery'}
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
-                {language === 'uk' ? 'Подивіться на нашу ферму та процеси' : 'See our farm and processes'}
+                {language === 'uk'
+                  ? 'Подивіться на нашу ферму та процеси'
+                  : 'See our farm and processes'}
               </p>
-              <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Переглянути' : 'Browse'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Переглянути' : 'Browse'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('recipes')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('recipes')}
+          >
             <CardContent className="p-6 text-center">
-              <BookOpen size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <BookOpen
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-lg font-semibold mb-2">
                 {language === 'uk' ? 'Рецепти та поради' : 'Recipes & Tips'}
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
                 {language === 'uk' ? 'Дізнайтеся як готувати креветки' : 'Learn how to cook prawns'}
               </p>
-              <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
                 {language === 'uk' ? 'Читати' : 'Read'} <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
@@ -245,10 +306,9 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
               {language === 'uk' ? 'Наша історія' : 'Our Story'}
             </h3>
             <p className="text-lg leading-relaxed mb-8 opacity-90">
-              {language === 'uk' 
-                ? 'Ми почали свою діяльність у 2018 році з мрією створити найякісніші умови для вирощування малайзійських креветок в Україні. Наша сім\'я завжди мала пристрасть до аквакультури, і ми вирішили поєднати традиційні методи з сучасними технологіями. Сьогодні наша ферма є прикладом сталого розвитку та якості в галузі.'
-                : 'We started our business in 2018 with a dream to create the highest quality conditions for growing Malaysian prawns in Ukraine. Our family has always had a passion for aquaculture, and we decided to combine traditional methods with modern technology. Today our farm is an example of sustainable development and quality in the industry.'
-              }
+              {language === 'uk'
+                ? "Ми почали свою діяльність у 2018 році з мрією створити найякісніші умови для вирощування малайзійських креветок в Україні. Наша сім'я завжди мала пристрасть до аквакультури, і ми вирішили поєднати традиційні методи з сучасними технологіями. Сьогодні наша ферма є прикладом сталого розвитку та якості в галузі."
+                : 'We started our business in 2018 with a dream to create the highest quality conditions for growing Malaysian prawns in Ukraine. Our family has always had a passion for aquaculture, and we decided to combine traditional methods with modern technology. Today our farm is an example of sustainable development and quality in the industry.'}
             </p>
             <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-8">
               <div className="text-center">
@@ -259,7 +319,9 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
                   {language === 'uk' ? 'Михайло Петренко' : 'Mykhailo Petrenko'}
                 </p>
                 <p className="text-sm opacity-80">
-                  {language === 'uk' ? 'Засновник та головний спеціаліст' : 'Founder and Chief Specialist'}
+                  {language === 'uk'
+                    ? 'Засновник та головний спеціаліст'
+                    : 'Founder and Chief Specialist'}
                 </p>
               </div>
               <div className="text-center">
@@ -274,7 +336,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
                 </p>
               </div>
             </div>
-            
+
             {/* Contact CTA */}
             {onNavigate && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -283,7 +345,7 @@ export function AboutSection({ onNavigate }: AboutSectionProps) {
                   className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-6 py-3"
                   onClick={() => onNavigate('contact')}
                 >
-                  {language === 'uk' ? 'Зв\'язатися з нами' : 'Contact Us'}
+                  {language === 'uk' ? "Зв'язатися з нами" : 'Contact Us'}
                 </Button>
                 <Button
                   variant="outline"

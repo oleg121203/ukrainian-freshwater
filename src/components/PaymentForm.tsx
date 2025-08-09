@@ -1,21 +1,27 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  CreditCard, 
-  Smartphone, 
-  Building, 
-  CheckCircle, 
+import {
+  CreditCard,
+  DeviceMobile,
+  Building,
+  CheckCircle,
   Shield,
   Lock,
-  AlertCircle,
-  ArrowRight
+  Warning,
+  ArrowRight,
 } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -30,7 +36,21 @@ interface PaymentFormProps {
 }
 
 interface PaymentData {
-  method: 'card' | 'apple_pay' | 'google_pay' | 'privat24' | 'monobank' | 'oschadbank' | 'ukrgasbank' | 'ibox' | 'paypal' | 'skrill' | 'webmoney' | 'qiwi' | 'crypto' | 'bank_transfer'
+  method:
+    | 'card'
+    | 'apple_pay'
+    | 'google_pay'
+    | 'privat24'
+    | 'monobank'
+    | 'oschadbank'
+    | 'ukrgasbank'
+    | 'ibox'
+    | 'paypal'
+    | 'skrill'
+    | 'webmoney'
+    | 'qiwi'
+    | 'crypto'
+    | 'bank_transfer'
   cardData?: {
     number: string
     expiry: string
@@ -58,14 +78,19 @@ interface PaymentData {
   }
 }
 
-export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting }: PaymentFormProps) {
+export function PaymentForm({
+  totalAmount,
+  onPaymentSubmit,
+  onBack,
+  isSubmitting,
+}: PaymentFormProps) {
   const { language, t } = useLanguage()
   const [paymentMethod, setPaymentMethod] = useState<string>('card')
   const [cardData, setCardData] = useState({
     number: '',
     expiry: '',
     cvv: '',
-    name: ''
+    name: '',
   })
   const [bankPhone, setBankPhone] = useState('')
   const [walletEmail, setWalletEmail] = useState('')
@@ -77,7 +102,7 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
     bankName: '',
     accountNumber: '',
     recipientName: '',
-    purpose: ''
+    purpose: '',
   })
   const [agreeToTerms, setAgreeToTerms] = useState(false)
 
@@ -88,108 +113,108 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
       icon: CreditCard,
       description: language === 'uk' ? 'Visa, Mastercard, Мир' : 'Visa, Mastercard, Мир',
       fee: '0%',
-      popular: true
+      popular: true,
     },
     {
       id: 'apple_pay',
       name: 'Apple Pay',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'Швидка оплата через Apple' : 'Quick Apple payment',
       fee: '0%',
-      available: /iPad|iPhone|iPod/.test(navigator.userAgent)
+      available: /iPad|iPhone|iPod/.test(navigator.userAgent),
     },
     {
       id: 'google_pay',
       name: 'Google Pay',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'Швидка оплата через Google' : 'Quick Google payment',
       fee: '0%',
-      available: true
+      available: true,
     },
     {
       id: 'privat24',
       name: 'Приват24',
       icon: Building,
       description: language === 'uk' ? 'Оплата через Приват24' : 'PrivatBank payment',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'monobank',
       name: 'Monobank',
       icon: Building,
       description: language === 'uk' ? 'Оплата через Monobank' : 'Monobank payment',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'oschadbank',
       name: 'Ощадбанк',
       icon: Building,
       description: language === 'uk' ? 'Оплата через Ощадбанк 24/7' : 'Oschadbank 24/7 payment',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'ukrgasbank',
       name: 'УкрГазБанк',
       icon: Building,
       description: language === 'uk' ? 'Мобільний банкінг УкрГазБанк' : 'UkrGasBank mobile banking',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'ibox',
       name: 'iBox Bank',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'Мобільний банк iBox' : 'iBox mobile banking',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'paypal',
       name: 'PayPal',
       icon: Building,
       description: language === 'uk' ? 'Міжнародна система оплати' : 'International payment system',
-      fee: '2.9%'
+      fee: '2.9%',
     },
     {
       id: 'skrill',
       name: 'Skrill',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'Цифровий гаманець Skrill' : 'Skrill digital wallet',
-      fee: '1.9%'
+      fee: '1.9%',
     },
     {
       id: 'webmoney',
       name: 'WebMoney',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'Електронний гаманець' : 'Electronic wallet',
-      fee: '0.8%'
+      fee: '0.8%',
     },
     {
       id: 'qiwi',
       name: 'QIWI',
-      icon: Smartphone,
+      icon: DeviceMobile,
       description: language === 'uk' ? 'QIWI гаманець' : 'QIWI wallet',
-      fee: '1.6%'
+      fee: '1.6%',
     },
     {
       id: 'bank_transfer',
       name: language === 'uk' ? 'Банківський переказ' : 'Bank Transfer',
       icon: Building,
       description: language === 'uk' ? 'Прямий переказ на рахунок' : 'Direct bank account transfer',
-      fee: '0%'
+      fee: '0%',
     },
     {
       id: 'crypto',
       name: language === 'uk' ? 'Криптовалюта' : 'Cryptocurrency',
       icon: Shield,
       description: 'Bitcoin, Ethereum, USDT',
-      fee: '1%'
-    }
+      fee: '1%',
+    },
   ]
 
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
     const matches = v.match(/\d{4,16}/g)
-    const match = matches && matches[0] || ''
-    const parts = []
+    const match = (matches && matches[0]) || ''
+    const parts: string[] = []
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4))
     }
@@ -210,33 +235,37 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
 
   const validateCardData = () => {
     const { number, expiry, cvv, name } = cardData
-    
+
     if (!number || number.replace(/\s/g, '').length < 13) {
-      toast.error(language === 'uk' ? 'Введіть коректний номер картки' : 'Enter a valid card number')
+      toast.error(
+        language === 'uk' ? 'Введіть коректний номер картки' : 'Enter a valid card number'
+      )
       return false
     }
-    
+
     if (!expiry || expiry.length !== 5) {
       toast.error(language === 'uk' ? 'Введіть коректну дату дії' : 'Enter a valid expiry date')
       return false
     }
-    
+
     if (!cvv || cvv.length < 3) {
       toast.error(language === 'uk' ? 'Введіть коректний CVV код' : 'Enter a valid CVV code')
       return false
     }
-    
+
     if (!name.trim()) {
-      toast.error(language === 'uk' ? 'Введіть ім\'я власника картки' : 'Enter cardholder name')
+      toast.error(language === 'uk' ? "Введіть ім'я власника картки" : 'Enter cardholder name')
       return false
     }
-    
+
     return true
   }
 
   const validateBankPayment = () => {
     if (!bankPhone || !/^\+?[\d\s\-\(\)]+$/.test(bankPhone)) {
-      toast.error(language === 'uk' ? 'Введіть коректний номер телефону' : 'Enter a valid phone number')
+      toast.error(
+        language === 'uk' ? 'Введіть коректний номер телефону' : 'Enter a valid phone number'
+      )
       return false
     }
     return true
@@ -245,7 +274,9 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
   const validateWalletPayment = () => {
     if (paymentMethod === 'paypal' || paymentMethod === 'skrill') {
       if (!walletEmail || !/\S+@\S+\.\S+/.test(walletEmail)) {
-        toast.error(language === 'uk' ? 'Введіть коректну електронну адресу' : 'Enter a valid email address')
+        toast.error(
+          language === 'uk' ? 'Введіть коректну електронну адресу' : 'Enter a valid email address'
+        )
         return false
       }
     } else if (paymentMethod === 'webmoney') {
@@ -264,33 +295,35 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
 
   const validateBankTransfer = () => {
     const { bankName, accountNumber, recipientName, purpose } = bankTransferData
-    
+
     if (!bankName.trim()) {
       toast.error(language === 'uk' ? 'Оберіть банк' : 'Select bank')
       return false
     }
-    
+
     if (!accountNumber.trim()) {
       toast.error(language === 'uk' ? 'Введіть номер рахунку' : 'Enter account number')
       return false
     }
-    
+
     if (!recipientName.trim()) {
-      toast.error(language === 'uk' ? 'Введіть ім\'я отримувача' : 'Enter recipient name')
+      toast.error(language === 'uk' ? "Введіть ім'я отримувача" : 'Enter recipient name')
       return false
     }
-    
+
     if (!purpose.trim()) {
       toast.error(language === 'uk' ? 'Введіть призначення платежу' : 'Enter payment purpose')
       return false
     }
-    
+
     return true
   }
 
   const validateCryptoPayment = () => {
     if (!cryptoWallet.trim()) {
-      toast.error(language === 'uk' ? 'Введіть адресу криптогаманця' : 'Enter crypto wallet address')
+      toast.error(
+        language === 'uk' ? 'Введіть адресу криптогаманця' : 'Enter crypto wallet address'
+      )
       return false
     }
     return true
@@ -298,11 +331,13 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
 
   const handleSubmit = async () => {
     if (!agreeToTerms) {
-      toast.error(language === 'uk' ? 'Прийміть умови користування' : 'Please accept the terms and conditions')
+      toast.error(
+        language === 'uk' ? 'Прийміть умови користування' : 'Please accept the terms and conditions'
+      )
       return
     }
 
-    let paymentData: PaymentData = { method: paymentMethod as any }
+    const paymentData: PaymentData = { method: paymentMethod as any }
 
     // Validate based on payment method
     switch (paymentMethod) {
@@ -323,10 +358,10 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
       case 'webmoney':
       case 'qiwi':
         if (!validateWalletPayment()) return
-        paymentData.walletData = { 
-          email: walletEmail, 
-          walletId: walletId, 
-          phone: walletPhone 
+        paymentData.walletData = {
+          email: walletEmail,
+          walletId: walletId,
+          phone: walletPhone,
         }
         break
       case 'bank_transfer':
@@ -349,7 +384,7 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
   const calculateFinalAmount = () => {
     const method = paymentMethods.find(m => m.id === paymentMethod)
     if (!method || method.fee === '0%') return totalAmount
-    
+
     const feePercentage = parseFloat(method.fee.replace('%', ''))
     const feeAmount = totalAmount * (feePercentage / 100)
     return totalAmount + feeAmount
@@ -364,10 +399,9 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
       <Alert className="border-green-200 bg-green-50">
         <Shield className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-800">
-          {language === 'uk' 
+          {language === 'uk'
             ? '🔒 Всі платежі захищені SSL-шифруванням та відповідають стандартам PCI DSS'
-            : '🔒 All payments are secured with SSL encryption and PCI DSS compliant'
-          }
+            : '🔒 All payments are secured with SSL encryption and PCI DSS compliant'}
         </AlertDescription>
       </Alert>
 
@@ -381,7 +415,7 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
         </CardHeader>
         <CardContent>
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-            {paymentMethods.map((method) => (
+            {paymentMethods.map(method => (
               <div key={method.id} className="relative">
                 <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer">
                   <RadioGroupItem value={method.id} id={method.id} />
@@ -403,10 +437,11 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          {method.fee === '0%' 
-                            ? (language === 'uk' ? 'Без комісії' : 'No fee')
-                            : `${language === 'uk' ? 'Комісія' : 'Fee'} ${method.fee}`
-                          }
+                          {method.fee === '0%'
+                            ? language === 'uk'
+                              ? 'Без комісії'
+                              : 'No fee'
+                            : `${language === 'uk' ? 'Комісія' : 'Fee'} ${method.fee}`}
                         </p>
                       </div>
                     </div>
@@ -439,26 +474,28 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="cardNumber"
                 value={cardData.number}
-                onChange={(e) => setCardData(prev => ({
-                  ...prev, 
-                  number: formatCardNumber(e.target.value)
-                }))}
+                onChange={e =>
+                  setCardData(prev => ({
+                    ...prev,
+                    number: formatCardNumber(e.target.value),
+                  }))
+                }
                 placeholder="1234 5678 9012 3456"
                 maxLength={19}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="expiry">
-                  {language === 'uk' ? 'Дата дії' : 'Expiry Date'} *
-                </Label>
+                <Label htmlFor="expiry">{language === 'uk' ? 'Дата дії' : 'Expiry Date'} *</Label>
                 <Input
                   id="expiry"
                   value={cardData.expiry}
-                  onChange={(e) => setCardData(prev => ({
-                    ...prev, 
-                    expiry: formatExpiry(e.target.value)
-                  }))}
+                  onChange={e =>
+                    setCardData(prev => ({
+                      ...prev,
+                      expiry: formatExpiry(e.target.value),
+                    }))
+                  }
                   placeholder="MM/YY"
                   maxLength={5}
                 />
@@ -468,10 +505,12 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                 <Input
                   id="cvv"
                   value={cardData.cvv}
-                  onChange={(e) => setCardData(prev => ({
-                    ...prev, 
-                    cvv: e.target.value.replace(/\D/g, '')
-                  }))}
+                  onChange={e =>
+                    setCardData(prev => ({
+                      ...prev,
+                      cvv: e.target.value.replace(/\D/g, ''),
+                    }))
+                  }
                   placeholder="123"
                   maxLength={4}
                   type="password"
@@ -480,15 +519,17 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
             </div>
             <div>
               <Label htmlFor="cardName">
-                {language === 'uk' ? 'Ім\'я власника картки' : 'Cardholder Name'} *
+                {language === 'uk' ? "Ім'я власника картки" : 'Cardholder Name'} *
               </Label>
               <Input
                 id="cardName"
                 value={cardData.name}
-                onChange={(e) => setCardData(prev => ({
-                  ...prev, 
-                  name: e.target.value
-                }))}
+                onChange={e =>
+                  setCardData(prev => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
                 placeholder="JOHN DOE"
                 style={{ textTransform: 'uppercase' }}
               />
@@ -497,7 +538,11 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
         </Card>
       )}
 
-      {(paymentMethod === 'privat24' || paymentMethod === 'monobank' || paymentMethod === 'oschadbank' || paymentMethod === 'ukrgasbank' || paymentMethod === 'ibox') && (
+      {(paymentMethod === 'privat24' ||
+        paymentMethod === 'monobank' ||
+        paymentMethod === 'oschadbank' ||
+        paymentMethod === 'ukrgasbank' ||
+        paymentMethod === 'ibox') && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -516,14 +561,13 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="bankPhone"
                 value={bankPhone}
-                onChange={(e) => setBankPhone(e.target.value)}
+                onChange={e => setBankPhone(e.target.value)}
                 placeholder="+380 XX XXX XX XX"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                {language === 'uk' 
-                  ? 'Номер телефону, прив\'язаний до мобільного банку'
-                  : 'Phone number linked to mobile banking'
-                }
+                {language === 'uk'
+                  ? "Номер телефону, прив'язаний до мобільного банку"
+                  : 'Phone number linked to mobile banking'}
               </p>
             </div>
           </CardContent>
@@ -544,7 +588,7 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                 id="paypalEmail"
                 type="email"
                 value={walletEmail}
-                onChange={(e) => setWalletEmail(e.target.value)}
+                onChange={e => setWalletEmail(e.target.value)}
                 placeholder="your@paypal.com"
               />
             </div>
@@ -566,14 +610,13 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                 id="skrillEmail"
                 type="email"
                 value={walletEmail}
-                onChange={(e) => setWalletEmail(e.target.value)}
+                onChange={e => setWalletEmail(e.target.value)}
                 placeholder="your@skrill.com"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Email адреса вашого Skrill аккаунту'
-                  : 'Email address of your Skrill account'
-                }
+                  : 'Email address of your Skrill account'}
               </p>
             </div>
           </CardContent>
@@ -593,14 +636,13 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="webmoneyId"
                 value={walletId}
-                onChange={(e) => setWalletId(e.target.value)}
+                onChange={e => setWalletId(e.target.value)}
                 placeholder="123456789012"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                {language === 'uk' 
+                {language === 'uk'
                   ? '12-значний номер вашого WebMoney гаманця'
-                  : '12-digit WebMoney wallet identifier'
-                }
+                  : '12-digit WebMoney wallet identifier'}
               </p>
             </div>
           </CardContent>
@@ -620,14 +662,11 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="qiwiPhone"
                 value={walletPhone}
-                onChange={(e) => setWalletPhone(e.target.value)}
+                onChange={e => setWalletPhone(e.target.value)}
                 placeholder="+7 XXX XXX XX XX"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                {language === 'uk' 
-                  ? 'Номер телефону QIWI гаманця'
-                  : 'QIWI wallet phone number'
-                }
+                {language === 'uk' ? 'Номер телефону QIWI гаманця' : 'QIWI wallet phone number'}
               </p>
             </div>
           </CardContent>
@@ -641,12 +680,10 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="bankName">
-                {language === 'uk' ? 'Назва банку' : 'Bank Name'} *
-              </Label>
-              <Select 
-                value={bankTransferData.bankName} 
-                onValueChange={(value) => setBankTransferData(prev => ({...prev, bankName: value}))}
+              <Label htmlFor="bankName">{language === 'uk' ? 'Назва банку' : 'Bank Name'} *</Label>
+              <Select
+                value={bankTransferData.bankName}
+                onValueChange={value => setBankTransferData(prev => ({ ...prev, bankName: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={language === 'uk' ? 'Оберіть банк' : 'Select bank'} />
@@ -659,7 +696,9 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
                   <SelectItem value="ukrsibbank">УкрСібБанк</SelectItem>
                   <SelectItem value="raiffeisen">Райффайзен Банк</SelectItem>
                   <SelectItem value="ukrsots">УКРСОЦБАНК</SelectItem>
-                  <SelectItem value="other">{language === 'uk' ? 'Інший банк' : 'Other bank'}</SelectItem>
+                  <SelectItem value="other">
+                    {language === 'uk' ? 'Інший банк' : 'Other bank'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -670,19 +709,23 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="accountNumber"
                 value={bankTransferData.accountNumber}
-                onChange={(e) => setBankTransferData(prev => ({...prev, accountNumber: e.target.value}))}
+                onChange={e =>
+                  setBankTransferData(prev => ({ ...prev, accountNumber: e.target.value }))
+                }
                 placeholder="UA123456789012345678901234567"
               />
             </div>
             <div>
               <Label htmlFor="recipientName">
-                {language === 'uk' ? 'Ім\'я отримувача' : 'Recipient Name'} *
+                {language === 'uk' ? "Ім'я отримувача" : 'Recipient Name'} *
               </Label>
               <Input
                 id="recipientName"
                 value={bankTransferData.recipientName}
-                onChange={(e) => setBankTransferData(prev => ({...prev, recipientName: e.target.value}))}
-                placeholder={language === 'uk' ? 'Повне ім\'я отримувача' : 'Full recipient name'}
+                onChange={e =>
+                  setBankTransferData(prev => ({ ...prev, recipientName: e.target.value }))
+                }
+                placeholder={language === 'uk' ? "Повне ім'я отримувача" : 'Full recipient name'}
               />
             </div>
             <div>
@@ -692,8 +735,12 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="purpose"
                 value={bankTransferData.purpose}
-                onChange={(e) => setBankTransferData(prev => ({...prev, purpose: e.target.value}))}
-                placeholder={language === 'uk' ? 'Оплата за продукцію AquaFarm' : 'Payment for AquaFarm products'}
+                onChange={e => setBankTransferData(prev => ({ ...prev, purpose: e.target.value }))}
+                placeholder={
+                  language === 'uk'
+                    ? 'Оплата за продукцію AquaFarm'
+                    : 'Payment for AquaFarm products'
+                }
               />
             </div>
           </CardContent>
@@ -707,10 +754,11 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="cryptoCurrency">
-                {language === 'uk' ? 'Валюта' : 'Currency'} *
-              </Label>
-              <Select value={cryptoCurrency} onValueChange={(value: any) => setCryptoCurrency(value)}>
+              <Label htmlFor="cryptoCurrency">{language === 'uk' ? 'Валюта' : 'Currency'} *</Label>
+              <Select
+                value={cryptoCurrency}
+                onValueChange={(value: any) => setCryptoCurrency(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -728,7 +776,7 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
               <Input
                 id="cryptoWallet"
                 value={cryptoWallet}
-                onChange={(e) => setCryptoWallet(e.target.value)}
+                onChange={e => setCryptoWallet(e.target.value)}
                 placeholder="0x..."
               />
             </div>
@@ -743,12 +791,11 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
           </CardHeader>
           <CardContent>
             <div className="text-center py-8">
-              <Smartphone size={48} className="mx-auto mb-4 text-primary" />
+              <DeviceMobile size={48} className="mx-auto mb-4 text-primary" />
               <p className="text-muted-foreground">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Натисніть "Оплатити" щоб продовжити через ваш пристрій'
-                  : 'Click "Pay Now" to continue through your device'
-                }
+                  : 'Click "Pay Now" to continue through your device'}
               </p>
             </div>
           </CardContent>
@@ -785,14 +832,13 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
           type="checkbox"
           id="terms"
           checked={agreeToTerms}
-          onChange={(e) => setAgreeToTerms(e.target.checked)}
+          onChange={e => setAgreeToTerms(e.target.checked)}
           className="mt-1"
         />
         <Label htmlFor="terms" className="text-sm cursor-pointer">
-          {language === 'uk' 
+          {language === 'uk'
             ? 'Я погоджуюся з умовами використання та політикою конфіденційності'
-            : 'I agree to the terms of service and privacy policy'
-          }
+            : 'I agree to the terms of service and privacy policy'}
         </Label>
       </div>
 
@@ -801,24 +847,27 @@ export function PaymentForm({ totalAmount, onPaymentSubmit, onBack, isSubmitting
         <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           {language === 'uk' ? 'Назад' : 'Back'}
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           disabled={isSubmitting || !agreeToTerms}
           className="relative"
         >
           {isSubmitting ? (
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
             />
           ) : (
             <Lock size={16} className="mr-2" />
           )}
-          {isSubmitting 
-            ? (language === 'uk' ? 'Обробка...' : 'Processing...')
-            : (language === 'uk' ? 'Оплатити' : 'Pay Now')
-          }
+          {isSubmitting
+            ? language === 'uk'
+              ? 'Обробка...'
+              : 'Processing...'
+            : language === 'uk'
+              ? 'Оплатити'
+              : 'Pay Now'}
           {!isSubmitting && <ArrowRight size={16} className="ml-2" />}
         </Button>
       </div>

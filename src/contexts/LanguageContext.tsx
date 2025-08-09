@@ -19,13 +19,13 @@ const translations = {
     'nav.recipes': 'Рецепти',
     'nav.reviews': 'Відгуки',
     'nav.contact': 'Контакти',
-    
+
     // Hero section
     'hero.title': 'Свіжі креветки Macrobrachium rosenbergii',
     'hero.subtitle': 'Вирощуємо найякісніші річкові креветки в екологічно чистих умовах',
     'hero.cta': 'Переглянути продукцію',
     'hero.learn-more': 'Дізнатися більше',
-    
+
     // Products
     'products.title': 'Наша продукція',
     'products.fresh': 'Свіжі креветки',
@@ -33,24 +33,25 @@ const translations = {
     'products.live': 'Живі креветки',
     'products.per-kg': 'за кг',
     'products.add-to-cart': 'Додати в кошик',
-    
+
     // About
     'about.title': 'Про наше господарство',
-    'about.description': 'Ми спеціалізуємося на вирощуванні малайзійських креветок Macrobrachium rosenbergii в екологічно чистих умовах. Наша ферма використовує найсучасніші технології для забезпечення найвищої якості продукції.',
-    
+    'about.description':
+      'Ми спеціалізуємося на вирощуванні малайзійських креветок Macrobrachium rosenbergii в екологічно чистих умовах. Наша ферма використовує найсучасніші технології для забезпечення найвищої якості продукції.',
+
     // Footer
     'footer.rights': 'Всі права захищені',
     'footer.phone': 'Телефон',
     'footer.email': 'Електронна пошта',
     'footer.address': 'Адреса',
-    
+
     // Cart
     'cart.title': 'Кошик',
     'cart.empty': 'Ваш кошик порожній',
     'cart.total': 'Загальна сума',
     'cart.checkout': 'Оформити замовлення',
     'cart.remove': 'Видалити',
-    
+
     // Common
     'common.loading': 'Завантаження...',
     'common.price': 'Ціна',
@@ -68,13 +69,13 @@ const translations = {
     'nav.recipes': 'Recipes',
     'nav.reviews': 'Reviews',
     'nav.contact': 'Contact',
-    
+
     // Hero section
     'hero.title': 'Fresh Macrobrachium rosenbergii Prawns',
     'hero.subtitle': 'Growing the finest freshwater prawns in eco-friendly conditions',
     'hero.cta': 'View Products',
     'hero.learn-more': 'Learn More',
-    
+
     // Products
     'products.title': 'Our Products',
     'products.fresh': 'Fresh Prawns',
@@ -82,41 +83,42 @@ const translations = {
     'products.live': 'Live Prawns',
     'products.per-kg': 'per kg',
     'products.add-to-cart': 'Add to Cart',
-    
+
     // About
     'about.title': 'About Our Farm',
-    'about.description': 'We specialize in growing Malaysian prawns Macrobrachium rosenbergii in eco-friendly conditions. Our farm uses cutting-edge technology to ensure the highest quality products.',
-    
+    'about.description':
+      'We specialize in growing Malaysian prawns Macrobrachium rosenbergii in eco-friendly conditions. Our farm uses cutting-edge technology to ensure the highest quality products.',
+
     // Footer
     'footer.rights': 'All rights reserved',
     'footer.phone': 'Phone',
     'footer.email': 'Email',
     'footer.address': 'Address',
-    
+
     // Cart
     'cart.title': 'Cart',
     'cart.empty': 'Your cart is empty',
     'cart.total': 'Total',
     'cart.checkout': 'Checkout',
     'cart.remove': 'Remove',
-    
+
     // Common
     'common.loading': 'Loading...',
     'common.price': 'Price',
     'common.quantity': 'Quantity',
     'common.save': 'Save',
     'common.cancel': 'Cancel',
-  }
+  },
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<'uk' | 'en'>('uk')
-  
+
   const t = (key: string): string => {
-    const translation = translations[language][key as keyof typeof translations['uk']]
+    const translation = translations[language][key as keyof (typeof translations)['uk']]
     return translation || key
   }
-  
+
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}

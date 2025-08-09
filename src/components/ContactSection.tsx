@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Clock, Send, ShoppingCart, Star, ArrowRight } from '@phosphor-icons/react'
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  ShoppingCart,
+  Star,
+  ArrowRight,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,7 +28,7 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
     name: '',
     email: '',
     phone: '',
-    message: ''
+    message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -29,29 +38,29 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
       title_uk: 'Телефон',
       title_en: 'Phone',
       value: '+380 67 123 45 67',
-      link: 'tel:+380671234567'
+      link: 'tel:+380671234567',
     },
     {
       icon: Mail,
       title_uk: 'Електронна пошта',
       title_en: 'Email',
       value: 'info@aquafarm.ua',
-      link: 'mailto:info@aquafarm.ua'
+      link: 'mailto:info@aquafarm.ua',
     },
     {
       icon: MapPin,
       title_uk: 'Адреса',
       title_en: 'Address',
       value: 'село Водяне, Київська область, Україна',
-      link: '#'
+      link: '#',
     },
     {
       icon: Clock,
       title_uk: 'Години роботи',
       title_en: 'Working Hours',
       value: 'Пн-Пт: 8:00-18:00, Сб: 9:00-15:00',
-      link: '#'
-    }
+      link: '#',
+    },
   ]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,8 +76,8 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
     await new Promise(resolve => setTimeout(resolve, 1000))
 
     toast.success(
-      language === 'uk' 
-        ? 'Повідомлення надіслано! Ми зв\'яжемося з вами найближчим часом.'
+      language === 'uk'
+        ? "Повідомлення надіслано! Ми зв'яжемося з вами найближчим часом."
         : 'Message sent! We will contact you soon.'
     )
 
@@ -82,22 +91,22 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
       name: 'Головна ферма',
       lat: 50.123,
       lng: 30.456,
-      status: 'active'
+      status: 'active',
     },
     {
       id: 2,
       name: 'Дослідний центр',
       lat: 50.234,
       lng: 30.567,
-      status: 'active'
+      status: 'active',
     },
     {
       id: 3,
       name: 'Центр обробки',
       lat: 50.345,
       lng: 30.678,
-      status: 'active'
-    }
+      status: 'active',
+    },
   ]
 
   return (
@@ -114,10 +123,9 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
             {t('nav.contact')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {language === 'uk' 
-              ? 'Зв\'яжіться з нами для замовлення або отримання додаткової інформації'
-              : 'Contact us to place an order or get additional information'
-            }
+            {language === 'uk'
+              ? "Зв'яжіться з нами для замовлення або отримання додаткової інформації"
+              : 'Contact us to place an order or get additional information'}
           </p>
         </motion.div>
 
@@ -133,11 +141,7 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
             {/* Contact Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {contactInfo.map((info, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.div key={index} whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                   <Card className="h-full hover:shadow-lg transition-shadow duration-300">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
@@ -175,10 +179,9 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
                       <MapPin size={48} className="mx-auto mb-4" />
                       <h3 className="text-xl font-semibold mb-2">AquaFarm</h3>
                       <p className="text-sm opacity-90">
-                        {language === 'uk' 
+                        {language === 'uk'
                           ? 'село Водяне, Київська область'
-                          : 'Vodiane village, Kyiv region'
-                        }
+                          : 'Vodiane village, Kyiv region'}
                       </p>
                     </div>
                   </div>
@@ -232,23 +235,19 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">
-                        {language === 'uk' ? 'Ім\'я' : 'Name'} *
-                      </Label>
+                      <Label htmlFor="name">{language === 'uk' ? "Ім'я" : 'Name'} *</Label>
                       <Input
                         id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        placeholder={language === 'uk' ? 'Ваше ім\'я' : 'Your name'}
+                        placeholder={language === 'uk' ? "Ваше ім'я" : 'Your name'}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">
-                        {language === 'uk' ? 'Телефон' : 'Phone'}
-                      </Label>
+                      <Label htmlFor="phone">{language === 'uk' ? 'Телефон' : 'Phone'}</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -287,18 +286,14 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
                       required
                       rows={5}
                       placeholder={
-                        language === 'uk' 
+                        language === 'uk'
                           ? 'Розкажіть про ваші потреби або задайте питання...'
                           : 'Tell us about your needs or ask a question...'
                       }
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
-                  >
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -325,37 +320,29 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
                   <div className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      {language === 'uk' 
-                        ? 'Мінімальне замовлення: 1 кг'
-                        : 'Minimum order: 1 kg'
-                      }
+                      {language === 'uk' ? 'Мінімальне замовлення: 1 кг' : 'Minimum order: 1 kg'}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      {language === 'uk' 
+                      {language === 'uk'
                         ? 'Безкоштовна доставка від 500 грн'
-                        : 'Free delivery from 500 UAH'
-                      }
+                        : 'Free delivery from 500 UAH'}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      {language === 'uk' 
+                      {language === 'uk'
                         ? 'Відповідаємо протягом 2 годин'
-                        : 'We respond within 2 hours'
-                      }
+                        : 'We respond within 2 hours'}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      {language === 'uk' 
-                        ? 'Можливість екскурсії по фермі'
-                        : 'Farm tour available'
-                      }
+                      {language === 'uk' ? 'Можливість екскурсії по фермі' : 'Farm tour available'}
                     </span>
                   </div>
                 </div>
@@ -372,38 +359,56 @@ export function ContactSection({ onNavigate }: ContactSectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('products')}
+          >
             <CardContent className="p-8 text-center">
-              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <ShoppingCart
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Зробити замовлення' : 'Place an Order'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Перегляньте наш каталог та оберіть свіжі креветки'
-                  : 'Browse our catalog and choose fresh prawns'
-                }
+                  : 'Browse our catalog and choose fresh prawns'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'До каталогу' : 'To Catalog'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'До каталогу' : 'To Catalog'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('reviews')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('reviews')}
+          >
             <CardContent className="p-8 text-center">
-              <Star size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <Star
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Відгуки клієнтів' : 'Customer Reviews'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Прочитайте що кажуть наші клієнти про якість продукції'
-                  : 'Read what our customers say about product quality'
-                }
+                  : 'Read what our customers say about product quality'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Читати відгуки' : 'Read Reviews'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Читати відгуки' : 'Read Reviews'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>

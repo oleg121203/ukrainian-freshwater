@@ -47,14 +47,12 @@ export const useShoppingCart = () => {
   const [orders, setOrders] = useKV<Order[]>('user-orders', [])
 
   const addToCart = (product: Product, quantity: number = 1) => {
-    setCart((currentCart) => {
+    setCart(currentCart => {
       const existingItem = currentCart.find(item => item.id === product.id)
-      
+
       if (existingItem) {
         return currentCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         )
       } else {
         return [...currentCart, { ...product, quantity }]
@@ -63,7 +61,7 @@ export const useShoppingCart = () => {
   }
 
   const removeFromCart = (productId: string) => {
-    setCart((currentCart) => currentCart.filter(item => item.id !== productId))
+    setCart(currentCart => currentCart.filter(item => item.id !== productId))
   }
 
   const updateQuantity = (productId: string, newQuantity: number) => {
@@ -72,10 +70,8 @@ export const useShoppingCart = () => {
       return
     }
 
-    setCart((currentCart) => 
-      currentCart.map(item =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
+    setCart(currentCart =>
+      currentCart.map(item => (item.id === productId ? { ...item, quantity: newQuantity } : item))
     )
   }
 
@@ -84,14 +80,18 @@ export const useShoppingCart = () => {
   }
 
   const getTotalPrice = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   }
 
   const getTotalItems = () => {
     return cart.reduce((sum, item) => sum + item.quantity, 0)
   }
 
-  const createOrder = (customerInfo: Order['customerInfo'], deliveryInfo: Order['deliveryInfo'], paymentMethod: string) => {
+  const createOrder = (
+    customerInfo: Order['customerInfo'],
+    deliveryInfo: Order['deliveryInfo'],
+    paymentMethod: string
+  ) => {
     const newOrder: Order = {
       id: `order-${Date.now()}`,
       items: [...cart],
@@ -101,12 +101,12 @@ export const useShoppingCart = () => {
       paymentMethod,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     }
 
-    setOrders((currentOrders) => [...currentOrders, newOrder])
+    setOrders(currentOrders => [...currentOrders, newOrder])
     clearCart()
-    
+
     return newOrder
   }
 
@@ -121,7 +121,7 @@ export const useShoppingCart = () => {
     getTotalItems,
     createOrder,
     setCart,
-    setOrders
+    setOrders,
   }
 }
 
@@ -138,7 +138,7 @@ export const SAMPLE_PRODUCTS: Product[] = [
     image: '🦐',
     category: 'fresh',
     weight: '1 kg',
-    inStock: true
+    inStock: true,
   },
   {
     id: 'frozen-prawns-500g',
@@ -151,7 +151,7 @@ export const SAMPLE_PRODUCTS: Product[] = [
     image: '🧊',
     category: 'frozen',
     weight: '500 g',
-    inStock: true
+    inStock: true,
   },
   {
     id: 'live-prawns-2kg',
@@ -164,7 +164,7 @@ export const SAMPLE_PRODUCTS: Product[] = [
     image: '🌊',
     category: 'live',
     weight: '2 kg',
-    inStock: true
+    inStock: true,
   },
   {
     id: 'premium-selection',
@@ -177,6 +177,6 @@ export const SAMPLE_PRODUCTS: Product[] = [
     image: '⭐',
     category: 'fresh',
     weight: '750 g',
-    inStock: false
-  }
+    inStock: false,
+  },
 ]

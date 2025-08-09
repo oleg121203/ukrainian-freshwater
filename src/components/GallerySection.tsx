@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight, ShoppingCart, BookOpen, ArrowRight } from '@phosphor-icons/react'
+import { X, CaretLeft, CaretRight, ShoppingCart, BookOpen, ArrowRight } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -33,7 +33,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Our Farm from Above',
       description_uk: 'Вид на наше господарство з дрона - чисті басейни та природне середовище',
       description_en: 'Drone view of our farm - clean pools and natural environment',
-      category: 'farm'
+      category: 'farm',
     },
     {
       id: '2',
@@ -42,7 +42,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Fresh Prawns',
       description_uk: 'Щойно виловлені креветки готові до упаковки',
       description_en: 'Freshly caught prawns ready for packaging',
-      category: 'product'
+      category: 'product',
     },
     {
       id: '3',
@@ -51,7 +51,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Water Quality Control',
       description_uk: 'Щоденна перевірка параметрів води в наших басейнах',
       description_en: 'Daily water parameter checks in our pools',
-      category: 'process'
+      category: 'process',
     },
     {
       id: '4',
@@ -60,7 +60,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Filtration System',
       description_uk: 'Сучасна система очищення води забезпечує ідеальні умови',
       description_en: 'Modern water purification system ensures perfect conditions',
-      category: 'farm'
+      category: 'farm',
     },
     {
       id: '5',
@@ -69,7 +69,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Sorting Process',
       description_uk: 'Ретельний відбір креветок за розміром та якістю',
       description_en: 'Careful selection of prawns by size and quality',
-      category: 'process'
+      category: 'process',
     },
     {
       id: '6',
@@ -78,7 +78,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Product Packaging',
       description_uk: 'Вакуумна упаковка для збереження свіжості',
       description_en: 'Vacuum packaging to maintain freshness',
-      category: 'product'
+      category: 'product',
     },
     {
       id: '7',
@@ -87,7 +87,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Prawn Juveniles',
       description_uk: 'Молоді креветки в спеціальних інкубаторах',
       description_en: 'Young prawns in special incubators',
-      category: 'process'
+      category: 'process',
     },
     {
       id: '8',
@@ -96,20 +96,21 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
       title_en: 'Final Product',
       description_uk: 'Красиво подані креветки готові до сервірування',
       description_en: 'Beautifully presented prawns ready to serve',
-      category: 'product'
-    }
+      category: 'product',
+    },
   ]
 
   const categories = [
     { key: 'all', label_uk: 'Всі фото', label_en: 'All Photos' },
     { key: 'farm', label_uk: 'Ферма', label_en: 'Farm' },
     { key: 'process', label_uk: 'Процес', label_en: 'Process' },
-    { key: 'product', label_uk: 'Продукція', label_en: 'Products' }
+    { key: 'product', label_uk: 'Продукція', label_en: 'Products' },
   ]
 
-  const filteredImages = selectedCategory === 'all' 
-    ? galleryImages 
-    : galleryImages.filter(img => img.category === selectedCategory)
+  const filteredImages =
+    selectedCategory === 'all'
+      ? galleryImages
+      : galleryImages.filter(img => img.category === selectedCategory)
 
   const openLightbox = (image: GalleryImage) => {
     setSelectedImage(image)
@@ -121,16 +122,16 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
 
   const navigateLightbox = (direction: 'prev' | 'next') => {
     if (!selectedImage) return
-    
+
     const currentIndex = filteredImages.findIndex(img => img.id === selectedImage.id)
     let newIndex
-    
+
     if (direction === 'next') {
       newIndex = (currentIndex + 1) % filteredImages.length
     } else {
       newIndex = currentIndex === 0 ? filteredImages.length - 1 : currentIndex - 1
     }
-    
+
     setSelectedImage(filteredImages[newIndex])
   }
 
@@ -148,10 +149,9 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
             {language === 'uk' ? 'Наша галерея' : 'Our Gallery'}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Подивіться, як ми вирощуємо найкращі креветки'
-              : 'See how we grow the best prawns'
-            }
+              : 'See how we grow the best prawns'}
           </p>
         </motion.div>
 
@@ -163,7 +163,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          {categories.map((category) => (
+          {categories.map(category => (
             <Button
               key={category.key}
               variant={selectedCategory === category.key ? 'default' : 'outline'}
@@ -176,7 +176,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
         </motion.div>
 
         {/* Gallery grid */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
           layout
         >
@@ -225,7 +225,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 {/* Close button */}
                 <Button
@@ -244,7 +244,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-black hover:bg-black/10"
                   onClick={() => navigateLightbox('prev')}
                 >
-                  <ChevronLeft size={24} />
+                  <CaretLeft size={24} />
                 </Button>
 
                 <Button
@@ -253,7 +253,7 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-black hover:bg-black/10"
                   onClick={() => navigateLightbox('next')}
                 >
-                  <ChevronRight size={24} />
+                  <CaretRight size={24} />
                 </Button>
 
                 {/* Image */}
@@ -267,7 +267,9 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
                     {language === 'uk' ? selectedImage.title_uk : selectedImage.title_en}
                   </h3>
                   <p className="text-muted-foreground">
-                    {language === 'uk' ? selectedImage.description_uk : selectedImage.description_en}
+                    {language === 'uk'
+                      ? selectedImage.description_uk
+                      : selectedImage.description_en}
                   </p>
                 </div>
               </motion.div>
@@ -283,38 +285,56 @@ export function GallerySection({ onNavigate }: GallerySectionProps) {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('products')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('products')}
+          >
             <CardContent className="p-8 text-center">
-              <ShoppingCart size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <ShoppingCart
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Замовити креветки' : 'Order Prawns'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Оберіть та замовте свіжі креветки з нашої ферми'
-                  : 'Choose and order fresh prawns from our farm'
-                }
+                  : 'Choose and order fresh prawns from our farm'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'До каталогу' : 'To Catalog'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'До каталогу' : 'To Catalog'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50" onClick={() => onNavigate?.('recipes')}>
+          <Card
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50"
+            onClick={() => onNavigate?.('recipes')}
+          >
             <CardContent className="p-8 text-center">
-              <BookOpen size={48} className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+              <BookOpen
+                size={48}
+                className="text-primary mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              />
               <h3 className="text-xl font-semibold mb-3">
                 {language === 'uk' ? 'Рецепти з креветками' : 'Prawn Recipes'}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {language === 'uk' 
+                {language === 'uk'
                   ? 'Дізнайтеся як готувати смачні страви з креветок'
-                  : 'Learn how to cook delicious dishes with prawns'
-                }
+                  : 'Learn how to cook delicious dishes with prawns'}
               </p>
-              <Button variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'} <ArrowRight size={16} className="ml-1" />
+              <Button
+                variant="ghost"
+                className="group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {language === 'uk' ? 'Переглянути рецепти' : 'View Recipes'}{' '}
+                <ArrowRight size={16} className="ml-1" />
               </Button>
             </CardContent>
           </Card>

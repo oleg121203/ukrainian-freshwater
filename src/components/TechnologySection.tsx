@@ -1,5 +1,14 @@
 import { motion } from 'framer-motion'
-import { Gear, Thermometer, DropletHalf, ChartLineUp, ArrowLeft, Cpu, WifiHigh, Timer } from '@phosphor-icons/react'
+import {
+  Gear,
+  Thermometer,
+  DropletHalf,
+  ChartLineUp,
+  ArrowLeft,
+  Cpu,
+  WifiHigh,
+  Timer,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,37 +27,42 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       icon: Thermometer,
       title_uk: 'Контроль температури',
       title_en: 'Temperature Control',
-      description_uk: 'Автоматичні системи підтримують оптимальну температуру 28-32°C цілодобово з точністю ±0.5°C',
-      description_en: 'Automatic systems maintain optimal temperature 28-32°C 24/7 with ±0.5°C accuracy',
+      description_uk:
+        'Автоматичні системи підтримують оптимальну температуру 28-32°C цілодобово з точністю ±0.5°C',
+      description_en:
+        'Automatic systems maintain optimal temperature 28-32°C 24/7 with ±0.5°C accuracy',
       specs: {
         range_uk: 'Діапазон: 26-35°C',
         range_en: 'Range: 26-35°C',
         accuracy_uk: 'Точність: ±0.5°C',
         accuracy_en: 'Accuracy: ±0.5°C',
         monitoring_uk: 'Моніторинг: 24/7',
-        monitoring_en: 'Monitoring: 24/7'
-      }
+        monitoring_en: 'Monitoring: 24/7',
+      },
     },
     {
       icon: DropletHalf,
       title_uk: 'Якість води',
       title_en: 'Water Quality',
-      description_uk: 'Постійний аналіз pH, розчиненого кисню, амонію та нітратів з автоматичним коригуванням',
-      description_en: 'Continuous analysis of pH, dissolved oxygen, ammonia and nitrates with automatic correction',
+      description_uk:
+        'Постійний аналіз pH, розчиненого кисню, амонію та нітратів з автоматичним коригуванням',
+      description_en:
+        'Continuous analysis of pH, dissolved oxygen, ammonia and nitrates with automatic correction',
       specs: {
         ph_uk: 'pH: 7.5-8.5',
         ph_en: 'pH: 7.5-8.5',
         oxygen_uk: 'Кисень: >6 мг/л',
         oxygen_en: 'Oxygen: >6 mg/l',
         tests_uk: 'Тестів на день: 96',
-        tests_en: 'Tests per day: 96'
-      }
+        tests_en: 'Tests per day: 96',
+      },
     },
     {
       icon: ChartLineUp,
       title_uk: 'Аналітика росту',
       title_en: 'Growth Analytics',
-      description_uk: 'ШІ-система відстежує ріст кожної особини, прогнозує врожайність та оптимізує годування',
+      description_uk:
+        'ШІ-система відстежує ріст кожної особини, прогнозує врожайність та оптимізує годування',
       description_en: 'AI system tracks individual growth, predicts yield and optimizes feeding',
       specs: {
         tracking_uk: 'Відстеження: Індивідуальне',
@@ -56,24 +70,26 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
         prediction_uk: 'Прогноз: 95% точність',
         prediction_en: 'Prediction: 95% accuracy',
         optimization_uk: 'Оптимізація: Автоматична',
-        optimization_en: 'Optimization: Automatic'
-      }
+        optimization_en: 'Optimization: Automatic',
+      },
     },
     {
       icon: WifiHigh,
       title_uk: 'IoT мережа',
       title_en: 'IoT Network',
-      description_uk: 'Більше 200 датчиків підключені до єдиної мережі для комплексного моніторингу',
-      description_en: 'Over 200 sensors connected to a unified network for comprehensive monitoring',
+      description_uk:
+        'Більше 200 датчиків підключені до єдиної мережі для комплексного моніторингу',
+      description_en:
+        'Over 200 sensors connected to a unified network for comprehensive monitoring',
       specs: {
         sensors_uk: 'Датчики: 250+',
         sensors_en: 'Sensors: 250+',
-        connectivity_uk: 'Зв\'язок: 99.9%',
+        connectivity_uk: "Зв'язок: 99.9%",
         connectivity_en: 'Connectivity: 99.9%',
         latency_uk: 'Затримка: <100мс',
-        latency_en: 'Latency: <100ms'
-      }
-    }
+        latency_en: 'Latency: <100ms',
+      },
+    },
   ]
 
   const automationFeatures = [
@@ -82,29 +98,29 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       name_en: 'Automatic Feeding',
       description_uk: 'Розумні годівниці дозують корм за розкладом та потребами',
       description_en: 'Smart feeders dispense food according to schedule and needs',
-      efficiency: 95
+      efficiency: 95,
     },
     {
       name_uk: 'Очищення води',
       name_en: 'Water Purification',
       description_uk: 'Автоматична система фільтрації та рециркуляції',
       description_en: 'Automatic filtration and recirculation system',
-      efficiency: 98
+      efficiency: 98,
     },
     {
       name_uk: 'Контроль середовища',
       name_en: 'Environment Control',
       description_uk: 'Підтримка оптимальних умов без втручання людини',
       description_en: 'Maintaining optimal conditions without human intervention',
-      efficiency: 99
+      efficiency: 99,
     },
     {
-      name_uk: 'Моніторинг здоров\'я',
+      name_uk: "Моніторинг здоров'я",
       name_en: 'Health Monitoring',
       description_uk: 'Раннє виявлення захворювань через аналіз поведінки',
       description_en: 'Early disease detection through behavior analysis',
-      efficiency: 92
-    }
+      efficiency: 92,
+    },
   ]
 
   const benefits = [
@@ -114,7 +130,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       title_en: 'Faster Growth',
       value: '+25%',
       description_uk: 'Прискорення росту завдяки оптимальним умовам',
-      description_en: 'Growth acceleration through optimal conditions'
+      description_en: 'Growth acceleration through optimal conditions',
     },
     {
       icon: DropletHalf,
@@ -122,7 +138,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       title_en: 'Water Savings',
       value: '60%',
       description_uk: 'Зменшення споживання води через рециркуляцію',
-      description_en: 'Reduced water consumption through recirculation'
+      description_en: 'Reduced water consumption through recirculation',
     },
     {
       icon: Gear,
@@ -130,7 +146,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       title_en: 'Efficiency',
       value: '40%',
       description_uk: 'Підвищення загальної ефективності виробництва',
-      description_en: 'Increased overall production efficiency'
+      description_en: 'Increased overall production efficiency',
     },
     {
       icon: ChartLineUp,
@@ -138,8 +154,8 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
       title_en: 'Quality',
       value: '99.5%',
       description_uk: 'Стабільність якості продукції',
-      description_en: 'Product quality consistency'
-    }
+      description_en: 'Product quality consistency',
+    },
   ]
 
   return (
@@ -169,16 +185,15 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
             <Cpu size={16} />
             {language === 'uk' ? 'Інноваційні технології' : 'Innovative Technologies'}
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-bold text-foreground heading-font mb-6">
             🔬 {language === 'uk' ? 'Сучасні технології' : 'Modern Technologies'}
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-8">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Наша ферма оснащена найсучаснішими автоматизованими системами, які забезпечують ідеальні умови для вирощування креветок. Використання ШІ та IoT технологій дозволяє досягти максимальної ефективності та якості.'
-              : 'Our farm is equipped with state-of-the-art automated systems that provide perfect conditions for prawn farming. The use of AI and IoT technologies allows us to achieve maximum efficiency and quality.'
-            }
+              : 'Our farm is equipped with state-of-the-art automated systems that provide perfect conditions for prawn farming. The use of AI and IoT technologies allows us to achieve maximum efficiency and quality.'}
           </p>
 
           {/* Key Stats */}
@@ -220,7 +235,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Технологічні системи' : 'Technology Systems'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {technologies.map((tech, index) => (
               <motion.div
@@ -245,7 +260,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
                     <p className="text-muted-foreground leading-relaxed">
                       {language === 'uk' ? tech.description_uk : tech.description_en}
                     </p>
-                    
+
                     <div className="grid grid-cols-1 gap-2">
                       {Object.entries(tech.specs).map(([key, value]) => {
                         if (key.includes('_')) {
@@ -279,7 +294,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Автоматизація процесів' : 'Process Automation'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {automationFeatures.map((feature, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
@@ -311,17 +326,18 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Результати впровадження' : 'Implementation Results'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
+              <Card
+                key={index}
+                className="text-center hover:shadow-lg transition-shadow duration-300"
+              >
                 <CardContent className="p-6">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <benefit.icon size={32} className="text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-2">
-                    {benefit.value}
-                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-2">{benefit.value}</div>
                   <h3 className="font-semibold text-lg mb-2">
                     {language === 'uk' ? benefit.title_uk : benefit.title_en}
                   </h3>
@@ -349,10 +365,9 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
           <p className="text-xl leading-relaxed mb-8 opacity-90 max-w-3xl mx-auto">
             {language === 'uk'
               ? 'Ми постійно інвестуємо в дослідження та розробку нових технологій. В планах: впровадження машинного навчання для прогнозування захворювань, робототехніка для автоматичного збору врожаю та блокчейн для відстеження продукції.'
-              : 'We continuously invest in research and development of new technologies. Plans include: implementing machine learning for disease prediction, robotics for automatic harvesting, and blockchain for product traceability.'
-            }
+              : 'We continuously invest in research and development of new technologies. Plans include: implementing machine learning for disease prediction, robotics for automatic harvesting, and blockchain for product traceability.'}
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"

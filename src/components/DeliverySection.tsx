@@ -1,5 +1,14 @@
 import { motion } from 'framer-motion'
-import { Truck, Clock, Package, MapPin, ArrowLeft, Lightning, Shield, ThermometerSimple } from '@phosphor-icons/react'
+import {
+  Truck,
+  Clock,
+  Package,
+  MapPin,
+  ArrowLeft,
+  Lightning,
+  Shield,
+  ThermometerSimple,
+} from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,30 +27,35 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       icon: Package,
       title_uk: 'Збір та упакування',
       title_en: 'Harvest and Packaging',
-      description_uk: 'Креветки збираються вранці та одразу упаковуються в спеціальні контейнери з льодом',
-      description_en: 'Prawns are harvested in the morning and immediately packed in special containers with ice',
+      description_uk:
+        'Креветки збираються вранці та одразу упаковуються в спеціальні контейнери з льодом',
+      description_en:
+        'Prawns are harvested in the morning and immediately packed in special containers with ice',
       time_uk: '6:00 - 8:00',
-      time_en: '6:00 - 8:00 AM'
+      time_en: '6:00 - 8:00 AM',
     },
     {
       step: 2,
       icon: ThermometerSimple,
       title_uk: 'Контроль температури',
       title_en: 'Temperature Control',
-      description_uk: 'Упакована продукція зберігається при температурі 0-2°C протягом всього шляху',
+      description_uk:
+        'Упакована продукція зберігається при температурі 0-2°C протягом всього шляху',
       description_en: 'Packaged products are stored at 0-2°C throughout the journey',
       time_uk: 'Постійно',
-      time_en: 'Continuous'
+      time_en: 'Continuous',
     },
     {
       step: 3,
       icon: Truck,
       title_uk: 'Швидка доставка',
       title_en: 'Fast Delivery',
-      description_uk: 'Спеціалізований транспорт з холодильними камерами доставляє продукцію протягом дня',
-      description_en: 'Specialized transport with refrigeration chambers delivers products during the day',
+      description_uk:
+        'Спеціалізований транспорт з холодильними камерами доставляє продукцію протягом дня',
+      description_en:
+        'Specialized transport with refrigeration chambers delivers products during the day',
       time_uk: '8:00 - 20:00',
-      time_en: '8:00 AM - 8:00 PM'
+      time_en: '8:00 AM - 8:00 PM',
     },
     {
       step: 4,
@@ -51,8 +65,8 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       description_uk: 'Клієнт отримує найсвіжішу продукцію максимум через 24 години після вилову',
       description_en: 'Customer receives the freshest products within 24 hours of harvest',
       time_uk: 'До 24 годин',
-      time_en: 'Within 24 hours'
-    }
+      time_en: 'Within 24 hours',
+    },
   ]
 
   const deliveryZones = [
@@ -63,7 +77,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       time_en: '6-12 hours',
       price_uk: 'Безкоштовно від 500 грн',
       price_en: 'Free from 500 UAH',
-      express: true
+      express: true,
     },
     {
       zone_uk: 'Великі міста України',
@@ -72,7 +86,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       time_en: '12-18 hours',
       price_uk: 'Від 80 грн',
       price_en: 'From 80 UAH',
-      express: true
+      express: true,
     },
     {
       zone_uk: 'Інші регіони',
@@ -81,7 +95,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       time_en: '18-24 hours',
       price_uk: 'Від 120 грн',
       price_en: 'From 120 UAH',
-      express: false
+      express: false,
     },
     {
       zone_uk: 'Самовивіз з ферми',
@@ -90,8 +104,8 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       time_en: 'Immediate',
       price_uk: 'Безкоштовно',
       price_en: 'Free',
-      express: true
-    }
+      express: true,
+    },
   ]
 
   const packagingTypes = [
@@ -103,7 +117,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       icon: Package,
       temperature: '0-2°C',
       shelf_life_uk: '48 годин',
-      shelf_life_en: '48 hours'
+      shelf_life_en: '48 hours',
     },
     {
       type_uk: 'Преміум упаковка',
@@ -113,7 +127,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       icon: Shield,
       temperature: '0-1°C',
       shelf_life_uk: '72 години',
-      shelf_life_en: '72 hours'
+      shelf_life_en: '72 hours',
     },
     {
       type_uk: 'Експрес упаковка',
@@ -123,8 +137,8 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       icon: Lightning,
       temperature: '1-3°C',
       shelf_life_uk: '24 години',
-      shelf_life_en: '24 hours'
-    }
+      shelf_life_en: '24 hours',
+    },
   ]
 
   const qualityGuarantees = [
@@ -132,26 +146,26 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
       title_uk: 'Гарантія свіжості',
       title_en: 'Freshness Guarantee',
       description_uk: 'Повернемо гроші, якщо продукція не відповідає стандартам свіжості',
-      description_en: 'Money back guarantee if products don\'t meet freshness standards'
+      description_en: "Money back guarantee if products don't meet freshness standards",
     },
     {
       title_uk: 'Контроль температури',
       title_en: 'Temperature Control',
       description_uk: 'Постійний моніторинг температури з звітами для кожного замовлення',
-      description_en: 'Continuous temperature monitoring with reports for each order'
+      description_en: 'Continuous temperature monitoring with reports for each order',
     },
     {
       title_uk: 'Страхування вантажу',
       title_en: 'Cargo Insurance',
       description_uk: 'Всі замовлення автоматично застраховані на повну вартість',
-      description_en: 'All orders are automatically insured for full value'
+      description_en: 'All orders are automatically insured for full value',
     },
     {
       title_uk: 'Відстеження доставки',
       title_en: 'Delivery Tracking',
       description_uk: 'SMS та email оповіщення на кожному етапі доставки',
-      description_en: 'SMS and email notifications at every delivery stage'
-    }
+      description_en: 'SMS and email notifications at every delivery stage',
+    },
   ]
 
   return (
@@ -181,16 +195,15 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
             <Truck size={16} />
             {language === 'uk' ? 'Швидка доставка' : 'Fast Delivery'}
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-bold text-foreground heading-font mb-6">
             🚚 {language === 'uk' ? 'Швидка доставка' : 'Fast Delivery'}
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-8">
-            {language === 'uk' 
+            {language === 'uk'
               ? 'Ми доставляємо найсвіжіші креветки протягом 24 годин після вилову прямо до вашого порогу. Наша логістична система забезпечує збереження якості та свіжості продукції протягом всього шляху.'
-              : 'We deliver the freshest prawns within 24 hours of harvest right to your doorstep. Our logistics system ensures product quality and freshness throughout the journey.'
-            }
+              : 'We deliver the freshest prawns within 24 hours of harvest right to your doorstep. Our logistics system ensures product quality and freshness throughout the journey.'}
           </p>
 
           {/* Key Stats */}
@@ -232,7 +245,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Процес доставки' : 'Delivery Process'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {deliverySteps.map((step, index) => (
               <motion.div
@@ -247,7 +260,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
                 {index < deliverySteps.length - 1 && (
                   <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-orange-300 to-transparent transform -translate-y-1/2 z-0" />
                 )}
-                
+
                 <Card className="h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-orange-500/50 relative z-10">
                   <CardHeader className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg relative">
@@ -285,7 +298,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Зони доставки' : 'Delivery Zones'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {deliveryZones.map((zone, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
@@ -300,7 +313,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Clock size={16} className="text-muted-foreground" />
@@ -332,10 +345,13 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Типи упаковки' : 'Packaging Types'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {packagingTypes.map((pkg, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-orange-500">
+              <Card
+                key={index}
+                className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-orange-500"
+              >
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-orange-100 rounded-lg">
@@ -350,7 +366,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
                   <p className="text-muted-foreground">
                     {language === 'uk' ? pkg.description_uk : pkg.description_en}
                   </p>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">
@@ -384,10 +400,13 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
           <h2 className="text-3xl font-bold text-center mb-12 heading-font">
             {language === 'uk' ? 'Гарантії якості' : 'Quality Guarantees'}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {qualityGuarantees.map((guarantee, index) => (
-              <div key={index} className="flex items-start gap-4 p-6 bg-white rounded-lg border border-orange-200">
+              <div
+                key={index}
+                className="flex items-start gap-4 p-6 bg-white rounded-lg border border-orange-200"
+              >
                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-orange-600 font-bold text-sm">{index + 1}</span>
                 </div>
@@ -419,10 +438,9 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
           <p className="text-xl leading-relaxed mb-8 opacity-90 max-w-3xl mx-auto">
             {language === 'uk'
               ? 'Замовте свіжі креветки прямо зараз і отримайте їх завтра! Ми працюємо цілодобово, щоб забезпечити найкращий сервіс доставки в Україні.'
-              : 'Order fresh prawns right now and get them tomorrow! We work around the clock to provide the best delivery service in Ukraine.'
-            }
+              : 'Order fresh prawns right now and get them tomorrow! We work around the clock to provide the best delivery service in Ukraine.'}
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
@@ -437,7 +455,7 @@ export function DeliverySection({ onNavigate }: DeliverySectionProps) {
               className="border-white/50 text-white hover:bg-white/10"
               onClick={() => onNavigate?.('contact')}
             >
-              {language === 'uk' ? 'Зв\'язатися з нами' : 'Contact Us'}
+              {language === 'uk' ? "Зв'язатися з нами" : 'Contact Us'}
             </Button>
           </div>
         </motion.div>
