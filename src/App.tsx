@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { PrawnVisualization } from '@/components/PrawnVisualization'
+const PrawnVisualization = lazy(() => import('@/components/PrawnVisualization'))
 import { PetkaGame } from '@/components/PetkaGame'
 import { NavigationMenu } from '@/components/NavigationMenu'
 import { HeroSection } from '@/components/HeroSection'
@@ -31,6 +31,7 @@ function App() {
   const [show3D, setShow3D] = useState(false)
   const [showDebug, setShowDebug] = useState(false)
   const [showCart, setShowCart] = useState(false)
+  const [prevSection, setPrevSection] = useState<string | null>(null)
   const { playSwooshSound } = useAudio()
 
   // All available sections for debugging
@@ -51,6 +52,7 @@ function App() {
     'orders',
     'shop-test',
     'payment-admin',
+  'petka',
   ]
 
   const handleNavigate = (section: string) => {
@@ -59,20 +61,29 @@ function App() {
     
     if (section === 'hero') {
       // If going back to hero, show 3D
+      setPrevSection(currentSection)
       setCurrentSection('hero')
-      setShow3D(true)
+      setShow3D(false)
     } else {
       // Going to any other section, hide 3D
+      setPrevSection(currentSection)
       setCurrentSection(section)
       setShow3D(false)
     }
     setMenuVisible(false)
   }
 
-  const handleBackToHero = () => {
+  const handleBack = () => {
     playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
-    setCurrentSection('hero')
-    setShow3D(true)
+    if (prevSection) {
+      const target = prevSection
+      setPrevSection(null)
+      setCurrentSection(target)
+      setShow3D(false)
+    } else {
+      setCurrentSection('hero')
+      setShow3D(false)
+    }
   }
 
   const handleNavigateToSite = () => {
@@ -85,16 +96,7 @@ function App() {
   const renderCurrentSection = () => {
     switch (currentSection) {
       case 'hero':
-        return (
-          <PetkaGame
-            onNavigate={handleNavigate}
-            onOpen3D={() => {
-              setCurrentSection('hero')
-              setShow3D(true)
-              setMenuVisible(false)
-            }}
-          />
-        )
+        return <HeroSection onNavigate={handleNavigate} />
       case 'about':
         return <AboutSection onNavigate={handleNavigate} />
       case 'products':
@@ -137,6 +139,17 @@ function App() {
         return <ShoppingTest onNavigate={handleNavigate} />
       case 'payment-admin':
         return <PaymentAdmin onNavigate={handleNavigate} />
+      case 'petka':
+        return (
+          <PetkaGame
+            onNavigate={handleNavigate}
+            onOpen3D={() => {
+              setCurrentSection('hero')
+              setShow3D(true)
+              setMenuVisible(false)
+            }}
+          />
+        )
       default:
   return <PetkaGame onNavigate={handleNavigate} onOpen3D={() => { setCurrentSection('hero'); setShow3D(true) }} />
     }
@@ -214,25 +227,37 @@ function App() {
         {/* 3D Visualization or Content */}
         {show3D && currentSection === 'hero' ? (
           <div className="fixed inset-0 z-10">
-            <PrawnVisualization
-              onMenuToggle={() => setMenuVisible(!menuVisible)}
-              menuVisible={menuVisible}
-              onNavigateToSite={() => setCurrentSection('hero')}
-            />
+            <Suspense fallback={<div className="fixed inset-0 grid place-items-center text-white">Завантаження 3D…</div>}>
+              <PrawnVisualization
+                onMenuToggle={() => setMenuVisible(!menuVisible)}
+                menuVisible={menuVisible}
+                onNavigateToSite={() => setCurrentSection('hero')}
+              />
+            </Suspense>
           </div>
         ) : (
           <main className="relative z-20">
-            {/* Back to Hero Button */}
+            {/* Left: Back Button (when not on main) */}
             {currentSection !== 'hero' && (
               <div className="fixed top-6 left-6 z-30">
                 <button
-                  onClick={handleBackToHero}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  onClick={handleBack}
+                  className="bg-white/90 text-foreground px-4 py-2 rounded-full shadow-lg border hover:bg-white transition-all duration-300 hover:scale-105"
                 >
-                  🏠 AquaFarm
+                  ← Назад
                 </button>
               </div>
             )}
+
+            {/* Right: AquaFarm Button (always visible) */}
+            <div className="fixed top-6 right-6 z-30">
+              <button
+                onClick={() => handleNavigate('hero')}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                🏠 AquaFarm
+              </button>
+            </div>
 
             {/* Current Section Content */}
             {renderCurrentSection()}
