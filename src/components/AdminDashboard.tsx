@@ -1,6 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useKV } from '@/hooks/useKV'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
+interface AdminConfig {
+  exchangeRate: number // kg per shrimp
+  minExchangeWeight: number // minimum kg to exchange
+  breedingChance: number // 0-1
+  growthSpeed: number // multiplier
+}
 
 interface AdminDashboardProps {
   onNavigate?: (section: string) => void
@@ -8,6 +20,20 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
   const { language } = useLanguage()
+  
+  const [adminConfig, setAdminConfig] = useKV<AdminConfig>('admin-shrimp-config', {
+    exchangeRate: 0.15,
+    minExchangeWeight: 1.0,
+    breedingChance: 0.3,
+    growthSpeed: 1.0
+  })
+  
+  const [tempConfig, setTempConfig] = useState<AdminConfig>(adminConfig)
+
+  const saveConfig = () => {
+    setAdminConfig(tempConfig)
+    toast.success('Налаштування збережено!')
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-cyan-900 to-teal-900 p-4">
@@ -117,6 +143,86 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Shrimp Game Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {language === 'uk' ? '🦐 Налаштування гри з креветками' : '🦐 Shrimp Game Configuration'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="exchangeRate">
+                    {language === 'uk' ? 'Курс обміну (кг за креветку)' : 'Exchange Rate (kg per shrimp)'}
+                  </Label>
+                  <Input
+                    id="exchangeRate"
+                    type="number"
+                    step="0.01"
+                    value={tempConfig.exchangeRate}
+                    onChange={(e) => setTempConfig({...tempConfig, exchangeRate: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="minWeight">
+                    {language === 'uk' ? 'Мінімальна вага для обміну (кг)' : 'Minimum exchange weight (kg)'}
+                  </Label>
+                  <Input
+                    id="minWeight"
+                    type="number"
+                    step="0.1"
+                    value={tempConfig.minExchangeWeight}
+                    onChange={(e) => setTempConfig({...tempConfig, minExchangeWeight: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="breedingChance">
+                    {language === 'uk' ? 'Шанс розмноження (0-1)' : 'Breeding chance (0-1)'}
+                  </Label>
+                  <Input
+                    id="breedingChance"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    value={tempConfig.breedingChance}
+                    onChange={(e) => setTempConfig({...tempConfig, breedingChance: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="growthSpeed">
+                    {language === 'uk' ? 'Швидкість росту (множник)' : 'Growth speed (multiplier)'}
+                  </Label>
+                  <Input
+                    id="growthSpeed"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="10"
+                    value={tempConfig.growthSpeed}
+                    onChange={(e) => setTempConfig({...tempConfig, growthSpeed: parseFloat(e.target.value) || 1})}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={saveConfig}>
+                  {language === 'uk' ? 'Зберегти налаштування' : 'Save Settings'}
+                </Button>
+                <Button variant="outline" onClick={() => setTempConfig(adminConfig)}>
+                  {language === 'uk' ? 'Скасувати' : 'Cancel'}
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  {language === 'uk' 
+                    ? 'Поточні налаштування впливають на механіку гри вирощування креветок.' 
+                    : 'Current settings affect the shrimp growing game mechanics.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* System Status */}
           <Card>
