@@ -3,14 +3,15 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { FeedingSimulation } from '@/components/FeedingSimulation'
 import { PetkaGame } from '@/components/PetkaGame'
+import { BreedingSimulation } from '@/components/BreedingSimulation'
 
 interface AquaGameProps {
   onNavigate?: (section: string) => void
 }
 
-// Объединённая игровая сцена: корми креветку + квіз «Петька» в одном современном оформлении
+// Объединённая игровая сцена: корми креветку + квіз «Петька» + вирощування в одном современном оформлении
 export function AquaGame({ onNavigate }: AquaGameProps) {
-  const [tab, setTab] = useState<'feeding' | 'petka'>('feeding')
+  const [tab, setTab] = useState<'feeding' | 'breeding' | 'petka'>('feeding')
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-sky-900 via-blue-900 to-cyan-900 text-white">
@@ -18,10 +19,11 @@ export function AquaGame({ onNavigate }: AquaGameProps) {
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold heading-font">AquaFarm — Інтерактив</h1>
-            <p className="text-white/80 text-sm">Сучасна гра: годування креветки + квіз Петьки</p>
+            <p className="text-white/80 text-sm">Сучасна гра: годування + вирощування + квіз Петьки</p>
           </div>
           <div className="flex gap-2">
             <Button variant={tab === 'feeding' ? 'default' : 'outline'} onClick={() => setTab('feeding')}>🦐 Годування</Button>
+            <Button variant={tab === 'breeding' ? 'default' : 'outline'} onClick={() => setTab('breeding')}>🌱 Вирощування</Button>
             <Button variant={tab === 'petka' ? 'default' : 'outline'} onClick={() => setTab('petka')}>🤖 Петька</Button>
           </div>
         </div>
@@ -32,6 +34,8 @@ export function AquaGame({ onNavigate }: AquaGameProps) {
               onPrawnFeed={() => {}}
               onStatsUpdate={() => {}}
             />
+          ) : tab === 'breeding' ? (
+            <BreedingSimulation onNavigate={onNavigate} />
           ) : (
             <PetkaGame onNavigate={onNavigate} />
           )}
