@@ -185,52 +185,17 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
           </div>
 
           <div className="relative h-full w-full flex items-center justify-center text-white">
-            <div className="text-center px-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-4 text-sm tracking-widest uppercase">AquaFarm</div>
-              </motion.div>
-              <motion.h1
-                className="text-5xl md:text-7xl font-black heading-font tracking-tight"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.1, delay: 0.15 }}
-              >
-                Розумне акварільне фермерство
-              </motion.h1>
-              <motion.p
-                className="mt-4 text-lg md:text-xl text-white/85 max-w-2xl mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.0, delay: 0.5 }}
-              >
-                Інновації, смак і повага до води.
-              </motion.p>
-
-              <div className="mt-8 flex items-center justify-center gap-3">
-                <button
-                  onClick={() => onNavigate?.('about')}
-                  className="px-5 py-2 rounded-full bg-white/15 border border-white/20 hover:bg-white/20 transition"
-                >
-                  Меню
-                </button>
-                <button
-                  onClick={() => { setStage('quiz'); playSwooshSound({ volume: 0.25 }) }}
-                  className="px-5 py-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition"
-                >
-                  Пропустити
-                </button>
-              </div>
-            </div>
+            {/* Intentionally empty to avoid overlapping the main UI. We keep only the shrimp reveal below. */}
 
             {/* Shrimp reveal from afar */}
             <motion.div
               className="absolute bottom-10 right-10 select-none"
               initial={{ opacity: 0, scale: 0.2, x: 120, y: 40, filter: 'blur(6px)' }}
               animate={{ opacity: 1, scale: 1, x: 0, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 1.6, delay: 1.0, ease: 'easeOut' }}
+              transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
               onAnimationComplete={() => {
                 // Auto enter quiz after a moment
-                setTimeout(() => setStage((s) => (s === 'intro' ? 'quiz' : s)), 1400)
+                setTimeout(() => setStage((s) => (s === 'intro' ? 'quiz' : s)), 900)
               }}
             >
               <div className="text-7xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</div>
