@@ -4,15 +4,17 @@ import { Button } from '@/components/ui/button'
 import { FeedingSimulation } from '@/components/FeedingSimulation'
 import { PetkaGame } from '@/components/PetkaGame'
 import { BreedingSystem } from '@/components/BreedingSystem'
+import { BattleArena } from '@/components/BattleArena'
+import { NetworkHub } from '@/components/NetworkHub'
 import { useKV } from '@/hooks/useKV'
 
 interface AquaGameProps {
   onNavigate?: (section: string) => void
 }
 
-// Объединённая игровая сцена: корми креветку + квіз «Петька» + система розмноження в одном современном оформлении
+// Объединённая игровая сцена: корми креветку + квіз «Петька» + система розмноження + арена битв + мережевий хаб в одном современном оформлении
 export function AquaGame({ onNavigate }: AquaGameProps) {
-  const [tab, setTab] = useState<'feeding' | 'petka' | 'breeding'>('feeding')
+  const [tab, setTab] = useState<'feeding' | 'petka' | 'breeding' | 'battle' | 'network'>('feeding')
   const [prawnStats] = useKV('prawn-stats', {
     hunger: 50,
     health: 80,
@@ -29,11 +31,13 @@ export function AquaGame({ onNavigate }: AquaGameProps) {
         <div className="flex items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold heading-font">AquaFarm — Інтерактив</h1>
-            <p className="text-white/80 text-sm">Сучасна гра: годування креветки + квіз Петьки + вирощування</p>
+            <p className="text-white/80 text-sm">Сучасна гра: годування + вирощування + квіз Петьки + арена битв + мережа</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant={tab === 'feeding' ? 'default' : 'outline'} onClick={() => setTab('feeding')}>🦐 Годування</Button>
             <Button variant={tab === 'breeding' ? 'default' : 'outline'} onClick={() => setTab('breeding')}>🏠 Вирощування</Button>
+            <Button variant={tab === 'battle' ? 'default' : 'outline'} onClick={() => setTab('battle')}>⚔️ Арена</Button>
+            <Button variant={tab === 'network' ? 'default' : 'outline'} onClick={() => setTab('network')}>🌐 Мережа</Button>
             <Button variant={tab === 'petka' ? 'default' : 'outline'} onClick={() => setTab('petka')}>🤖 Петька</Button>
           </div>
         </div>
@@ -50,6 +54,10 @@ export function AquaGame({ onNavigate }: AquaGameProps) {
               onStatsUpdate={() => {}}
               feedingStats={prawnStats}
             />
+          ) : tab === 'battle' ? (
+            <BattleArena onNavigate={onNavigate} />
+          ) : tab === 'network' ? (
+            <NetworkHub onNavigate={onNavigate} />
           ) : (
             <PetkaGame onNavigate={onNavigate} />
           )}

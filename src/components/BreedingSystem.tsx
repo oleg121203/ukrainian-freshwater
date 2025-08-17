@@ -22,6 +22,31 @@ interface ShrimpData {
   experienceFromFeeding: number
   birthDate: number
   lastInteraction: number
+  // Combat & Artifact System
+  combatStats: {
+    attack: number
+    defense: number
+    speed: number
+    intelligence: number
+    endurance: number
+  }
+  artifacts: Array<{
+    id: string
+    name: string
+    type: 'weapon' | 'armor' | 'intelligence' | 'speed' | 'special'
+    rarity: 'common' | 'rare' | 'epic' | 'legendary'
+    bonuses: {
+      attack?: number
+      defense?: number
+      speed?: number
+      intelligence?: number
+      endurance?: number
+    }
+    acquiredDate: number
+  }>
+  battleExperience: number
+  wins: number
+  losses: number
 }
 
 interface BreedingPair {
@@ -45,6 +70,27 @@ const BREEDING_STAGES = {
   young: { name: { uk: 'Підліток', en: 'Young' }, minDays: 30, maxDays: 60, size: [3, 6] },
   adult: { name: { uk: 'Дорослий', en: 'Adult' }, minDays: 60, maxDays: 90, size: [6, 10] },
   breeding: { name: { uk: 'Готовий до розмноження', en: 'Breeding Ready' }, minDays: 90, maxDays: 365, size: [10, 15] }
+}
+
+// Combat stats generation based on stage
+const generateCombatStats = (stage: ShrimpData['stage'], baseVariation = 0.2) => {
+  const baseStats = {
+    juvenile: { attack: 10, defense: 8, speed: 15, intelligence: 5, endurance: 12 },
+    young: { attack: 20, defense: 18, speed: 25, intelligence: 15, endurance: 22 },
+    adult: { attack: 35, defense: 30, speed: 40, intelligence: 30, endurance: 35 },
+    breeding: { attack: 50, defense: 45, speed: 55, intelligence: 45, endurance: 50 }
+  }
+  
+  const base = baseStats[stage]
+  const variation = baseVariation
+  
+  return {
+    attack: Math.round(base.attack * (1 + (Math.random() - 0.5) * variation)),
+    defense: Math.round(base.defense * (1 + (Math.random() - 0.5) * variation)),
+    speed: Math.round(base.speed * (1 + (Math.random() - 0.5) * variation)),
+    intelligence: Math.round(base.intelligence * (1 + (Math.random() - 0.5) * variation)),
+    endurance: Math.round(base.endurance * (1 + (Math.random() - 0.5) * variation))
+  }
 }
 
 export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: BreedingSystemProps) {
@@ -78,7 +124,12 @@ export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: Bre
           breedingReadiness: 0,
           experienceFromFeeding: 0,
           birthDate: Date.now() - (15 * 24 * 60 * 60 * 1000),
-          lastInteraction: Date.now()
+          lastInteraction: Date.now(),
+          combatStats: generateCombatStats('juvenile'),
+          artifacts: [],
+          battleExperience: 0,
+          wins: 0,
+          losses: 0
         },
         {
           id: 'starter-2', 
@@ -91,7 +142,12 @@ export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: Bre
           breedingReadiness: 0,
           experienceFromFeeding: 0,
           birthDate: Date.now() - (12 * 24 * 60 * 60 * 1000),
-          lastInteraction: Date.now()
+          lastInteraction: Date.now(),
+          combatStats: generateCombatStats('juvenile'),
+          artifacts: [],
+          battleExperience: 0,
+          wins: 0,
+          losses: 0
         }
       ]
       setShrimpColony(starterShrimp)
@@ -133,7 +189,9 @@ export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: Bre
             age: daysSinceBirth,
             stage: newStage,
             size: Math.max(stageData.size[0], Math.min(stageData.size[1], newSize)),
-            breedingReadiness: newStage === 'breeding' ? Math.min(100, 50 + daysSinceBirth) : shrimp.breedingReadiness
+            breedingReadiness: newStage === 'breeding' ? Math.min(100, 50 + daysSinceBirth) : shrimp.breedingReadiness,
+            // Update combat stats when stage changes
+            combatStats: shrimp.stage !== newStage ? generateCombatStats(newStage) : shrimp.combatStats
           }
         })
       )
@@ -237,7 +295,12 @@ export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: Bre
         breedingReadiness: 0,
         experienceFromFeeding: 0,
         birthDate: Date.now(),
-        lastInteraction: Date.now()
+        lastInteraction: Date.now(),
+        combatStats: generateCombatStats('juvenile'),
+        artifacts: [],
+        battleExperience: 0,
+        wins: 0,
+        losses: 0
       })
     }
 
@@ -443,6 +506,57 @@ export function BreedingSystem({ onPrawnFeed, onStatsUpdate, feedingStats }: Bre
                     <span>{language === 'uk' ? 'Здоров\'я:' : 'Health:'}</span>
                     <span>{Math.floor(shrimp.health)}%</span>
                   </div>
+                  
+                  {/* Combat Stats Display */}
+                  <div className="mt-2 pt-2 border-t border-white/10">
+                    <div className="text-xs font-medium mb-1">
+                      {language === 'uk' ? '⚔️ Бойові Характеристики:' : '⚔️ Combat Stats:'}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      <div>⚔️ {shrimp.combatStats.attack}</div>
+                      <div>🛡️ {shrimp.combatStats.defense}</div>
+                      <div>💨 {shrimp.combatStats.speed}</div>
+                      <div>🧠 {shrimp.combatStats.intelligence}</div>
+                    </div>
+                  </div>
+                  
+                  {/* Artifacts Display */}
+                  {shrimp.artifacts.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                      <div className="text-xs font-medium mb-1">
+                        🎁 {language === 'uk' ? `Артефакти (${shrimp.artifacts.length}):` : `Artifacts (${shrimp.artifacts.length}):`}
+                      </div>
+                      <div className="space-y-1">
+                        {shrimp.artifacts.slice(0, 3).map((artifact, index) => (
+                          <div key={artifact.id} className="text-xs flex items-center gap-1">
+                            <div className={`w-2 h-2 rounded-full ${
+                              artifact.rarity === 'legendary' ? 'bg-yellow-400' :
+                              artifact.rarity === 'epic' ? 'bg-purple-400' :
+                              artifact.rarity === 'rare' ? 'bg-blue-400' : 'bg-gray-400'
+                            }`} />
+                            <span className="truncate">{artifact.name}</span>
+                          </div>
+                        ))}
+                        {shrimp.artifacts.length > 3 && (
+                          <div className="text-xs text-white/60">
+                            +{shrimp.artifacts.length - 3} {language === 'uk' ? 'більше' : 'more'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Battle Experience */}
+                  {shrimp.battleExperience > 0 && (
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                      <div className="text-xs">
+                        🏆 {language === 'uk' ? 'Досвід:' : 'Experience:'} {shrimp.battleExperience}
+                      </div>
+                      <div className="text-xs">
+                        📊 W/L: {shrimp.wins}/{shrimp.losses}
+                      </div>
+                    </div>
+                  )}
                   
                   {(shrimp.stage === 'adult' || shrimp.stage === 'breeding') && (
                     <div className="space-y-1">

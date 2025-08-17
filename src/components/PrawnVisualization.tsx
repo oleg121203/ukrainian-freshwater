@@ -6,11 +6,50 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { motion } from 'framer-motion'
 import { useAudio } from '@/hooks/useAudio'
+import { useKV } from '@/hooks/useKV'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { PetkaQuiz } from '@/components/PetkaQuiz'
 
 // Локальні типи та логіка
+interface ShrimpData {
+  id: string
+  name: string
+  age: number
+  stage: 'juvenile' | 'young' | 'adult' | 'breeding'
+  gender: 'male' | 'female'
+  health: number
+  size: number
+  breedingReadiness: number
+  experienceFromFeeding: number
+  birthDate: number
+  lastInteraction: number
+  combatStats: {
+    attack: number
+    defense: number
+    speed: number
+    intelligence: number
+    endurance: number
+  }
+  artifacts: Array<{
+    id: string
+    name: string
+    type: 'weapon' | 'armor' | 'intelligence' | 'speed' | 'special'
+    rarity: 'common' | 'rare' | 'epic' | 'legendary'
+    bonuses: {
+      attack?: number
+      defense?: number
+      speed?: number
+      intelligence?: number
+      endurance?: number
+    }
+    acquiredDate: number
+  }>
+  battleExperience: number
+  wins: number
+  losses: number
+}
+
 interface PrawnVisualizationProps {
   onMenuToggle?: () => void
   menuVisible?: boolean
@@ -84,7 +123,10 @@ export function PrawnVisualization({
 
   const { playClickSound, playSwooshSound, playBubbleSound, resumeAudioContext } = useAudio()
 
-  // Inventory / Recipe / Feeding
+  // Shrimp Colony State for artifact collection
+  const [shrimpColony, setShrimpColony] = useKV<ShrimpData[]>('shrimp-colony', [])
+
+  // Inventory / Recipe / Feeding (keeping for backward compatibility)
   type ItemKey = 'garlic' | 'herb' | 'lemon' | 'butter' | 'salt' | 'pepper'
   const [inventory, setInventory] = useState<Record<ItemKey, number>>({
     garlic: 0,
@@ -565,50 +607,75 @@ export function PrawnVisualization({
       createBubble(scene)
     }, 2000 + Math.random() * 3000)
 
-    // Collectibles (ingredients)
+    // Collectibles (Battle Artifacts)
     const collectibles = new THREE.Group()
-    const itemTypes: ItemKey[] = ['garlic', 'herb', 'lemon', 'butter', 'salt', 'pepper']
-    const spawnItem = (type: ItemKey) => {
+    const artifactTypes = [
+      { type: 'weapon', name: 'Sharp Claws', color: 0xff4444, geometry: 'dodecahedron' },
+      { type: 'armor', name: 'Shell Shield', color: 0x4444ff, geometry: 'icosahedron' },
+      { type: 'intelligence', name: 'Wise Crystal', color: 0x44ff44, geometry: 'octahedron' },
+      { type: 'speed', name: 'Swift Fins', color: 0xffff44, geometry: 'tetrahedron' },
+      { type: 'special', name: 'Mystic Pearl', color: 0xff44ff, geometry: 'sphere' }
+    ]
+    
+    const spawnArtifact = (artifactInfo: typeof artifactTypes[0]) => {
       let geom: THREE.BufferGeometry
-      let mat: THREE.Material
-      switch (type) {
-        case 'garlic':
-          geom = new THREE.DodecahedronGeometry(0.12)
-          mat = new THREE.MeshStandardMaterial({ color: 0xf5e6c8, roughness: 0.7, metalness: 0.0 })
+      const size = 0.15 + Math.random() * 0.1
+      
+      switch (artifactInfo.geometry) {
+        case 'dodecahedron':
+          geom = new THREE.DodecahedronGeometry(size)
           break
-        case 'herb':
-          geom = new THREE.CapsuleGeometry(0.06, 0.12, 6, 8)
-          mat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.6 })
+        case 'icosahedron':
+          geom = new THREE.IcosahedronGeometry(size)
           break
-        case 'lemon':
-          geom = new THREE.SphereGeometry(0.12, 16, 12)
-          mat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 })
+        case 'octahedron':
+          geom = new THREE.OctahedronGeometry(size)
           break
-        case 'butter':
-          geom = new THREE.BoxGeometry(0.18, 0.08, 0.12)
-          mat = new THREE.MeshStandardMaterial({ color: 0xffeb99, roughness: 0.8 })
+        case 'tetrahedron':
+          geom = new THREE.TetrahedronGeometry(size)
           break
-        case 'salt':
-          geom = new THREE.TetrahedronGeometry(0.09)
-          mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
-          break
-        case 'pepper':
+        case 'sphere':
         default:
-          geom = new THREE.IcosahedronGeometry(0.1, 0)
-          mat = new THREE.MeshStandardMaterial({ color: 0x8e5a2b, roughness: 0.8 })
+          geom = new THREE.SphereGeometry(size, 16, 12)
           break
       }
+      
+      const mat = new THREE.MeshStandardMaterial({ 
+        color: artifactInfo.color, 
+        roughness: 0.3, 
+        metalness: 0.7,
+        emissive: artifactInfo.color,
+        emissiveIntensity: 0.1
+      })
+      
       const mesh = new THREE.Mesh(geom, mat)
-      mesh.userData.itemType = type
+      mesh.userData.artifactType = artifactInfo.type
+      mesh.userData.artifactName = artifactInfo.name
+      mesh.userData.artifactRarity = Math.random() < 0.1 ? 'legendary' : Math.random() < 0.25 ? 'epic' : Math.random() < 0.5 ? 'rare' : 'common'
       mesh.castShadow = true
+      
       const x = (Math.random() - 0.5) * 14
       const z = (Math.random() - 0.5) * 14
       mesh.position.set(x, -2.7 + Math.random() * 0.3, z)
+      
+      // Add glow effect for rarer artifacts
+      if (mesh.userData.artifactRarity === 'legendary' || mesh.userData.artifactRarity === 'epic') {
+        const glowGeometry = new THREE.SphereGeometry(size * 1.5, 16, 12)
+        const glowMaterial = new THREE.MeshBasicMaterial({
+          color: artifactInfo.color,
+          transparent: true,
+          opacity: 0.3
+        })
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial)
+        mesh.add(glow)
+      }
+      
       collectibles.add(mesh)
     }
-    // spawn a few of each
-    itemTypes.forEach((t) => {
-      for (let i = 0; i < 3; i++) spawnItem(t)
+    
+    // Spawn artifacts
+    artifactTypes.forEach((artifactInfo) => {
+      for (let i = 0; i < 2; i++) spawnArtifact(artifactInfo)
     })
     scene.add(collectibles)
     collectiblesRef.current = collectibles
@@ -980,11 +1047,38 @@ export function PrawnVisualization({
       })
     })
 
-    // Float collectibles slightly
+    // Enhanced artifact floating animation
     if (collectiblesRef.current) {
-      collectiblesRef.current.children.forEach((m, i) => {
-        m.position.y += Math.sin(Date.now() * 0.001 + i) * 0.0008
-        m.rotation.y += 0.002
+      collectiblesRef.current.children.forEach((artifact, i) => {
+        const time = Date.now() * 0.001
+        
+        // Floating motion
+        artifact.position.y += Math.sin(time + i) * 0.001
+        
+        // Rotation based on rarity
+        const rarity = artifact.userData.artifactRarity || 'common'
+        const rotationSpeed = {
+          common: 0.002,
+          rare: 0.004,
+          epic: 0.006,
+          legendary: 0.01
+        }[rarity] || 0.002
+        
+        artifact.rotation.y += rotationSpeed
+        artifact.rotation.x += rotationSpeed * 0.5
+        
+        // Add special effects for rare artifacts
+        if (rarity === 'legendary' || rarity === 'epic') {
+          // Pulsing scale effect
+          const scale = 1 + Math.sin(time * 3 + i) * 0.1
+          artifact.scale.setScalar(scale)
+          
+          // Update emissive intensity for glow effect
+          const material = (artifact as THREE.Mesh).material as THREE.MeshStandardMaterial
+          if (material && material.emissiveIntensity !== undefined) {
+            material.emissiveIntensity = 0.1 + Math.sin(time * 2 + i) * 0.1
+          }
+        }
       })
     }
 
@@ -1125,21 +1219,75 @@ export function PrawnVisualization({
         
         updateEnvironment(deltaTime)
 
-        // Collision check with collectibles
+        // Collision check with collectibles (artifacts)
       if (prawnGroupRef.current && collectiblesRef.current) {
           const prawnPos = prawnGroupRef.current.position
           const toRemove: THREE.Object3D[] = []
           collectiblesRef.current.children.forEach((obj) => {
-            if (!('itemType' in obj.userData)) return
+            if (!('artifactType' in obj.userData)) return
         const radius = prawnGroupRef.current?.userData?.pickupRadius ?? 0.3
         if (prawnPos.distanceTo(obj.position) < radius) {
               toRemove.push(obj)
-              const type = obj.userData.itemType as any
-              setInventory((prev) => ({ ...prev, [type]: (prev[type] + 1) as number }))
-              playBubbleSound({ volume: 0.5 })
-              // Stable toast IDs per item type to avoid stacking
-              const id = `pickup-${type}`
-              toast.success(`Зібрано інгредієнт: ${type}`, { id })
+              
+              // Create artifact object from the collected item
+              const artifactType = obj.userData.artifactType as string
+              const artifactName = obj.userData.artifactName as string
+              const artifactRarity = obj.userData.artifactRarity as string
+              
+              // Calculate bonuses based on type and rarity
+              const rarityMultiplier = {
+                common: 1,
+                rare: 1.5,
+                epic: 2,
+                legendary: 3
+              }[artifactRarity] || 1
+              
+              const baseBonuses = {
+                weapon: { attack: 5 },
+                armor: { defense: 5 },
+                intelligence: { intelligence: 5 },
+                speed: { speed: 5 },
+                special: { attack: 2, defense: 2, speed: 2, intelligence: 2, endurance: 2 }
+              }[artifactType] || { attack: 1 }
+              
+              const scaledBonuses = Object.fromEntries(
+                Object.entries(baseBonuses).map(([key, value]) => [key, Math.round(value * rarityMultiplier)])
+              )
+              
+              const newArtifact = {
+                id: `artifact-${Date.now()}-${Math.random()}`,
+                name: artifactName,
+                type: artifactType as any,
+                rarity: artifactRarity as any,
+                bonuses: scaledBonuses,
+                acquiredDate: Date.now()
+              }
+              
+              // Add artifact to the first available shrimp in colony
+              if (shrimpColony.length > 0) {
+                setShrimpColony(current => 
+                  current.map((shrimp, index) => {
+                    if (index === 0) { // Give to first shrimp for simplicity
+                      return {
+                        ...shrimp,
+                        artifacts: [...shrimp.artifacts, newArtifact]
+                      }
+                    }
+                    return shrimp
+                  })
+                )
+                
+                playBubbleSound({ volume: 0.6, playbackRate: 1.2 })
+                toast.success(`🎁 Знайдено артефакт: ${artifactName} (${artifactRarity})!`, { 
+                  duration: 3000,
+                  description: `Додано до ${shrimpColony[0]?.name || 'креветки'}`
+                })
+              } else {
+                // Fallback - add to inventory for backward compatibility
+                setInventory((prev) => ({ ...prev, garlic: prev.garlic + 1 }))
+                playBubbleSound({ volume: 0.5 })
+                toast.success(`🎁 Знайдено артефакт: ${artifactName}!`)
+              }
             }
           })
           toRemove.forEach((obj) => {
