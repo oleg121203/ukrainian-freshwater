@@ -177,57 +177,126 @@ export function PrawnVisualization({
         return c
       }
 
-      // Spawn VFX: particle burst and sound
+      // Spawn VFX: particle burst, glow and distinct sound
       const playSpawnVFX = (position: THREE.Vector3) => {
         try {
           const scene = sceneRef.current
           if (!scene) return
-          const particleCount = 40
-          const geom = new THREE.BufferGeometry()
-          const positions = new Float32Array(particleCount * 3)
-          const velocities = new Float32Array(particleCount * 3)
-          for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = position.x
-            positions[i * 3 + 1] = position.y
-            positions[i * 3 + 2] = position.z
-            velocities[i * 3] = (Math.random() - 0.5) * 0.6
-            velocities[i * 3 + 1] = Math.random() * 0.8
-            velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.6
-          }
-          geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-          geom.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3))
-          const mat = new THREE.PointsMaterial({ size: 0.06, color: 0xfff1d6, transparent: true, opacity: 0.95 })
-          const points = new THREE.Points(geom, mat)
-          scene.add(points)
+          // small glow mesh
+          const glowGeom = new THREE.SphereGeometry(0.18, 12, 12)
+          const glowMat = new THREE.MeshBasicMaterial({ color: 0xfff4d6, transparent: true, opacity: 0.85 })
+          const glow = new THREE.Mesh(glowGeom, glowMat)
+          glow.position.copy(position)
+          scene.add(glow)
 
-          const start = Date.now()
-          const lifetime = 900
-          const tick = () => {
-            const now = Date.now()
-            const t = (now - start) / lifetime
-            const posAttr = points.geometry.attributes.position as THREE.BufferAttribute
-            const velAttr = points.geometry.attributes.velocity as THREE.BufferAttribute
-            for (let i = 0; i < posAttr.count; i++) {
-              posAttr.setX(i, posAttr.getX(i) + velAttr.getX(i) * 0.04)
-              posAttr.setY(i, posAttr.getY(i) + velAttr.getY(i) * 0.04 - 0.01)
-              posAttr.setZ(i, posAttr.getZ(i) + velAttr.getZ(i) * 0.04)
-              // gravity effect
-              velAttr.setY(i, velAttr.getY(i) - 0.01)
+          // burst particles (two layers)
+          const makeBurst = (count: number, color: number, speedMul = 1) => {
+            const geom = new THREE.BufferGeometry()
+            const positions = new Float32Array(count * 3)
+            const velocities = new Float32Array(count * 3)
+            for (let i = 0; i < count; i++) {
+              positions[i * 3] = position.x
+              positions[i * 3 + 1] = position.y
+              positions[i * 3 + 2] = position.z
+              const theta = Math.random() * Math.PI * 2
+              const phi = Math.acos(2 * Math.random() - 1)
+              const speed = (0.2 + Math.random() * 0.8) * speedMul
+              velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * speed
+              velocities[i * 3 + 1] = Math.cos(phi) * speed
+              velocities[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * speed
             }
-            posAttr.needsUpdate = true
-            velAttr.needsUpdate = true
-            ;(points.material as THREE.PointsMaterial).opacity = Math.max(0, 1 - t)
-            if (t < 1) requestAnimationFrame(tick)
+            geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+            geom.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3))
+            const mat = new THREE.PointsMaterial({ size: 0.08, color, transparent: true, opacity: 0.95, depthWrite: false })
+            const pts = new THREE.Points(geom, mat)
+            scene.add(pts)
+            return { pts, geom }
+          }
+
+          // generate a soft circular sprite texture via canvas for prettier particles
+          const createSpriteTexture = (size = 64) => {
+            const canvas = document.createElement('canvas')
+            canvas.width = size
+            canvas.height = size
+            const ctx = canvas.getContext('2d')!
+            const cx = size / 2
+            const cy = size / 2
+            const r = size / 2
+            // radial gradient (center bright -> edge transparent)
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+            grad.addColorStop(0, 'rgba(255,250,230,1)')
+            grad.addColorStop(0.25, 'rgba(255,200,160,0.95)')
+            grad.addColorStop(0.5, 'rgba(255,120,120,0.6)')
+            grad.addColorStop(1, 'rgba(255,120,120,0)')
+            ctx.fillStyle = grad
+            ctx.fillRect(0, 0, size, size)
+            const tex = new THREE.CanvasTexture(canvas)
+            tex.needsUpdate = true
+            return tex
+          }
+
+          const spriteTex = createSpriteTexture(128)
+
+          const burstA = makeBurst(60, 0xffffff, 1)
+          const burstB = makeBurst(30, 0xff9aa2, 0.7)
+
+          const start = performance.now()
+          const lifetime = 1100
+          const ticker = () => {
+            const now = performance.now()
+            const t = (now - start) / lifetime
+            const bursts = [burstA, burstB]
+            for (let bI = 0; bI < bursts.length; bI++) {
+              const pts = bursts[bI].pts
+              const posAttr = pts.geometry.attributes.position as THREE.BufferAttribute
+              const velAttr = pts.geometry.attributes.velocity as THREE.BufferAttribute
+              for (let i = 0; i < posAttr.count; i++) {
+                posAttr.setX(i, posAttr.getX(i) + velAttr.getX(i) * 0.045)
+                posAttr.setY(i, posAttr.getY(i) + velAttr.getY(i) * 0.045 - 0.008)
+                posAttr.setZ(i, posAttr.getZ(i) + velAttr.getZ(i) * 0.045)
+                velAttr.setY(i, velAttr.getY(i) - 0.004)
+              }
+              posAttr.needsUpdate = true
+              velAttr.needsUpdate = true
+              const pm = pts.material as THREE.PointsMaterial
+              // attach sprite texture once
+              if (!pm.map) {
+                pm.map = spriteTex
+                pm.alphaTest = 0.01
+                pm.blending = THREE.AdditiveBlending
+                pm.depthWrite = false
+              }
+              pm.opacity = Math.max(0, 1 - t)
+            }
+            // glow fade + scale
+            glow.scale.setScalar(1 + t * 1.4)
+            ;(glow.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.85 * (1 - t))
+            if (t < 1) requestAnimationFrame(ticker)
             else {
               try {
-                scene.remove(points)
-                points.geometry.dispose()
-                ;(points.material as THREE.Material).dispose()
+                scene.remove(burstA.pts)
+                scene.remove(burstB.pts)
+                scene.remove(glow)
+                burstA.pts.geometry.dispose()
+                burstB.pts.geometry.dispose()
+                ;(burstA.pts.material as THREE.Material).dispose()
+                ;(burstB.pts.material as THREE.Material).dispose()
+                glow.geometry.dispose()
+                ;(glow.material as THREE.Material).dispose()
+                try { spriteTex.dispose() } catch {}
               } catch {}
             }
           }
-          tick()
-          try { playBubbleSound({ volume: 0.7 }) } catch {}
+          ticker()
+
+          // play distinct spawn sound if available; fallback to click or swoosh
+          try {
+            if ((playSwooshSound as any)) {
+              playSwooshSound({ volume: 0.9, playbackRate: 1.05 })
+            } else if ((playClickSound as any)) {
+              playClickSound({ volume: 0.9 })
+            }
+          } catch {}
         } catch (err) {
           console.warn('Spawn VFX failed', err)
         }
