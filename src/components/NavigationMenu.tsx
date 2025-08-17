@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingCart, Images, BookOpen, Star, Phone, Globe, GearSix, CookingPot, Package, GameController } from '@phosphor-icons/react'
+import { Globe } from '@phosphor-icons/react'
+import HierarchicalMenu, { MenuNode } from '@/components/HierarchicalMenu'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
+import { navTree, findNodeByKey } from '@/config/navigation'
 
 interface NavigationMenuProps {
   isVisible: boolean
@@ -13,20 +15,19 @@ interface NavigationMenuProps {
 export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMenuProps) {
   const { language, setLanguage, t } = useLanguage()
   const { playClickSound, playBubbleSound } = useAudio()
+  const isAuthed = typeof window !== 'undefined' && !!sessionStorage.getItem('adminAuthed')
 
-  const primary = [
-    { key: 'about', icon: BookOpen, label: language === 'uk' ? 'Про нас' : 'About' },
-    { key: 'products', icon: ShoppingCart, label: language === 'uk' ? 'Магазин' : 'Shop' },
-    { key: 'recipes', icon: BookOpen, label: language === 'uk' ? 'Рецепти' : 'Recipes' },
-    { key: 'contact', icon: Phone, label: language === 'uk' ? 'Контакти' : 'Contact' },
-  ]
-  const secondary = [
-    { key: 'gallery', icon: Images, label: language === 'uk' ? 'Галерея' : 'Gallery' },
-    { key: 'reviews', icon: Star, label: language === 'uk' ? 'Відгуки' : 'Reviews' },
-    { key: 'orders', icon: Package, label: language === 'uk' ? 'Замовлення' : 'Orders' },
-  { key: 'game', icon: GameController, label: language === 'uk' ? 'Гра' : 'Game' },
-    { key: 'admin', icon: GearSix, label: language === 'uk' ? 'Адмін' : 'Admin' },
-  ]
+  // Преобразуем конфиг в структуру MenuNode, подтягивая локализацию
+  const toMenuNodes = (nodes: typeof navTree): MenuNode[] =>
+    nodes
+      .filter(n => (n.requiresAuth ? isAuthed : true))
+      .map(n => ({
+        key: n.key,
+        label: t(n.labelKey) || n.labelKey,
+        icon: n.icon,
+        children: n.children ? toMenuNodes(n.children) : undefined,
+      }))
+  const tree = toMenuNodes(navTree)
 
   const containerVariants = {
     hidden: {
@@ -117,51 +118,22 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
                 </div>
               </motion.div>
 
-              {/* Clear actions grid */}
+              {/* Hierarchical menu */}
               <div className="relative w-[28rem]">
-                <div className="grid grid-cols-2 gap-4">
-                  {primary.map((item) => (
-                    <motion.div key={item.key} variants={itemVariants}>
-                      <Button
-                        variant="default"
-                        size="lg"
-                        className="w-full h-20 rounded-xl bg-primary text-primary-foreground hover:opacity-90 shadow-lg"
-                        onMouseEnter={() => playBubbleSound({ volume: 0.15, playbackRate: 1.3 })}
-                        onClick={() => {
-                          playClickSound({ volume: 0.4, playbackRate: 1.1 })
-                          onNavigate(item.key)
-                          onClose()
-                        }}
-                      >
-                        <div className="flex items-center gap-2 text-base">
-                          <item.icon size={22} />
-                          <span className="font-semibold">{item.label}</span>
-                        </div>
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div>
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  {secondary.map((item) => (
-                    <motion.div key={item.key} variants={itemVariants}>
-                      <Button
-                        variant="outline"
-                        size="default"
-                        className="w-full h-12 rounded-lg bg-white/90 hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => {
-                          playClickSound({ volume: 0.4, playbackRate: 1.05 })
-                          onNavigate(item.key)
-                          onClose()
-                        }}
-                      >
-                        <div className="flex items-center gap-2 text-sm">
-                          <item.icon size={18} />
-                          <span>{item.label}</span>
-                        </div>
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div>
+                <HierarchicalMenu
+                  className="p-2"
+                  onNavigate={(k) => {
+                    const node = findNodeByKey(navTree, k)
+                    if (node?.requiresAuth && !isAuthed) {
+                      onNavigate('admin-login')
+                    } else {
+                      onNavigate(node?.section || k)
+                    }
+                    onClose()
+                  }}
+                  onClose={onClose}
+                  tree={tree as MenuNode[]}
+                />
               </div>
 
               {/* Language switcher */}

@@ -1,6 +1,8 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useMemo, useState, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import { AquaMenu } from '@/components/AquaMenu'
+import { MenuNode } from '@/components/HierarchicalMenu'
 const PrawnVisualization = lazy(() => import('@/components/PrawnVisualization'))
 import { PetkaGame } from '@/components/PetkaGame'
 import { NavigationMenu } from '@/components/NavigationMenu'
@@ -25,6 +27,8 @@ import { ShoppingTest } from '@/components/ShoppingTest'
 import { PaymentAdmin } from '@/components/PaymentAdmin'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
+import AdminBanner from '@/components/AdminBanner'
+import { flattenSections, navTree, NavNode, findNodeByKey } from '@/config/navigation'
 
 function App() {
   const [currentSection, setCurrentSection] = useState<string>('hero')
@@ -35,33 +39,122 @@ function App() {
   const [prevSection, setPrevSection] = useState<string | null>(null)
   const { playSwooshSound } = useAudio()
 
-  // All available sections for debugging
-  const allSections = [
-    'hero',
-    'about',
-    'products',
-    'gallery',
-    'recipes',
-    'reviews',
-    'contact',
-    'admin',
-    'eco-farming',
-    'technology',
-    'delivery',
-    'professional',
-  'feeding', // оставляем для обратной совместимости
-  'game',
-    'orders',
-    'shop-test',
-    'payment-admin',
-  'petka',
-  ]
+  // Навигационные секции из единого конфига
+  const allSections = useMemo(() => flattenSections(navTree), [])
 
-  const handleNavigate = (section: string) => {
-    console.log('Navigating to section:', section)
-    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
+  // Admin mode state for menu reactivity
+  const [adminMode, setAdminMode] = useState(false)
+  
+  // Check admin status on mount and update state
+  useEffect(() => {
+    const checkAdmin = () => {
+      const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('adminAuthed')
+      setAdminMode(!!isAdmin)
+    }
+    checkAdmin()
     
-    if (section === 'hero') {
+    // Listen for storage changes to update menu when admin status changes
+    window.addEventListener('storage', checkAdmin)
+    return () => window.removeEventListener('storage', checkAdmin)
+  }, [])
+
+  const labelFor = (sectionName: string) => {
+    // Попробуем найти узел по section, без локализации (Debug-панель)
+    const flat = (arr: any[]) => arr.flatMap(n => [n, ...(n.children ? flat(n.children) : [])])
+    const node = flat(navTree).find((n: any) => n.section === sectionName)
+    if (node && node.labelKey) {
+      const last = String(node.labelKey).split('.').pop() || sectionName
+      return last.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    }
+    switch (sectionName) {
+      case 'eco-farming':
+        return 'Eco'
+      case 'technology':
+        return 'Tech'
+      case 'delivery':
+        return 'Ship'
+      case 'professional':
+        return 'Pro'
+      case 'feeding':
+        return 'Feed'
+      case 'orders':
+        return 'Orders'
+      case 'shop-test':
+        return 'Test'
+      case 'payment-admin':
+        return 'Pay'
+      default:
+        return sectionName
+    }
+  }
+
+  const menuTree: MenuNode[] = useMemo(() => {
+    const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('adminAuthed')
+    
+    const transform = (nodes: NavNode[]): MenuNode[] => {
+      return nodes.filter(node => {
+        // Show admin nodes only if admin mode is active
+        if (node.requiresAuth && !isAdmin) return false
+        return true
+      }).map(node => ({
+        key: node.key,
+        label: (node.labelKey.split('.').pop() || node.key).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        icon: node.icon,
+        children: node.children ? transform(node.children) : undefined,
+      }))
+    }
+
+    const baseTree = transform(navTree)
+
+    // Add any missing sections that exist in renderCurrentSection but not in navTree
+    const existingSections = new Set(flattenSections(navTree))
+    const additionalSections: MenuNode[] = []
+
+    // Check for sections in renderCurrentSection that aren't in navTree
+    const allRenderSections = [
+      'hero', 'about', 'products', 'gallery', 'recipes', 'reviews', 'contact', 
+      'admin', 'eco-farming', 'technology', 'delivery', 'professional', 
+      'feeding', 'game', 'orders', 'shop-test', 'payment-admin', 'petka'
+    ]
+
+    allRenderSections.forEach(section => {
+      if (!existingSections.has(section)) {
+        // Only add admin sections if admin mode is active
+        if ((section === 'admin' || section === 'payment-admin') && !isAdmin) return
+        
+        additionalSections.push({
+          key: section,
+          label: labelFor(section),
+        })
+      }
+    })
+
+    // Add additional sections to More submenu
+    if (additionalSections.length > 0) {
+      const moreIndex = baseTree.findIndex(node => node.key === 'more')
+      if (moreIndex !== -1 && baseTree[moreIndex].children) {
+        baseTree[moreIndex].children!.push(...additionalSections)
+      }
+    }
+
+    return baseTree
+  }, [adminMode]) // Re-compute when admin status changes
+
+
+  const handleNavigate = (key: string) => {
+    console.log('Navigating to key:', key)
+    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
+
+    // Special handling for container nodes that don't have sections
+    if (key === 'more') {
+      // "More" is just a container, don't navigate
+      return
+    }
+
+    const node = findNodeByKey(navTree, key)
+    const targetSection = node?.section || key
+
+    if (targetSection === 'hero') {
       // If going to hero, show 3D
       setPrevSection(currentSection)
       setCurrentSection('hero')
@@ -69,10 +162,10 @@ function App() {
     } else {
       // Going to any other section, hide 3D
       setPrevSection(currentSection)
-      setCurrentSection(section)
+      setCurrentSection(targetSection)
       setShow3D(false)
     }
-    setMenuVisible(false)
+    // setMenuVisible(false) // Keep open
   }
 
   const handleBack = () => {
@@ -141,6 +234,13 @@ function App() {
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-background text-foreground">
+        <AquaMenu
+          tree={menuTree}
+          onNavigate={handleNavigate}
+          isAdminMode={adminMode}
+          onAdminOpen={() => handleNavigate('admin')}
+        />
+        {/* Admin banner moved into the menu header to avoid overlap */}
         {/* Debug Navigation Panel */}
         {showDebug && (
           <div className="fixed top-4 left-4 z-50 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border max-w-xs">
@@ -149,42 +249,17 @@ function App() {
             <p className="text-xs mb-2">3D: {show3D ? 'Yes' : 'No'}</p>
             <p className="text-xs mb-3">Menu: {menuVisible ? 'Open' : 'Closed'}</p>
             <div className="grid grid-cols-2 gap-1">
-              {allSections.map(section => {
-                const getSectionLabel = (sectionName: string) => {
-                  switch (sectionName) {
-                    case 'eco-farming':
-                      return 'Eco'
-                    case 'technology':
-                      return 'Tech'
-                    case 'delivery':
-                      return 'Ship'
-                    case 'professional':
-                      return 'Pro'
-                    case 'feeding':
-                      return 'Feed'
-                    case 'orders':
-                      return 'Orders'
-                    case 'shop-test':
-                      return 'Test'
-                    case 'payment-admin':
-                      return 'Pay'
-                    default:
-                      return sectionName
-                  }
-                }
-
-                return (
-                  <Button
-                    key={section}
-                    size="sm"
-                    variant={currentSection === section ? 'default' : 'outline'}
-                    className="text-xs h-6"
-                    onClick={() => handleNavigate(section)}
-                  >
-                    {getSectionLabel(section)}
-                  </Button>
-                )
-              })}
+              {allSections.map(section => (
+                <Button
+                  key={section}
+                  size="sm"
+                  variant={currentSection === section ? 'default' : 'outline'}
+                  className="text-xs h-6"
+                  onClick={() => handleNavigate(section)}
+                >
+                  {labelFor(section)}
+                </Button>
+              ))}
             </div>
             <Button
               size="sm"
@@ -258,7 +333,7 @@ function App() {
           </main>
         )}
 
-        {/* Navigation Menu */}
+        {/* OLD Navigation Menu - can be removed later */}
         <NavigationMenu
           isVisible={menuVisible}
           onNavigate={handleNavigate}

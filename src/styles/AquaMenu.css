@@ -1,0 +1,245 @@
+.aqua-menu-trigger {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.8), rgba(0, 200, 255, 0.9));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  box-shadow: 
+    0 8px 32px rgba(0, 150, 255, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aqua-menu-trigger:hover {
+  background: linear-gradient(135deg, rgba(0, 180, 255, 0.9), rgba(0, 220, 255, 1));
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 12px 40px rgba(0, 150, 255, 0.6),
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 3px rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.aqua-menu-trigger:active {
+  transform: scale(1.05) rotate(5deg);
+}
+
+.aqua-menu-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999; /* ensure overlay above everything */
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  padding: 8px 6px; /* minimal padding so items float */
+  border-radius: 12px;
+  background: transparent; /* removed background so only glow around buttons visible */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  position: fixed;
+  overflow: auto; /* allow scrolling inside menu without shifting page */
+  pointer-events: auto;
+}
+
+/* when menu is closed, don't intercept clicks */
+.aqua-menu-container.closed {
+  pointer-events: none;
+}
+
+/* keep a very subtle top accent line but transparent by default */
+.aqua-menu-container::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* HierarchicalMenu styles */
+.aqua-hierarchical-menu {
+  position: relative;
+  z-index: 10;
+}
+
+.aqua-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.aqua-menu-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aqua-menu-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aqua-admin-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 4px 6px;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+}
+
+.aqua-admin-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.aqua-admin-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.aqua-back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #2c3e50;
+  transition: all 0.2s ease;
+}
+
+.aqua-back-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-2px);
+}
+
+.aqua-menu-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.aqua-menu-level {
+  font-size: 12px;
+  color: rgba(44, 62, 80, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.aqua-menu-content {
+  position: relative;
+  overflow: hidden;
+  min-height: 240px;
+}
+
+.aqua-menu-items {
+  position: absolute;
+  inset: 0;
+  padding: 0 4px;
+}
+
+.aqua-items-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.aqua-menu-item {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 0 12px;
+  background: transparent; /* no background so only glow visible */
+  border: none; /* remove faint border that makes buttons look empty */
+  color: rgba(0,160,220,0.98) !important; /* enforce blueish label color */
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: visible;
+}
+
+.aqua-menu-item::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 16px;
+  background: radial-gradient(closest-side, rgba(0,200,255,0.14), transparent 60%);
+  filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
+}
+
+.aqua-menu-item:hover::before {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.aqua-menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 150, 255, 0.10);
+}
+
+.aqua-menu-icon {
+  color: rgba(0, 150, 255, 0.95);
+  flex-shrink: 0;
+}
+
+.aqua-menu-icon-placeholder {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.aqua-menu-label {
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  text-align: left;
+  color: rgba(0,140,210,1) !important;
+}
+
+.aqua-menu-arrow {
+  font-size: 12px;
+  color: rgba(44, 62, 80, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.aqua-menu-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  color: rgba(44, 62, 80, 0.7);
+  text-align: center;
+}

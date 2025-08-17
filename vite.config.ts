@@ -22,12 +22,11 @@ export default defineConfig({
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    hmr: process.env.CODESPACE_NAME && process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
-      ? {
-          protocol: 'wss',
-          host: `${process.env.CODESPACE_NAME}-5173.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`,
-          clientPort: 443,
-        }
-      : undefined,
+    // Force local HMR websocket to ws://localhost:5173 to avoid wss proxy issues in remote dev environments
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      clientPort: 5173,
+    },
   },
 })

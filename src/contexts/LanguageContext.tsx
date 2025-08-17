@@ -19,6 +19,18 @@ const translations = {
     'nav.recipes': 'Рецепти',
     'nav.reviews': 'Відгуки',
     'nav.contact': 'Контакти',
+  'nav.orders': 'Замовлення',
+  'nav.game': 'Гра',
+  'nav.admin': 'Адмін',
+  'nav.more': 'Ще',
+  'nav.eco': 'Еко-ферма',
+  'nav.tech': 'Технології',
+  'nav.delivery': 'Доставка',
+  'nav.pro': 'Професіоналам',
+  'nav.feed': 'Годування',
+  'nav.shopTest': 'Тест магазину',
+  'nav.payAdmin': 'Платежі (адмін)',
+  'nav.petka': 'Петька',
 
     // Hero section
     'hero.title': 'Свіжі креветки Macrobrachium rosenbergii',
@@ -31,6 +43,9 @@ const translations = {
     'products.fresh': 'Свіжі креветки',
     'products.frozen': 'Заморожені креветки',
     'products.live': 'Живі креветки',
+  // Game submenu
+  'game.interactive': 'Інтерактив',
+  'game.3d': '3D',
     'products.per-kg': 'за кг',
     'products.add-to-cart': 'Додати в кошик',
 
@@ -90,6 +105,18 @@ const translations = {
     'nav.recipes': 'Recipes',
     'nav.reviews': 'Reviews',
     'nav.contact': 'Contact',
+  'nav.orders': 'Orders',
+  'nav.game': 'Game',
+  'nav.admin': 'Admin',
+  'nav.more': 'More',
+  'nav.eco': 'Eco Farming',
+  'nav.tech': 'Technology',
+  'nav.delivery': 'Delivery',
+  'nav.pro': 'For Professionals',
+  'nav.feed': 'Feeding',
+  'nav.shopTest': 'Shop Test',
+  'nav.payAdmin': 'Payment Admin',
+  'nav.petka': 'Petka',
 
     // Hero section
     'hero.title': 'Fresh Macrobrachium rosenbergii Prawns',
@@ -102,6 +129,9 @@ const translations = {
     'products.fresh': 'Fresh Prawns',
     'products.frozen': 'Frozen Prawns',
     'products.live': 'Live Prawns',
+  // Game submenu
+  'game.interactive': 'Interactive',
+  'game.3d': '3D',
     'products.per-kg': 'per kg',
     'products.add-to-cart': 'Add to Cart',
 

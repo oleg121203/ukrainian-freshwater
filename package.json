@@ -12,7 +12,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "fix": "npm run format && npm run lint:fix",
     "optimize": "vite optimize",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:server": "node server/index.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -68,6 +69,7 @@
     "react-error-boundary": "^6.0.0",
     "react-hook-form": "^7.54.2",
     "react-resizable-panels": "^2.1.7",
+    "react-use": "^17.6.0",
     "recharts": "^2.15.1",
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",

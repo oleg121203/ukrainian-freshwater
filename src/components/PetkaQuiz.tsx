@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 
@@ -16,36 +16,43 @@ type Q = {
 }
 
 export function PetkaQuiz({ isOpen, onClose, onPassed, requiredCorrect = 3 }: PetkaQuizProps) {
-  const questions = useMemo<Q[]>(
+  const localQuestions = useMemo<Q[]>(
     () => [
       {
         q: 'Скільки ніг у креветки?',
         options: ['4', '6', '10'],
         correctIndex: 2,
       },
-      {
-        q: 'Що креветка робить хвостом під час плавання?',
-        options: ['Гальмує', 'Рухається вперед', 'Сигналізує іншим'],
-        correctIndex: 1,
-      },
-      {
-        q: 'Який інгредієнт найкраще підкреслює смак креветки?',
-        options: ['Цукор', 'Лимонний сік', 'Какао'],
-        correctIndex: 1,
-      },
-      {
-        q: 'Скільки солі потрібно додати зазвичай?',
-        options: ['Трохи, за смаком', 'Пів склянки', 'Не солити'],
-        correctIndex: 0,
-      },
-      {
-        q: 'Що з наведеного — трава?',
-        options: ['Базилік', 'Перець', 'Борошно'],
-        correctIndex: 0,
-      },
     ],
     []
   )
+
+  const [questions, setQuestions] = useState<Q[]>(localQuestions)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: 'Прості дитячі питання про креветок', maxQ: 5 }) })
+        if (!res.ok) throw new Error('Network')
+        const json = await res.json()
+        if (cancelled) return
+        const items = json.items || []
+        // Map to Q (simple splitting of possible answers)
+        const mapped: Q[] = items.map((it: any) => ({ q: it.question || '', options: [it.answer, 'Так/Ні', 'Невідомо'], correctIndex: 0 }))
+        setQuestions(mapped.length ? mapped : localQuestions)
+      } catch (e) {
+        console.warn('QA generation failed, using local questions', e)
+        setQuestions(localQuestions)
+      } finally {
+        setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isOpen])
 
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(-1))
   const [submitted, setSubmitted] = useState(false)

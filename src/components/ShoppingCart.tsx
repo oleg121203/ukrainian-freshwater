@@ -65,6 +65,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     getTotalPrice,
     getTotalItems,
     createOrder,
+    setCart,
   } = useShoppingCart()
   const { processPayment } = usePaymentService()
   const [step, setStep] = useState<
@@ -107,18 +108,33 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
   const totalPrice = getTotalPrice()
   const totalItems = getTotalItems()
 
+  // Local displayed snapshot to avoid stale render when modal opens
+  const [displayedCart, setDisplayedCart] = useState<CartItem[]>(cart)
+
+  const displayedTotalPrice = displayedCart.reduce((s, i) => s + i.price * i.quantity, 0)
+  const displayedTotalItems = displayedCart.reduce((s, i) => s + i.quantity, 0)
+
+  // Keep displayedCart in sync with hook cart
+  useEffect(() => {
+    setDisplayedCart(cart)
+  }, [cart])
+
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
-    updateQuantity(itemId, newQuantity)
+  updateQuantity(itemId, newQuantity)
+  // mirror immediately to displayed view
+  setDisplayedCart(prev => prev.map(i => (i.id === itemId ? { ...i, quantity: newQuantity } : i)))
   }
 
   const handleRemoveFromCart = (itemId: string) => {
     removeFromCart(itemId)
     toast.success(language === 'uk' ? 'Товар видалено з кошика' : 'Item removed from cart')
+  setDisplayedCart(prev => prev.filter(i => i.id !== itemId))
   }
 
   const handleClearCart = () => {
     clearCart()
     toast.success(language === 'uk' ? 'Кошик очищено' : 'Cart cleared')
+  setDisplayedCart([])
   }
 
   const cities = [
@@ -254,6 +270,23 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     onClose()
   }
 
+  // Ensure cart is in sync when modal opens (some components update localStorage directly)
+  useEffect(() => {
+    if (!isVisible) return
+    try {
+      const raw = localStorage.getItem('shopping-cart')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        // update local hook state to latest stored value
+        setCart(parsed)
+        setDisplayedCart(parsed)
+        console.debug('[ShoppingCart] synced from localStorage', parsed)
+      }
+    } catch (e) {
+      console.error('[ShoppingCart] sync error', e)
+    }
+  }, [isVisible, setCart])
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast.success(language === 'uk' ? 'Скопійовано!' : 'Copied!')
@@ -296,7 +329,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                   </h2>
                   {step === 'cart' && (
                     <p className="text-sm text-muted-foreground">
-                      {totalItems} {language === 'uk' ? 'товарів' : 'items'} • {totalPrice} UAH
+                      {displayedTotalItems} {language === 'uk' ? 'товарів' : 'items'} • {displayedTotalPrice} UAH
                     </p>
                   )}
                   {step === 'processing' && (
@@ -315,7 +348,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
             <div className="flex-1 overflow-y-auto">
               {step === 'cart' && (
                 <div className="p-6">
-                  {cart.length === 0 ? (
+                  {displayedCart.length === 0 ? (
                     <div className="text-center py-12">
                       <ShoppingCartIcon size={64} className="text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">
@@ -324,7 +357,7 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {cart.map(item => (
+                      {displayedCart.map(item => (
                         <Card key={item.id} className="p-4">
                           <div className="flex gap-4">
                             <div className="text-3xl">{item.image}</div>
