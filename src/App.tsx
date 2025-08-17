@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useState, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 const PrawnVisualization = lazy(() => import('@/components/PrawnVisualization'))
@@ -23,6 +23,8 @@ import { ShoppingCart } from '@/components/ShoppingCart'
 import { FloatingCart } from '@/components/FloatingCart'
 import { ShoppingTest } from '@/components/ShoppingTest'
 import { PaymentAdmin } from '@/components/PaymentAdmin'
+import { AquaMenu } from '@/components/AquaMenu'
+import { createMenuTree } from '@/config/menuTree'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
 
@@ -33,7 +35,26 @@ function App() {
   const [showDebug, setShowDebug] = useState(false)
   const [showCart, setShowCart] = useState(false)
   const [prevSection, setPrevSection] = useState<string | null>(null)
+  const [isAdminMode, setIsAdminMode] = useState<boolean>(false)
   const { playSwooshSound } = useAudio()
+
+  // Check admin mode status from sessionStorage
+  const checkAdminMode = () => {
+    return sessionStorage.getItem('adminAuthed') === '1'
+  }
+
+  // Update admin mode state when needed
+  const updateAdminMode = () => {
+    setIsAdminMode(checkAdminMode())
+  }
+
+  // Create menu tree
+  const menuTree = createMenuTree()
+
+  // Initialize admin mode on component mount
+  useEffect(() => {
+    updateAdminMode()
+  }, [currentSection]) // Update when section changes to keep admin mode in sync
 
   // All available sections for debugging
   const allSections = [
@@ -61,11 +82,14 @@ function App() {
     console.log('Navigating to section:', section)
     playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
     
-    if (section === 'hero') {
-      // If going to hero, show 3D
+    // Update admin mode state when navigating
+    updateAdminMode()
+    
+    if (section === 'hero' || section === 'hero-3d') {
+      // If going to hero, show 3D based on the specific option
       setPrevSection(currentSection)
       setCurrentSection('hero')
-      setShow3D(true)
+      setShow3D(section === 'hero-3d')
     } else {
       // Going to any other section, hide 3D
       setPrevSection(currentSection)
@@ -77,6 +101,7 @@ function App() {
 
   const handleBack = () => {
     playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
+    updateAdminMode()
     if (prevSection) {
       const target = prevSection
       setPrevSection(null)
@@ -88,11 +113,8 @@ function App() {
     }
   }
 
-  const handleNavigateToSite = () => {
-    playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
-    setCurrentSection('about') // Navigate to the about section as default entry point
-    setShow3D(false)
-    setMenuVisible(false)
+  const handleAdminOpen = () => {
+    handleNavigate('admin')
   }
 
   const renderCurrentSection = () => {
@@ -232,25 +254,14 @@ function App() {
               </div>
             )}
 
-            {/* Right: AquaFarm Button (always visible) and optional Open 3D when hero is active */}
-            <div className="fixed top-6 right-6 z-30 flex flex-col items-end space-y-2">
-              <button
-                onClick={() => handleNavigate('hero')}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                🏠 AquaFarm
-              </button>
-              {!show3D && currentSection === 'hero' && (
-                <button
-                  onClick={() => {
-                    playSwooshSound({ volume: 0.25, playbackRate: 0.95 })
-                    setShow3D(true)
-                  }}
-                  className="bg-white/90 text-foreground px-3 py-1 rounded-full shadow-md hover:bg-white transition-all duration-200 text-sm"
-                >
-                  🔍 Відкрити 3D
-                </button>
-              )}
+            {/* Right: AquaMenu - Always visible hierarchical menu */}
+            <div className="fixed top-6 right-6 z-30">
+              <AquaMenu
+                tree={menuTree}
+                onNavigate={handleNavigate}
+                isAdminMode={isAdminMode}
+                onAdminOpen={handleAdminOpen}
+              />
             </div>
 
             {/* Current Section Content */}
