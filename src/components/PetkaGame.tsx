@@ -246,7 +246,14 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <svg viewBox="0 0 1200 120" width="100%" height="90" preserveAspectRatio="none">
+            <motion.svg
+              viewBox="0 0 1200 120"
+              width="100%"
+              height="90"
+              preserveAspectRatio="none"
+              animate={{ x: [0, -6, 0, 6, 0] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            >
               <defs>
                 <linearGradient id="af-water" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#7dd3fc" />
@@ -256,34 +263,61 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
                 <filter id="af-soft" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
                 </filter>
+                <filter id="af-ripple" x="-10%" y="-30%" width="120%" height="160%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.006 0.02" numOctaves="1" seed="3" result="noise" />
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
                 <path id="af-wave-1" d="M0,60 C 160,20 320,100 480,60 S 800,20 960,60 S 1120,100 1200,60" fill="none" />
                 <path id="af-wave-2" d="M0,85 C 160,45 320,125 480,85 S 800,45 960,85 S 1120,125 1200,85" fill="none" />
               </defs>
+              <g filter="url(#af-ripple)">
+                {/* Outline underlay for readability */}
+                <text fontSize="18" fontWeight="800" fill="none" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="1.2">
+                  <motion.textPath
+                    href="#af-wave-1"
+                    startOffset="0%"
+                    animate={{ startOffset: ['0%', '50%', '0%'] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    AquaFarm — Інтерактив
+                  </motion.textPath>
+                </text>
+                {/* Top line: AquaFarm — Інтерактив */}
+                <text fontSize="18" fontWeight="700" fill="url(#af-water)" filter="url(#af-soft)">
+                  <motion.textPath
+                    href="#af-wave-1"
+                    startOffset="0%"
+                    animate={{ startOffset: ['0%', '50%', '0%'] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    AquaFarm — Інтерактив
+                  </motion.textPath>
+                </text>
 
-              {/* Top line: AquaFarm — Інтерактив */}
-              <text fontSize="18" fontWeight="700" fill="url(#af-water)" filter="url(#af-soft)">
-                <motion.textPath
-                  href="#af-wave-1"
-                  startOffset="0%"
-                  animate={{ startOffset: ['0%', '50%', '0%'] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  AquaFarm — Інтерактив
-                </motion.textPath>
-              </text>
-
-              {/* Bottom line: Розумне акварільне фермерство */}
-              <text fontSize="26" fontWeight="800" fill="url(#af-water)">
-                <motion.textPath
-                  href="#af-wave-2"
-                  startOffset="100%"
-                  animate={{ startOffset: ['100%', '50%', '100%'] }}
-                  transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  Розумне акварільне фермерство
-                </motion.textPath>
-              </text>
-            </svg>
+                {/* Outline underlay for readability */}
+                <text fontSize="26" fontWeight="900" fill="none" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="1.4">
+                  <motion.textPath
+                    href="#af-wave-2"
+                    startOffset="100%"
+                    animate={{ startOffset: ['100%', '50%', '100%'] }}
+                    transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    Розумне акварільне фермерство
+                  </motion.textPath>
+                </text>
+                {/* Bottom line: Розумне акварільне фермерство */}
+                <text fontSize="26" fontWeight="800" fill="url(#af-water)">
+                  <motion.textPath
+                    href="#af-wave-2"
+                    startOffset="100%"
+                    animate={{ startOffset: ['100%', '50%', '100%'] }}
+                    transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    Розумне акварільне фермерство
+                  </motion.textPath>
+                </text>
+              </g>
+            </motion.svg>
           </motion.div>
         </div>
       )}
