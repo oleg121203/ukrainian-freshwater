@@ -132,7 +132,7 @@ function App() {
       case 'payment-admin':
         return <PaymentAdmin onNavigate={handleNavigate} />
       case 'petka':
-  return <AquaGame onNavigate={handleNavigate} />
+        return <PetkaGame onNavigate={handleNavigate} />
       default:
   return <AboutSection onNavigate={handleNavigate} />
     }
