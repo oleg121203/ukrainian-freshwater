@@ -105,18 +105,8 @@ export function EcoFarmingSection({ onNavigate }: EcoFarmingSectionProps) {
   return (
     <section className="min-h-screen py-20 px-6 bg-gradient-to-b from-green-50/50 to-blue-50/50">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onNavigate?.('about')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            {language === 'uk' ? 'Назад' : 'Back'}
-          </Button>
-        </div>
+  {/* Header removed: глобальная кнопка Назад уже существует в App.tsx */}
+  <div className="mb-4" />
 
         {/* Hero Section */}
         <motion.div
