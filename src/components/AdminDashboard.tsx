@@ -1,8 +1,5 @@
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface AdminDashboardProps {
@@ -29,7 +26,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+  <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Website Management */}
             <Card>
@@ -74,16 +71,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => onNavigate?.('feeding')}
+      onClick={() => onNavigate?.('game')}
                 >
-                  {language === 'uk' ? 'Симулятор годування' : 'Feeding Simulator'}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => onNavigate?.('petka')}
-                >
-                  {language === 'uk' ? 'Гра Петька' : 'Petka Game'}
+      {language === 'uk' ? 'Інтерактивна гра' : 'Interactive Game'}
                 </Button>
                 <Button 
                   variant="outline" 

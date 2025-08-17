@@ -10,10 +10,10 @@ interface AdminGateProps {
 
 export function AdminGate({ onNavigate }: AdminGateProps) {
   const [authed, setAuthed] = useState(false)
-  const [username, setUsername] = useState('')
+  const [login, setLogin] = useState('')
   const [pw, setPw] = useState('')
-  const expectedUsername = 'admin'
-  const expectedPassword = 'admin'
+  const expectedLogin = 'admin'
+  const expectedPw = 'admin'
 
   useEffect(() => {
     const ok = sessionStorage.getItem('adminAuthed') === '1'
@@ -32,7 +32,7 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            if (username === expectedUsername && pw === expectedPassword) {
+            if (login === expectedLogin && pw === expectedPw) {
               sessionStorage.setItem('adminAuthed', '1')
               setAuthed(true)
               toast.success('Ласкаво просимо, адміністратор!', { id: 'admin-login' })
@@ -42,23 +42,13 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
           }}
           className="space-y-3"
         >
-          <Input
-            type="text"
-            placeholder="Логін"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Input
-            type="password"
-            placeholder="Пароль"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-          />
+          <Input type="text" placeholder="Логін" value={login} onChange={(e) => setLogin(e.target.value)} />
+          <Input type="password" placeholder="Пароль" value={pw} onChange={(e) => setPw(e.target.value)} />
           <div className="flex gap-2">
             <Button type="submit" className="w-full">Увійти</Button>
             <Button type="button" variant="outline" onClick={() => onNavigate?.('hero')}>Назад</Button>
           </div>
-          <p className="text-xs text-gray-500">Логін: <span className="font-mono">admin</span>, Пароль: <span className="font-mono">admin</span></p>
+          <p className="text-xs text-gray-500">Логін: <span className="font-mono">admin</span>, Пароль: <span className="font-mono">admin</span>. Порада: змініть облікові дані перед продакшном.</p>
         </form>
       </div>
     </div>
