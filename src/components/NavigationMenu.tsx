@@ -1,16 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ShoppingCart,
-  Fish,
-  Images,
-  BookOpen,
-  Star,
-  Phone,
-  Globe,
-  GearSix,
-  CookingPot,
-  Package,
-} from '@phosphor-icons/react'
+import { ShoppingCart, Images, BookOpen, Star, Phone, Globe, GearSix, CookingPot, Package, GameController } from '@phosphor-icons/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAudio } from '@/hooks/useAudio'
 import { Button } from '@/components/ui/button'
@@ -35,7 +24,7 @@ export function NavigationMenu({ isVisible, onNavigate, onClose }: NavigationMen
     { key: 'gallery', icon: Images, label: language === 'uk' ? 'Галерея' : 'Gallery' },
     { key: 'reviews', icon: Star, label: language === 'uk' ? 'Відгуки' : 'Reviews' },
     { key: 'orders', icon: Package, label: language === 'uk' ? 'Замовлення' : 'Orders' },
-    { key: 'feeding', icon: CookingPot, label: language === 'uk' ? 'Годування' : 'Feeding' },
+  { key: 'game', icon: GameController, label: language === 'uk' ? 'Гра' : 'Game' },
     { key: 'admin', icon: GearSix, label: language === 'uk' ? 'Адмін' : 'Admin' },
   ]
 

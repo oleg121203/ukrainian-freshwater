@@ -17,6 +17,7 @@ import { TechnologySection } from '@/components/TechnologySection'
 import { DeliverySection } from '@/components/DeliverySection'
 import { ProfessionalSection } from '@/components/ProfessionalSection'
 import { FeedingSimulation } from '@/components/FeedingSimulation'
+import { AquaGame } from '@/components/AquaGame'
 import { OrdersManagement } from '@/components/OrdersManagement'
 import { ShoppingCart } from '@/components/ShoppingCart'
 import { FloatingCart } from '@/components/FloatingCart'
@@ -48,7 +49,8 @@ function App() {
     'technology',
     'delivery',
     'professional',
-    'feeding',
+  'feeding', // оставляем для обратной совместимости
+  'game',
     'orders',
     'shop-test',
     'payment-admin',
@@ -120,19 +122,9 @@ function App() {
       case 'professional':
         return <ProfessionalSection onNavigate={handleNavigate} />
       case 'feeding':
-        return (
-          <FeedingSimulation
-            onPrawnFeed={(foodType, intensity) => {
-              // This could trigger animations in the 3D prawn when integrated
-              console.log('Prawn fed with:', foodType, 'intensity:', intensity)
-              playSwooshSound({ volume: 0.3, playbackRate: 1.2 })
-            }}
-            onStatsUpdate={stats => {
-              // Update global prawn state if needed
-              console.log('Prawn stats updated:', stats)
-            }}
-          />
-        )
+        return <AquaGame onNavigate={handleNavigate} />
+      case 'game':
+        return <AquaGame onNavigate={handleNavigate} />
       case 'orders':
         return <OrdersManagement onNavigate={handleNavigate} />
       case 'shop-test':
@@ -140,18 +132,9 @@ function App() {
       case 'payment-admin':
         return <PaymentAdmin onNavigate={handleNavigate} />
       case 'petka':
-        return (
-          <PetkaGame
-            onNavigate={handleNavigate}
-            onOpen3D={() => {
-              setCurrentSection('hero')
-              setShow3D(true)
-              setMenuVisible(false)
-            }}
-          />
-        )
+  return <AquaGame onNavigate={handleNavigate} />
       default:
-  return <PetkaGame onNavigate={handleNavigate} onOpen3D={() => { setCurrentSection('hero'); setShow3D(true) }} />
+  return <AboutSection onNavigate={handleNavigate} />
     }
   }
 

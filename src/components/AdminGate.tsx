@@ -10,8 +10,10 @@ interface AdminGateProps {
 
 export function AdminGate({ onNavigate }: AdminGateProps) {
   const [authed, setAuthed] = useState(false)
+  const [login, setLogin] = useState('')
   const [pw, setPw] = useState('')
-  const expected = (import.meta as any).env?.VITE_ADMIN_PASSWORD || 'petka-2025'
+  const expectedLogin = 'admin'
+  const expectedPw = 'admin'
 
   useEffect(() => {
     const ok = sessionStorage.getItem('adminAuthed') === '1'
@@ -26,31 +28,27 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800">
       <div className="bg-white/95 backdrop-blur p-6 rounded-xl shadow-xl w-full max-w-sm border">
         <h1 className="text-xl font-semibold mb-2">Вхід в адмін-панель</h1>
-        <p className="text-sm text-gray-600 mb-4">Введіть пароль, щоб продовжити.</p>
+        <p className="text-sm text-gray-600 mb-4">Логін та пароль: admin / admin</p>
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            if (pw === expected) {
+            if (login === expectedLogin && pw === expectedPw) {
               sessionStorage.setItem('adminAuthed', '1')
               setAuthed(true)
               toast.success('Ласкаво просимо, адміністратор!', { id: 'admin-login' })
             } else {
-              toast.error('Невірний пароль', { id: 'admin-login' })
+              toast.error('Невірні дані входу', { id: 'admin-login' })
             }
           }}
           className="space-y-3"
         >
-          <Input
-            type="password"
-            placeholder="Пароль"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-          />
+          <Input type="text" placeholder="Логін" value={login} onChange={(e) => setLogin(e.target.value)} />
+          <Input type="password" placeholder="Пароль" value={pw} onChange={(e) => setPw(e.target.value)} />
           <div className="flex gap-2">
             <Button type="submit" className="w-full">Увійти</Button>
             <Button type="button" variant="outline" onClick={() => onNavigate?.('hero')}>Назад</Button>
           </div>
-          <p className="text-xs text-gray-500">Поточний пароль за замовчуванням: <span className="font-mono">petka-2025</span> (змінюйте через VITE_ADMIN_PASSWORD)</p>
+          <p className="text-xs text-gray-500">Порада: змініть облікові дані у коді або через змінні середовища для продакшна.</p>
         </form>
       </div>
     </div>
