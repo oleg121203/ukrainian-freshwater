@@ -84,7 +84,7 @@ export function PrawnVisualization({
 
   const { playClickSound, playSwooshSound, playBubbleSound, resumeAudioContext } = useAudio()
 
-  // Inventory / Recipe
+  // Inventory / Recipe / Feeding
   type ItemKey = 'garlic' | 'herb' | 'lemon' | 'butter' | 'salt' | 'pepper'
   const [inventory, setInventory] = useState<Record<ItemKey, number>>({
     garlic: 0,
@@ -94,6 +94,55 @@ export function PrawnVisualization({
     salt: 0,
     pepper: 0,
   })
+  
+  // Enhanced game state for unified experience
+  const [extendedGameState, setExtendedGameState] = useState({
+    health: 100,
+    happiness: 80,
+    hunger: 50,
+    growth: 30,
+    colorIntensity: 60,
+    level: 1,
+    experience: 0,
+    coins: 150,
+    feedingStreak: 0
+  })
+  
+  // Feeding mechanics integrated into 3D
+  const [showFeedingPanel, setShowFeedingPanel] = useState(false)
+  const [isFeeding, setIsFeeding] = useState(false)
+  
+  // Food types from feeding simulation
+  const foodTypes = [
+    {
+      id: 'commercial-pellets',
+      name: 'Комерційні гранули',
+      type: 'pellets',
+      nutritionValue: 7,
+      cost: 2,
+      icon: '🔶',
+      effects: { growth: 5, health: 7, mood: 5, color: 3 }
+    },
+    {
+      id: 'artemia',
+      name: 'Артемія',
+      type: 'premium',
+      nutritionValue: 10,
+      cost: 8,
+      icon: '⭐',
+      effects: { growth: 10, health: 8, mood: 9, color: 7 }
+    },
+    {
+      id: 'bloodworms',
+      name: 'Мотиль',
+      type: 'worms',
+      nutritionValue: 9,
+      cost: 5,
+      icon: '🪱',
+      effects: { growth: 9, health: 6, mood: 10, color: 5 }
+    }
+  ]
+  
   const recipeRequirements: Record<ItemKey, number> = {
     garlic: 1,
     herb: 2,
@@ -101,6 +150,69 @@ export function PrawnVisualization({
     butter: 1,
     salt: 1,
     pepper: 1,
+  }
+  // Feed function for 3D environment
+  const feedCreature = (food: any) => {
+    if (isFeeding || extendedGameState.coins < food.cost) {
+      if (extendedGameState.coins < food.cost) {
+        toast.error('Недостатньо монет!')
+      }
+      return
+    }
+    
+    setIsFeeding(true)
+    playClickSound({ volume: 0.3 })
+    
+    // Deduct coins
+    setExtendedGameState(current => ({
+      ...current,
+      coins: current.coins - food.cost
+    }))
+    
+    // Create visual feeding effect
+    if (prawnGroupRef.current) {
+      // Animate the creature (could enhance this further)
+      prawnGroupRef.current.rotation.z += 0.2
+    }
+    
+    // Update stats after feeding
+    setTimeout(() => {
+      setExtendedGameState(current => {
+        const hungerBonus = current.hunger < 30 ? 1.5 : 1.0
+        const newStats = {
+          ...current,
+          hunger: Math.min(100, current.hunger + food.nutritionValue * 8 * hungerBonus),
+          health: Math.min(100, current.health + food.effects.health * hungerBonus),
+          growth: Math.min(100, current.growth + food.effects.growth * 0.5),
+          happiness: Math.min(100, current.happiness + food.effects.mood * 1.2),
+          colorIntensity: Math.min(100, current.colorIntensity + food.effects.color),
+          experience: current.experience + food.nutritionValue * 5,
+          feedingStreak: current.feedingStreak + 1
+        }
+        
+        // Level up system
+        if (newStats.experience >= newStats.level * 100) {
+          newStats.level += 1
+          newStats.experience = newStats.experience - (newStats.level - 1) * 100
+          toast.success('Новий рівень! 🎉')
+          playSwooshSound({ volume: 0.4 })
+        }
+        
+        return newStats
+      })
+      
+      setGameState(current => ({
+        ...current,
+        health: extendedGameState.health,
+        happiness: extendedGameState.happiness,
+        hunger: extendedGameState.hunger,
+        level: extendedGameState.level,
+        experience: extendedGameState.experience
+      }))
+      
+      toast.success(`Креветку нагодовано ${food.name}!`)
+      setIsFeeding(false)
+    }, 1500)
   }
   const [showRecipe, setShowRecipe] = useState(false)
   const [petkaOpen, setPetkaOpen] = useState(false)
@@ -1216,7 +1328,7 @@ export function PrawnVisualization({
           </motion.div>
         </Button>
 
-        {/* Simple game stats */}
+        {/* Enhanced game stats */}
         <div className="pointer-events-auto absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -1224,20 +1336,38 @@ export function PrawnVisualization({
               <div className="w-20 bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-red-500 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${gameState.health}%` }}
+                  style={{ width: `${extendedGameState.health}%` }}
                 />
               </div>
+              <span className="text-xs">{extendedGameState.health}%</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm">😊 Happiness:</span>
               <div className="w-20 bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${gameState.happiness}%` }}
+                  style={{ width: `${extendedGameState.happiness}%` }}
                 />
               </div>
+              <span className="text-xs">{extendedGameState.happiness}%</span>
             </div>
-            <div className="text-xs text-gray-600">Level: {gameState.level} | XP: {gameState.experience}</div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">🍽️ Hunger:</span>
+              <div className="w-20 bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    extendedGameState.hunger < 30 ? 'bg-red-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${extendedGameState.hunger}%` }}
+                />
+              </div>
+              <span className={`text-xs ${extendedGameState.hunger < 30 ? 'text-red-500 font-bold' : ''}`}>
+                {extendedGameState.hunger}%
+              </span>
+            </div>
+            <div className="text-xs text-gray-600">
+              Level: {extendedGameState.level} | XP: {extendedGameState.experience} | 💰: {extendedGameState.coins}
+            </div>
             <div className="flex gap-2 pt-2">
               <Button
                 size="sm"
@@ -1399,6 +1529,12 @@ export function PrawnVisualization({
             Прив'язка до дна
           </label>
           <Button
+            variant="outline"
+            onClick={() => setShowFeedingPanel(!showFeedingPanel)}
+          >
+            🍽️ Годування
+          </Button>
+          <Button
             variant={canCook ? 'default' : 'outline'}
             disabled={!canCook || !petkaPassed}
             onClick={() => {
@@ -1457,6 +1593,71 @@ export function PrawnVisualization({
             </div>
           )}
         </div>
+
+        {/* Feeding Panel */}
+        {showFeedingPanel && (
+          <div className="pointer-events-auto absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-sm p-6 rounded-xl shadow-2xl max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">🍽️ Годування креветки</h3>
+              <Button size="sm" variant="outline" onClick={() => setShowFeedingPanel(false)}>✕</Button>
+            </div>
+            
+            {/* Enhanced stats display */}
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span>🍽️ Голод:</span>
+                  <span className={extendedGameState.hunger < 30 ? 'text-red-500 font-bold' : 'text-green-600'}>{extendedGameState.hunger}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>💰 Монети:</span>
+                  <span className="font-bold">{extendedGameState.coins}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>🔥 Серія:</span>
+                  <span>{extendedGameState.feedingStreak}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Food selection */}
+            <div className="space-y-3">
+              <h4 className="font-semibold">Виберіть корм:</h4>
+              {foodTypes.map(food => (
+                <div
+                  key={food.id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                    extendedGameState.coins < food.cost ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50'
+                  } ${isFeeding ? 'pointer-events-none' : ''}`}
+                  onClick={() => !isFeeding && extendedGameState.coins >= food.cost && feedCreature(food)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{food.icon}</span>
+                      <div>
+                        <div className="font-medium">{food.name}</div>
+                        <div className="text-xs text-gray-600">📊 {food.nutritionValue}/10</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">💰 {food.cost}</div>
+                      {extendedGameState.coins < food.cost && (
+                        <div className="text-xs text-red-500">Недостатньо монет</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {isFeeding && (
+              <div className="mt-4 text-center">
+                <div className="text-2xl animate-bounce">🦐</div>
+                <div className="text-sm text-gray-600">Годування...</div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Interaction hints */}
         {!audioEnabled && (

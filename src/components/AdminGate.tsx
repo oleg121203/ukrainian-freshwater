@@ -28,7 +28,7 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800">
       <div className="bg-white/95 backdrop-blur p-6 rounded-xl shadow-xl w-full max-w-sm border">
         <h1 className="text-xl font-semibold mb-2">Вхід в адмін-панель</h1>
-        <p className="text-sm text-gray-600 mb-4">Логін та пароль: admin / admin</p>
+        <p className="text-sm text-gray-600 mb-4">Введіть логін та пароль, щоб продовжити.</p>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -37,7 +37,7 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
               setAuthed(true)
               toast.success('Ласкаво просимо, адміністратор!', { id: 'admin-login' })
             } else {
-              toast.error('Невірні дані входу', { id: 'admin-login' })
+              toast.error('Невірний логін або пароль', { id: 'admin-login' })
             }
           }}
           className="space-y-3"
@@ -48,7 +48,7 @@ export function AdminGate({ onNavigate }: AdminGateProps) {
             <Button type="submit" className="w-full">Увійти</Button>
             <Button type="button" variant="outline" onClick={() => onNavigate?.('hero')}>Назад</Button>
           </div>
-          <p className="text-xs text-gray-500">Порада: змініть облікові дані у коді або через змінні середовища для продакшна.</p>
+          <p className="text-xs text-gray-500">Логін: <span className="font-mono">admin</span>, Пароль: <span className="font-mono">admin</span>. Порада: змініть облікові дані перед продакшном.</p>
         </form>
       </div>
     </div>
