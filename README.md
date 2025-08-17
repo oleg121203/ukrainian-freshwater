@@ -6,9 +6,6 @@ This template is your blank canvas. It comes with a minimal setup to help you ge
 
 🚀 What's Inside?
 
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
 
 🧠 What Can You Do?
 
@@ -17,8 +14,25 @@ Right now, this is just a starting point — the perfect place to begin building
 🧹 Just Exploring?
 No problem! If you were just checking things out and don’t need to keep this code:
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+
+## Deployment
+
+This repository includes a GitHub Actions workflow that builds the project and deploys the `dist/` folder to GitHub Pages on pushes to `main` or via manual dispatch.
+
+How to use:
+
+- Ensure the repository is hosted on GitHub and the default branch is `main`.
+- Push your changes to `main`.
+- The workflow `.github/workflows/deploy-pages.yml` will run automatically and publish the site to GitHub Pages.
+
+Manual trigger:
+
+- Go to the repository Actions tab → Build and Deploy to GitHub Pages → Run workflow.
+
+Notes:
+
+- The workflow uses the official `actions/deploy-pages` action and `upload-pages-artifact` to publish the `dist/` directory.
+- If you prefer Netlify/Vercel or another host, create a separate deployment pipeline or provide the host credentials.
 
 📄 License For Spark Template Resources
 
