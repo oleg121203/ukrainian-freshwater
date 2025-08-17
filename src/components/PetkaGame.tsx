@@ -7,7 +7,6 @@ import { toast } from 'sonner'
 import { useKV } from '@/hooks/useKV'
 import { generateQuizQuestions, PetkaQuestion, generateProfessionalRecipe } from '@/services/petkaService'
 import { useAudio } from '@/hooks/useAudio'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface PetkaGameProps {
   onNavigate?: (section: string) => void
@@ -192,16 +191,16 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
               className="absolute bottom-10 right-10 select-none"
               initial={{ opacity: 0, scale: 0.2, x: 120, y: 40, filter: 'blur(6px)' }}
               animate={{ opacity: 1, scale: 1, x: 0, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
+              transition={{ duration: 2.4, delay: 0.6, ease: 'easeOut' }}
               onAnimationComplete={() => {
-                // Auto enter quiz after a moment
-                setTimeout(() => setStage((s) => (s === 'intro' ? 'quiz' : s)), 2200)
+                // Auto enter quiz after wave animation completes
+                setTimeout(() => setStage('quiz'), 2200)
               }}
             >
               <div className="relative">
                 <div className="text-7xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</div>
                 {/* Question appears near shrimp */}
-                {questions && stage === 'quiz' && questionOpen && (
+                {questions && String(stage) === 'quiz' ? (
                   <motion.div
                     className="absolute -top-32 left-1/2 -translate-x-1/2 w-[min(600px,90vw)] bg-white/95 backdrop-blur-sm text-gray-900 rounded-2xl px-4 py-3 border shadow-xl"
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -247,7 +246,7 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
                       )}
                     </div>
                   </motion.div>
-                )}
+                ) : null}
               </div>
             </motion.div>
           </div>
