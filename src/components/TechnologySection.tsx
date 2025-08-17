@@ -162,17 +162,7 @@ export function TechnologySection({ onNavigate }: TechnologySectionProps) {
     <section className="min-h-screen py-20 px-6 bg-gradient-to-b from-blue-50/50 to-indigo-50/50">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onNavigate?.('about')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft size={16} />
-            {language === 'uk' ? 'Назад' : 'Back'}
-          </Button>
-        </div>
+
 
         {/* Hero Section */}
         <motion.div
