@@ -195,10 +195,60 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
               transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
               onAnimationComplete={() => {
                 // Auto enter quiz after a moment
-                setTimeout(() => setStage((s) => (s === 'intro' ? 'quiz' : s)), 900)
+                setTimeout(() => setStage((s) => (s === 'intro' ? 'quiz' : s)), 2200)
               }}
             >
-              <div className="text-7xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</div>
+              <div className="relative">
+                <div className="text-7xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</div>
+                {/* Question appears near shrimp */}
+                {questions && stage === 'quiz' && questionOpen && (
+                  <motion.div
+                    className="absolute -top-32 left-1/2 -translate-x-1/2 w-[min(600px,90vw)] bg-white/95 backdrop-blur-sm text-gray-900 rounded-2xl px-4 py-3 border shadow-xl"
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <p className="text-sm sm:text-base font-medium text-center">{typedText || 'Петька думає над питанням…'}</p>
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {questions[current]?.options.map((opt, oi) => (
+                        <Button key={oi} size="sm" variant={selected === oi ? 'default' : 'outline'} className="truncate" onClick={() => setSelected(oi)}>
+                          {opt}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-gray-600">Питання {current + 1} / {questions.length} • Серія: {streak}</span>
+                      {!revealed ? (
+                        <Button size="sm" disabled={selected === null} onClick={() => {
+                          if (selected === null) return
+                          const correct = selected === questions[current].correctIndex
+                          setAnswers((prev) => prev.map((v, i) => (i === current ? selected : v)))
+                          setRevealed(true)
+                          setStreak((s) => (correct ? s + 1 : 0))
+                          toast[correct ? 'success' : 'warning'](correct ? 'Правильно!' : 'Неправильно', { id: `petka-q-${current}` })
+                        }}>Відповісти</Button>
+                      ) : (
+                        <Button size="sm" onClick={() => {
+                          if (streak >= 4) { setQuestionOpen(false); setStage('builder'); return }
+                          const next = current + 1
+                          if (next < questions.length) {
+                            setCurrent(next)
+                            setSelected(null)
+                            setRevealed(false)
+                            const t = questions[next].q
+                            fullTextRef.current = t
+                            setTypedText('')
+                            typeOut(t)
+                          } else {
+                            setQuestionOpen(false)
+                            setStage('builder')
+                          }
+                        }}>Далі</Button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </motion.div>
           </div>
         </div>
@@ -296,79 +346,7 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
       {/* Seabed decoration */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-950/60 to-transparent" />
 
-      {/* Quiz in modal dialog */}
-      <Dialog open={stage === 'quiz' && questionOpen} onOpenChange={(o) => setQuestionOpen(o)}>
-        <DialogContent className="bg-white/95 text-gray-900 border-white/40 shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="text-2xl">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</span>
-              Петька питає
-            </DialogTitle>
-            <DialogDescription>
-              Відповідайте на легкі питання. Питання {current + 1} / {questions?.length || 0} • Серія: {streak}
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Animated ripple behind the question */}
-          <div className="relative">
-            <motion.div
-              aria-hidden
-              className="pointer-events-none absolute -inset-2 rounded-xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.2, 0.5, 0.2] }}
-              transition={{ duration: 3.2, repeat: Infinity }}
-              style={{ background: 'radial-gradient(600px 200px at 50% -20%, rgba(59,130,246,0.25), transparent 60%)' }}
-            />
-            <motion.p
-              className="relative text-base font-medium"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {typedText || 'Петька думає над питанням…'}
-            </motion.p>
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {questions?.[current]?.options.map((opt, oi) => (
-              <Button key={oi} size="sm" variant={selected === oi ? 'default' : 'outline'} className="truncate" onClick={() => setSelected(oi)}>
-                {opt}
-              </Button>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-gray-600">Питання {current + 1} / {questions?.length || 0} • Серія: {streak}</span>
-            {!revealed ? (
-              <Button size="sm" disabled={selected === null} onClick={() => {
-                if (selected === null || !questions) return
-                const correct = selected === questions[current].correctIndex
-                setAnswers((prev) => prev.map((v, i) => (i === current ? (selected as number) : v)))
-                setRevealed(true)
-                setStreak((s) => (correct ? s + 1 : 0))
-                toast[correct ? 'success' : 'warning'](correct ? 'Правильно!' : 'Неправильно', { id: `petka-q-${current}` })
-              }}>Відповісти</Button>
-            ) : (
-              <Button size="sm" onClick={() => {
-                if (!questions) return
-                if (streak >= 4) { setQuestionOpen(false); setStage('builder'); return }
-                const next = current + 1
-                if (next < questions.length) {
-                  setCurrent(next)
-                  setSelected(null)
-                  setRevealed(false)
-                  const t = questions[next].q
-                  fullTextRef.current = t
-                  setTypedText('')
-                  typeOut(t)
-                } else {
-                  setQuestionOpen(false)
-                  setStage('builder')
-                }
-              }}>Далі</Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Quiz now shown near shrimp in intro section */}
 
       {/* Main content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-10">
