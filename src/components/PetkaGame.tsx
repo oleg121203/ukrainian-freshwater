@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { useKV } from '@/hooks/useKV'
 import { generateQuizQuestions, PetkaQuestion, generateProfessionalRecipe } from '@/services/petkaService'
 import { useAudio } from '@/hooks/useAudio'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface PetkaGameProps {
   onNavigate?: (section: string) => void
@@ -35,13 +36,13 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
   const [revealed, setRevealed] = useState(false)
   const [typedText, setTypedText] = useState('')
   const fullTextRef = useRef('')
-  const [petkaX, setPetkaX] = useState(0)
-  const dirRef = useRef(1)
+  // Modal-based quiz instead of left-right movement
   const [petkaProtein, setPetkaProtein] = useState<'shrimp' | 'crayfish'>('shrimp')
   const [streak, setStreak] = useState(0)
   const [aiRecipes, setAiRecipes] = useKV<NewRecipe[]>('chef-prawn-recipes', [])
   const { playBubbleSound, playAmbientSound, playSwooshSound } = useAudio()
   const ambientHandleRef = useRef<{ stop: () => void } | null>(null)
+  const [questionOpen, setQuestionOpen] = useState(false)
 
   const score = useMemo(() => {
     if (!questions) return 0
@@ -59,11 +60,12 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
         setCurrent(0)
         setSelected(null)
         setRevealed(false)
-        // typing setup
+  // typing setup
         const t = qs[0]?.q || ''
         fullTextRef.current = t
         setTypedText('')
         typeOut(t)
+  setQuestionOpen(true)
       } catch (_e) {
         toast.error('Петька: не вдалось отримати питання, використовую запасні')
       }
@@ -101,21 +103,7 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
     setTimeout(reveal, 50)
   }
 
-  // Petka floating along the bottom
-  useEffect(() => {
-    let raf: number
-    const loop = () => {
-      setPetkaX((prev) => {
-        let next = prev + 0.4 * dirRef.current
-        if (next > 100) { dirRef.current = -1; next = 100 }
-        if (next < 0) { dirRef.current = 1; next = 0 }
-        return next
-      })
-      raf = requestAnimationFrame(loop)
-    }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+  // No more left-right movement; quiz now shows in a modal dialog
   // Handlers
   const addIngredient = () => {
     const v = userIngrInput.trim()
@@ -260,67 +248,92 @@ export function PetkaGame({ onNavigate, onOpen3D }: PetkaGameProps) {
       {/* Seabed decoration */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-950/60 to-transparent" />
 
-      {/* Petka floating and asking */}
-  {stage === 'quiz' && (
-        <div className="absolute bottom-20 left-0 right-0 z-10 pointer-events-none">
-          <div className="relative" style={{ transform: `translateX(${petkaX}%)` }}>
-            <motion.div className="inline-block align-bottom" animate={{ y: [0, -6, 0] }} transition={{ duration: 2.2, repeat: Infinity }}>
-              <div className="text-6xl select-none">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</div>
-            </motion.div>
+      {/* Quiz in modal dialog */}
+      <Dialog open={stage === 'quiz' && questionOpen} onOpenChange={(o) => setQuestionOpen(o)}>
+        <DialogContent className="bg-white/95 text-gray-900 border-white/40 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-2xl">{petkaProtein === 'shrimp' ? '🦐' : '🦞'}</span>
+              Петька питає
+            </DialogTitle>
+            <DialogDescription>
+              Відповідайте на легкі питання. Питання {current + 1} / {questions?.length || 0} • Серія: {streak}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Animated ripple behind the question */}
+          <div className="relative">
             <motion.div
-              className="absolute -top-24 left-10 max-w-[80vw] sm:max-w-[60vw] bg-white/95 text-gray-900 rounded-2xl px-4 py-3 border shadow-xl pointer-events-auto"
-              initial={{ opacity: 0, y: 10 }}
+              aria-hidden
+              className="pointer-events-none absolute -inset-2 rounded-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 3.2, repeat: Infinity }}
+              style={{ background: 'radial-gradient(600px 200px at 50% -20%, rgba(59,130,246,0.25), transparent 60%)' }}
+            />
+            <motion.p
+              className="relative text-base font-medium"
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <p className="text-sm sm:text-base font-medium">{typedText || 'Петька думає над питанням…'}</p>
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {questions?.[current]?.options.map((opt, oi) => (
-                  <Button key={oi} size="sm" variant={selected === oi ? 'default' : 'outline'} className="truncate" onClick={() => setSelected(oi)}>
-                    {opt}
-                  </Button>
-                ))}
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-gray-600">Питання {current + 1} / {questions?.length || 0} • Серія: {streak}</span>
-                {!revealed ? (
-                  <Button size="sm" disabled={selected === null} onClick={() => {
-                    if (selected === null || !questions) return
-                    const correct = selected === questions[current].correctIndex
-                    setAnswers((prev) => prev.map((v, i) => (i === current ? (selected as number) : v)))
-                    setRevealed(true)
-                    setStreak((s) => (correct ? s + 1 : 0))
-                    toast[correct ? 'success' : 'warning'](correct ? 'Правильно!' : 'Неправильно', { id: `petka-q-${current}` })
-                  }}>Відповісти</Button>
-                ) : (
-                  <Button size="sm" onClick={() => {
-                    if (!questions) return
-                    if (streak >= 4) { setStage('builder'); return }
-                    const next = current + 1
-                    if (next < questions.length) {
-                      setCurrent(next)
-                      setSelected(null)
-                      setRevealed(false)
-                      const t = questions[next].q
-                      fullTextRef.current = t
-                      setTypedText('')
-                      typeOut(t)
-                    } else {
-                      setStage('builder')
-                    }
-                  }}>Далі</Button>
-                )}
-              </div>
-            </motion.div>
+              {typedText || 'Петька думає над питанням…'}
+            </motion.p>
           </div>
-        </div>
-      )}
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {questions?.[current]?.options.map((opt, oi) => (
+              <Button key={oi} size="sm" variant={selected === oi ? 'default' : 'outline'} className="truncate" onClick={() => setSelected(oi)}>
+                {opt}
+              </Button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs text-gray-600">Питання {current + 1} / {questions?.length || 0} • Серія: {streak}</span>
+            {!revealed ? (
+              <Button size="sm" disabled={selected === null} onClick={() => {
+                if (selected === null || !questions) return
+                const correct = selected === questions[current].correctIndex
+                setAnswers((prev) => prev.map((v, i) => (i === current ? (selected as number) : v)))
+                setRevealed(true)
+                setStreak((s) => (correct ? s + 1 : 0))
+                toast[correct ? 'success' : 'warning'](correct ? 'Правильно!' : 'Неправильно', { id: `petka-q-${current}` })
+              }}>Відповісти</Button>
+            ) : (
+              <Button size="sm" onClick={() => {
+                if (!questions) return
+                if (streak >= 4) { setQuestionOpen(false); setStage('builder'); return }
+                const next = current + 1
+                if (next < questions.length) {
+                  setCurrent(next)
+                  setSelected(null)
+                  setRevealed(false)
+                  const t = questions[next].q
+                  fullTextRef.current = t
+                  setTypedText('')
+                  typeOut(t)
+                } else {
+                  setQuestionOpen(false)
+                  setStage('builder')
+                }
+              }}>Далі</Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Main content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-10">
-        <motion.h1 className="text-4xl md:text-5xl font-bold heading-font mb-3 text-white" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          🤖 Петька — головна гра
+        <motion.h1 className="text-4xl md:text-5xl font-bold heading-font mb-2 text-white" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          AquaFarm — Інтерактив
         </motion.h1>
-        <p className="text-white/80 mb-6">Відповідайте на питання Петьки (згенеровані Gemini), наберіть серію з 4 правильних відповідей поспіль і відкрийте професійний рецепт.</p>
+        <p className="text-white/85 mb-5">Сучасна гра: годування креветки + квіз Петьки + вирощування</p>
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/90">🦐 Годування</span>
+          <span className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/90">🏠 Вирощування</span>
+          <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground">🤖 Петька</span>
+        </div>
+        <p className="text-white/80 mb-6">Відповідайте на легкі питання Петьки (через Gemini). Наберіть серію з 4 правильних відповідей поспіль і відкрийте професійний рецепт.</p>
 
         {/* Ingredient preferences */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6">
