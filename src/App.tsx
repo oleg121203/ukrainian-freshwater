@@ -220,20 +220,32 @@ function App() {
           </div>
         ) : (
           <main className="relative z-20">
-            {/* Left: Back Button (when not on main) */}
-            {currentSection !== 'hero' && (
-              <div className="fixed top-6 left-6 z-30">
+            {/* Navigation Bar with Dropdown */}
+            <div className="fixed top-6 left-6 right-6 z-30 flex justify-between items-center">
+              {/* Left: Back Button (when not on main) */}
+              {currentSection !== 'hero' && (
                 <button
                   onClick={handleBack}
                   className="bg-white/90 text-foreground px-4 py-2 rounded-full shadow-lg border hover:bg-white transition-all duration-300 hover:scale-105"
                 >
                   ← Назад
                 </button>
+              )}
+              
+              {/* Center: Quick Navigation Dropdown */}
+              <div className="relative group">
+                <button 
+                  className="bg-white/80 text-foreground px-4 py-2 rounded-full shadow-lg border hover:bg-white transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                  onClick={() => setMenuVisible(!menuVisible)}
+                >
+                  🧭 Навігація
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
-            )}
 
-            {/* Right: AquaFarm Button (always visible) */}
-            <div className="fixed top-6 right-6 z-30">
+              {/* Right: AquaFarm Button */}
               <button
                 onClick={() => handleNavigate('hero')}
                 className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
