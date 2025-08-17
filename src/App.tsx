@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 const PrawnVisualization = lazy(() => import('@/components/PrawnVisualization'))
 import { PetkaGame } from '@/components/PetkaGame'
 import { NavigationMenu } from '@/components/NavigationMenu'
+import { QuickNavigation } from '@/components/QuickNavigation'
 import { HeroSection } from '@/components/HeroSection'
 import { AboutSection } from '@/components/AboutSection'
 import { ProductsSection } from '@/components/ProductsSection'
@@ -232,8 +233,12 @@ function App() {
               </div>
             )}
 
-            {/* Right: AquaFarm Button (always visible) */}
-            <div className="fixed top-6 right-6 z-30">
+            {/* Right: Navigation and AquaFarm Button (always visible) */}
+            <div className="fixed top-6 right-6 z-30 flex items-center gap-3">
+              <QuickNavigation 
+                onNavigate={handleNavigate}
+                currentSection={currentSection}
+              />
               <button
                 onClick={() => handleNavigate('hero')}
                 className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
