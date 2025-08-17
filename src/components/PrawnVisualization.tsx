@@ -83,65 +83,155 @@ export function PrawnVisualization({
   })
 
   const { playClickSound, playSwooshSound, playBubbleSound, resumeAudioContext } = useAudio()
+      // Inventory / Recipe / Feeding
+      type ItemKey = 'garlic' | 'herb' | 'lemon' | 'butter' | 'salt' | 'pepper'
+      const [inventory, setInventory] = useState<Record<ItemKey, number>>({
+        garlic: 0,
+        herb: 0,
+        lemon: 0,
+        butter: 0,
+        salt: 0,
+        pepper: 0,
+      })
 
-  // Inventory / Recipe / Feeding
-  type ItemKey = 'garlic' | 'herb' | 'lemon' | 'butter' | 'salt' | 'pepper'
-  const [inventory, setInventory] = useState<Record<ItemKey, number>>({
-    garlic: 0,
-    herb: 0,
-    lemon: 0,
-    butter: 0,
-    salt: 0,
-    pepper: 0,
-  })
-  
-  // Enhanced game state for unified experience
-  const [extendedGameState, setExtendedGameState] = useState({
-    health: 100,
-    happiness: 80,
-    hunger: 50,
-    growth: 30,
-    colorIntensity: 60,
-    level: 1,
-    experience: 0,
-    coins: 150,
-    feedingStreak: 0
-  })
-  
-  // Feeding mechanics integrated into 3D
-  const [showFeedingPanel, setShowFeedingPanel] = useState(false)
-  const [isFeeding, setIsFeeding] = useState(false)
-  
-  // Food types from feeding simulation
-  const foodTypes = [
-    {
-      id: 'commercial-pellets',
-      name: 'Комерційні гранули',
-      type: 'pellets',
-      nutritionValue: 7,
-      cost: 2,
-      icon: '🔶',
-      effects: { growth: 5, health: 7, mood: 5, color: 3 }
-    },
-    {
-      id: 'artemia',
-      name: 'Артемія',
-      type: 'premium',
-      nutritionValue: 10,
-      cost: 8,
-      icon: '⭐',
-      effects: { growth: 10, health: 8, mood: 9, color: 7 }
-    },
-    {
-      id: 'bloodworms',
-      name: 'Мотиль',
-      type: 'worms',
-      nutritionValue: 9,
-      cost: 5,
-      icon: '🪱',
-      effects: { growth: 9, health: 6, mood: 10, color: 5 }
-    }
-  ]
+      // Enhanced game state for unified experience
+      const [extendedGameState, setExtendedGameState] = useState({
+        health: 100,
+        happiness: 80,
+        hunger: 50,
+        growth: 30,
+        colorIntensity: 60,
+        level: 1,
+        experience: 0,
+        coins: 150,
+        feedingStreak: 0
+      })
+
+      // Feeding mechanics integrated into 3D
+      const [showFeedingPanel, setShowFeedingPanel] = useState(false)
+      const [isFeeding, setIsFeeding] = useState(false)
+
+      // Food types from feeding simulation
+      const foodTypes = [
+        {
+          id: 'commercial-pellets',
+          name: 'Комерційні гранули',
+          type: 'pellets',
+          nutritionValue: 7,
+          cost: 2,
+          icon: '🔶',
+          effects: { growth: 5, health: 7, mood: 5, color: 3 }
+        },
+        {
+          id: 'artemia',
+          name: 'Артемія',
+          type: 'premium',
+          nutritionValue: 10,
+          cost: 8,
+          icon: '⭐',
+          effects: { growth: 10, health: 8, mood: 9, color: 7 }
+        },
+        {
+          id: 'bloodworms',
+          name: 'Мотиль',
+          type: 'worms',
+          nutritionValue: 9,
+          cost: 5,
+          icon: '🪱',
+          effects: { growth: 9, health: 6, mood: 10, color: 5 }
+        }
+      ]
+
+      // spawned creatures reference
+      const spawnedRef = useRef<THREE.Group[]>([])
+
+      // Incubation state
+      const [incubating, setIncubating] = useState(false)
+      const [incubationProgress, setIncubationProgress] = useState(0) // 0..1
+      const [incubationSecondsLeft, setIncubationSecondsLeft] = useState<number | null>(null)
+      const incubationTimerRef = useRef<number | null>(null)
+      const incubationEndsAtRef = useRef<number | null>(null)
+
+      // localStorage keys
+      const LS_KEYS = {
+        extended: 'af_extended',
+        inventory: 'af_inventory',
+        petka: 'af_petka',
+        spawns: 'af_spawns'
+      }
+
+      // Helper to spawn a creature into the scene and persist the spawn
+      const spawnCreatureAt = (kind: 'shrimp' | 'crayfish', position?: THREE.Vector3) => {
+        if (!sceneRef.current) return null
+        const c = createCreature(kind)
+        const pos = position ?? new THREE.Vector3((Math.random() - 0.5) * 10, -1.5 + Math.random() * 1, (Math.random() - 0.5) * 10)
+        c.position.copy(pos)
+        sceneRef.current.add(c)
+        spawnedRef.current.push(c)
+        // persist spawn info (append to array)
+        try {
+          const existing = JSON.parse(localStorage.getItem(LS_KEYS.spawns) || '[]') as any[]
+          existing.push({ species: kind, pos: { x: pos.x, y: pos.y, z: pos.z }, ts: Date.now() })
+          localStorage.setItem(LS_KEYS.spawns, JSON.stringify(existing))
+        } catch {}
+        return c
+      }
+
+      // Spawn VFX: particle burst and sound
+      const playSpawnVFX = (position: THREE.Vector3) => {
+        try {
+          const scene = sceneRef.current
+          if (!scene) return
+          const particleCount = 40
+          const geom = new THREE.BufferGeometry()
+          const positions = new Float32Array(particleCount * 3)
+          const velocities = new Float32Array(particleCount * 3)
+          for (let i = 0; i < particleCount; i++) {
+            positions[i * 3] = position.x
+            positions[i * 3 + 1] = position.y
+            positions[i * 3 + 2] = position.z
+            velocities[i * 3] = (Math.random() - 0.5) * 0.6
+            velocities[i * 3 + 1] = Math.random() * 0.8
+            velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.6
+          }
+          geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+          geom.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3))
+          const mat = new THREE.PointsMaterial({ size: 0.06, color: 0xfff1d6, transparent: true, opacity: 0.95 })
+          const points = new THREE.Points(geom, mat)
+          scene.add(points)
+
+          const start = Date.now()
+          const lifetime = 900
+          const tick = () => {
+            const now = Date.now()
+            const t = (now - start) / lifetime
+            const posAttr = points.geometry.attributes.position as THREE.BufferAttribute
+            const velAttr = points.geometry.attributes.velocity as THREE.BufferAttribute
+            for (let i = 0; i < posAttr.count; i++) {
+              posAttr.setX(i, posAttr.getX(i) + velAttr.getX(i) * 0.04)
+              posAttr.setY(i, posAttr.getY(i) + velAttr.getY(i) * 0.04 - 0.01)
+              posAttr.setZ(i, posAttr.getZ(i) + velAttr.getZ(i) * 0.04)
+              // gravity effect
+              velAttr.setY(i, velAttr.getY(i) - 0.01)
+            }
+            posAttr.needsUpdate = true
+            velAttr.needsUpdate = true
+            ;(points.material as THREE.PointsMaterial).opacity = Math.max(0, 1 - t)
+            if (t < 1) requestAnimationFrame(tick)
+            else {
+              try {
+                scene.remove(points)
+                points.geometry.dispose()
+                ;(points.material as THREE.Material).dispose()
+              } catch {}
+            }
+          }
+          tick()
+          try { playBubbleSound({ volume: 0.7 }) } catch {}
+        } catch (err) {
+          console.warn('Spawn VFX failed', err)
+        }
+      }
   
   const recipeRequirements: Record<ItemKey, number> = {
     garlic: 1,
@@ -217,6 +307,45 @@ export function PrawnVisualization({
   const [showRecipe, setShowRecipe] = useState(false)
   const [petkaOpen, setPetkaOpen] = useState(false)
   const [petkaPassed, setPetkaPassed] = useState<boolean>(() => sessionStorage.getItem('petkaPassed') === '1')
+  // Load persisted state on mount
+  useEffect(() => {
+    try {
+      const e = localStorage.getItem(LS_KEYS.extended)
+      if (e) setExtendedGameState(JSON.parse(e))
+      const inv = localStorage.getItem(LS_KEYS.inventory)
+      if (inv) setInventory(JSON.parse(inv))
+      const p = localStorage.getItem(LS_KEYS.petka)
+      if (p) setPetkaPassed(p === '1')
+      // load spawns
+      try {
+        const sp = localStorage.getItem(LS_KEYS.spawns)
+        if (sp && sp.length) {
+          const arr = JSON.parse(sp) as { species: string; pos: { x: number; y: number; z: number } }[]
+          // postpone adding until scene ready — store in ref
+          ;(window as any).__af_pending_spawns = arr
+        }
+      } catch {}
+    } catch (err) {
+      console.warn('Failed to load persisted game state', err)
+    }
+  }, [])
+
+  // Persist key state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEYS.extended, JSON.stringify(extendedGameState))
+    } catch {}
+  }, [extendedGameState])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEYS.inventory, JSON.stringify(inventory))
+    } catch {}
+  }, [inventory])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEYS.petka, petkaPassed ? '1' : '0')
+    } catch {}
+  }, [petkaPassed])
   const canCook = Object.entries(recipeRequirements).every(
     ([k, v]) => (inventory as any)[k] >= v
   )
@@ -831,35 +960,72 @@ export function PrawnVisualization({
       }
     }
 
-    // Smooth movement with physics-like behavior
-    const force = 0.05
-    const damping = 0.95
-    
-    // Only idle physics when not on a path
+    // Physics-like movement (mass, drag, max speed, buoyancy)
+    const mass = 1.0
+    const thrustFactor = 0.12 // how strongly prawn accelerates towards target
+    const waterDrag = 0.85 // basic drag in water
+    const maxSpeed = 0.12
+
+    // Only apply idle physics when not following a drawn path
     if (!(curveRef.current && followRef.current.active)) {
-      state.velocity.x += (targetX - prawnGroup.position.x) * force
-      state.velocity.y += (targetY - prawnGroup.position.y) * force
-      state.velocity.z += (targetZ - prawnGroup.position.z) * force
-    }
-    
-    state.velocity.x *= damping
-    state.velocity.y *= damping
-    state.velocity.z *= damping
-    
-    if (!(curveRef.current && followRef.current.active)) {
-      prawnGroup.position.x += state.velocity.x
-      prawnGroup.position.y += state.velocity.y
-      prawnGroup.position.z += state.velocity.z
+      // desired acceleration
+      const ax = (targetX - prawnGroup.position.x) * thrustFactor / mass
+      const ay = (targetY - prawnGroup.position.y) * thrustFactor / mass
+      const az = (targetZ - prawnGroup.position.z) * thrustFactor / mass
+
+      // apply to velocity
+      state.velocity.x += ax * (deltaTime * 0.001)
+      state.velocity.y += ay * (deltaTime * 0.001)
+      state.velocity.z += az * (deltaTime * 0.001)
+
+      // buoyancy: gently push upward if below neutral depth (-1) and damp vertical oscillations
+      const neutralDepth = -1.0
+      const buoyancyStrength = 0.02
+      const depthDiff = neutralDepth - prawnGroup.position.y
+      state.velocity.y += depthDiff * buoyancyStrength * (deltaTime * 0.001)
+
+      // apply water drag
+      state.velocity.x *= Math.pow(waterDrag, deltaTime * 0.06)
+      state.velocity.y *= Math.pow(waterDrag, deltaTime * 0.06)
+      state.velocity.z *= Math.pow(waterDrag, deltaTime * 0.06)
+
+      // clamp speed
+      const vx = state.velocity.x
+      const vy = state.velocity.y
+      const vz = state.velocity.z
+      const speed = Math.sqrt(vx * vx + vy * vy + vz * vz)
+      if (speed > maxSpeed) {
+        const k = maxSpeed / speed
+        state.velocity.x *= k
+        state.velocity.y *= k
+        state.velocity.z *= k
+      }
+
+      // integrate
+      prawnGroup.position.x += state.velocity.x * (deltaTime * 0.06)
+      prawnGroup.position.y += state.velocity.y * (deltaTime * 0.06)
+      prawnGroup.position.z += state.velocity.z * (deltaTime * 0.06)
+
+      // Soft collisions with pond bounds (-9..9 / -2.8..2)
+      const bounceFactor = 0.65
+      if (prawnGroup.position.x < -9) { prawnGroup.position.x = -9; state.velocity.x = -state.velocity.x * bounceFactor }
+      if (prawnGroup.position.x > 9) { prawnGroup.position.x = 9; state.velocity.x = -state.velocity.x * bounceFactor }
+      if (prawnGroup.position.z < -9) { prawnGroup.position.z = -9; state.velocity.z = -state.velocity.z * bounceFactor }
+      if (prawnGroup.position.z > 9) { prawnGroup.position.z = 9; state.velocity.z = -state.velocity.z * bounceFactor }
+      if (prawnGroup.position.y < -2.8) { prawnGroup.position.y = -2.8; state.velocity.y = -state.velocity.y * bounceFactor }
+      if (prawnGroup.position.y > 2) { prawnGroup.position.y = 2; state.velocity.y = -state.velocity.y * bounceFactor }
     }
 
     // Realistic rotation based on movement direction
     const speed = Math.sqrt(state.velocity.x ** 2 + state.velocity.y ** 2 + state.velocity.z ** 2)
-  if (speed > 0.001 && !(curveRef.current && followRef.current.active)) {
+    if (speed > 0.001 && !(curveRef.current && followRef.current.active)) {
       const targetRotationY = Math.atan2(state.velocity.x, state.velocity.z)
       const targetRotationX = Math.atan2(state.velocity.y, Math.sqrt(state.velocity.x ** 2 + state.velocity.z ** 2))
-      
-      prawnGroup.rotation.y = THREE.MathUtils.lerp(prawnGroup.rotation.y, targetRotationY, 0.1)
-      prawnGroup.rotation.x = THREE.MathUtils.lerp(prawnGroup.rotation.x, targetRotationX, 0.1)
+
+      // smoother turning at low speeds, snappier at higher speeds
+      const turnLerp = THREE.MathUtils.clamp(0.04 + speed * 2.0, 0.04, 0.25)
+      prawnGroup.rotation.y = THREE.MathUtils.lerp(prawnGroup.rotation.y, targetRotationY, turnLerp)
+      prawnGroup.rotation.x = THREE.MathUtils.lerp(prawnGroup.rotation.x, targetRotationX, turnLerp)
     }
 
   // Animate body parts
@@ -1113,6 +1279,22 @@ export function PrawnVisualization({
 
       setIsLoaded(true)
 
+      // Restore any persisted spawns after scene created
+      try {
+        const pending = (window as any).__af_pending_spawns as any[] | undefined
+        if (pending && pending.length) {
+          pending.forEach(s => {
+            const pos = new THREE.Vector3(s.pos.x, s.pos.y, s.pos.z)
+            const spawned = spawnCreatureAt(s.species === 'crayfish' ? 'crayfish' : 'shrimp', pos)
+            if (spawned) {
+              // small settled scale
+              spawned.scale.setScalar(1)
+            }
+          })
+          try { localStorage.removeItem(LS_KEYS.spawns) } catch {}
+        }
+      } catch (err) {}
+
       // Animation loop
       let lastTime = 0
       const animate = (currentTime: number) => {
@@ -1264,6 +1446,19 @@ export function PrawnVisualization({
         }
         scene.clear()
         renderer.dispose()
+        // clear incubation timer
+        if (incubationTimerRef.current) {
+          clearInterval(incubationTimerRef.current)
+          incubationTimerRef.current = null
+        }
+        // remove spawned creatures
+        spawnedRef.current.forEach(s => {
+          try {
+            scene.remove(s)
+            if ((s as any).geometry) (s as any).geometry.dispose?.()
+          } catch {}
+        })
+        spawnedRef.current = []
       }
     } catch (error) {
       console.error('Error initializing Three.js:', error)
@@ -1326,6 +1521,19 @@ export function PrawnVisualization({
           >
             ☰
           </motion.div>
+        </Button>
+
+        {/* AquaFarm home button */}
+        <Button
+          variant="default"
+          size="sm"
+          className="pointer-events-auto absolute top-4 right-20 bg-white/95 backdrop-blur-sm border hover:bg-primary hover:text-white transition-all duration-300"
+          onClick={() => {
+            playClickSound({ volume: 0.4 })
+            if (onNavigateToSite) onNavigateToSite('hero')
+          }}
+        >
+          🏠 AquaFarm
         </Button>
 
         {/* Enhanced game stats */}
@@ -1561,6 +1769,100 @@ export function PrawnVisualization({
             <div>🧂 Сіль: {inventory.salt}</div>
             <div>🌶️ Перець: {inventory.pepper}</div>
           </div>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={
+                inventory.garlic >= (recipeRequirements.garlic || 1) &&
+                inventory.herb >= (recipeRequirements.herb || 2) &&
+                inventory.lemon >= (recipeRequirements.lemon || 1)
+                ? 'default' : 'outline'
+              }
+              onClick={() => {
+                const can = inventory.garlic >= (recipeRequirements.garlic || 1) && inventory.herb >= (recipeRequirements.herb || 2) && inventory.lemon >= (recipeRequirements.lemon || 1)
+                if (!can) { toast.error('Немає потрібних інгредієнтів для рецепту'); return }
+                // consume minimal recipe
+                setInventory(prev => ({ ...prev, garlic: prev.garlic - 1, herb: Math.max(0, prev.herb - 2), lemon: Math.max(0, prev.lemon - 1) }))
+                setExtendedGameState(s => ({ ...s, coins: s.coins + 25, experience: s.experience + 20 }))
+                toast.success('Швидке приготування: +25💰 +20 XP')
+              }}
+            >
+              ✅ Приготувати
+            </Button>
+
+            <Button
+              size="sm"
+              variant={extendedGameState.coins >= 50 && !incubating ? 'default' : 'outline'}
+              onClick={() => {
+                if (incubating) { toast('Інкубація вже йде'); return }
+                if (extendedGameState.coins < 50) { toast.error('Потрібно 50💰 для інкубації'); return }
+                setExtendedGameState(s => ({ ...s, coins: s.coins - 50 }))
+                // start incubation
+                const duration = 20000
+                setIncubating(true)
+                setIncubationProgress(0)
+                incubationEndsAtRef.current = Date.now() + duration
+                toast('Інкубація розпочата: через 20с з`явиться нова креветка')
+                incubationTimerRef.current = window.setInterval(() => {
+                  // use rAF-driven smooth progress
+                  const updateSmooth = () => {
+                    if (!incubationEndsAtRef.current) return
+                    const now = Date.now()
+                    const remaining = Math.max(0, incubationEndsAtRef.current - now)
+                    const t = Math.max(0, Math.min(1, 1 - remaining / duration))
+                    setIncubationProgress(t)
+                    // if completed
+                    if (t >= 1) {
+                      // finish
+                      if (incubationTimerRef.current) { clearInterval(incubationTimerRef.current); incubationTimerRef.current = null }
+                      setIncubating(false)
+                      setIncubationProgress(1)
+                      // reward + spawn
+                      setExtendedGameState(s => ({ ...s, growth: Math.min(100, s.growth + 15), coins: s.coins + 80, experience: s.experience + 30 }))
+                      toast.success('Інкубація завершена: народилася креветка! +80💰')
+                      // spawn creature visually
+                      const spawned = spawnCreatureAt(species)
+                      if (spawned) {
+                        // small pop animation
+                        spawned.scale.setScalar(0.01)
+                        const targetScale = 1
+                        let tAnim = 0
+                        const anim = () => {
+                          tAnim += 0.06
+                          const s = THREE.MathUtils.lerp(0.01, targetScale, Math.min(1, tAnim))
+                          spawned.scale.setScalar(s)
+                          if (tAnim < 1) requestAnimationFrame(anim)
+                        }
+                        anim()
+                        // spawn VFX
+                        playSpawnVFX(spawned.position)
+                      }
+                    }
+                  }
+                  updateSmooth()
+                }, 200)
+              }}
+            >
+              🐣 Інкубація (50💰)
+            </Button>
+          </div>
+          {/* Incubation progress */}
+          {incubating && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <div>Інкубація</div>
+                <div>{incubationSecondsLeft !== null ? `${incubationSecondsLeft}s` : ''}</div>
+              </div>
+              <div className="w-full bg-gray-200 h-2 rounded overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${incubationProgress * 100}%` }}
+                  transition={{ ease: 'linear', duration: 0.18 }}
+                  className="bg-emerald-500 h-2 rounded"
+                />
+              </div>
+            </div>
+          )}
           {showRecipe && petkaPassed && (
             <div className="mt-3 text-sm">
               <p className="font-medium mb-1">Рецепт: Смажені креветки з часником та лимоном</p>

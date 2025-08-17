@@ -62,10 +62,10 @@ function App() {
     playSwooshSound({ volume: 0.25, playbackRate: 0.9 })
     
     if (section === 'hero') {
-      // If going back to hero, show 3D
+      // If going to hero, show 3D
       setPrevSection(currentSection)
       setCurrentSection('hero')
-      setShow3D(false)
+      setShow3D(true)
     } else {
       // Going to any other section, hide 3D
       setPrevSection(currentSection)
@@ -81,10 +81,10 @@ function App() {
       const target = prevSection
       setPrevSection(null)
       setCurrentSection(target)
-      setShow3D(false)
+      setShow3D(target === 'hero')
     } else {
       setCurrentSection('hero')
-      setShow3D(false)
+      setShow3D(true)
     }
   }
 
@@ -232,14 +232,25 @@ function App() {
               </div>
             )}
 
-            {/* Right: AquaFarm Button (always visible) */}
-            <div className="fixed top-6 right-6 z-30">
+            {/* Right: AquaFarm Button (always visible) and optional Open 3D when hero is active */}
+            <div className="fixed top-6 right-6 z-30 flex flex-col items-end space-y-2">
               <button
                 onClick={() => handleNavigate('hero')}
                 className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 🏠 AquaFarm
               </button>
+              {!show3D && currentSection === 'hero' && (
+                <button
+                  onClick={() => {
+                    playSwooshSound({ volume: 0.25, playbackRate: 0.95 })
+                    setShow3D(true)
+                  }}
+                  className="bg-white/90 text-foreground px-3 py-1 rounded-full shadow-md hover:bg-white transition-all duration-200 text-sm"
+                >
+                  🔍 Відкрити 3D
+                </button>
+              )}
             </div>
 
             {/* Current Section Content */}

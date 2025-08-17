@@ -82,6 +82,16 @@ export function HeroSection({ onNavigate }: HeroSectionProps) {
             {t('hero.learn-more')}
             <ArrowRight size={24} className="ml-2" />
           </Button>
+
+          {/* Visible AquaFarm quick-open button */}
+          <Button
+            variant="outline"
+            size="lg"
+            className="border-white/50 text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold rounded-full backdrop-blur-sm"
+            onClick={() => onNavigate('hero')}
+          >
+            🦐 AquaFarm
+          </Button>
         </motion.div>
 
         {/* Quality indicators */}
