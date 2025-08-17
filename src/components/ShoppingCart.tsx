@@ -104,6 +104,13 @@ export function ShoppingCart({ isVisible, onClose }: ShoppingCartProps) {
     }
   }, [savedCustomerInfo])
 
+  // Reset to cart view when modal opens and ensure state is fresh
+  useEffect(() => {
+    if (isVisible) {
+      setStep('cart')
+    }
+  }, [isVisible])
+
   const totalPrice = getTotalPrice()
   const totalItems = getTotalItems()
 
